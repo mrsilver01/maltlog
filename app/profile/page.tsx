@@ -4,6 +4,13 @@ import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { loadWhiskyDataFromStorage, whiskeyDatabase, reviewsDatabase } from '../../lib/whiskyData'
 
+interface Comment {
+  id: number
+  user: string
+  content: string
+  date: string
+}
+
 export default function ProfilePage() {
   const router = useRouter()
   const [isLoggedIn, setIsLoggedIn] = useState(false)
@@ -699,7 +706,7 @@ export default function ProfilePage() {
                     {/* 댓글 목록 - 접힌/펼쳐진 상태에 따라 표시 */}
                     {expandedComments[note.id.toString()] === true && note.comments.length > 0 && (
                       <div className="mt-2 space-y-2">
-                        {note.comments.map((comment) => (
+                        {note.comments.map((comment: Comment) => (
                           <div key={comment.id} className="flex items-center justify-between bg-gray-50 p-3 rounded border border-gray-100">
                             <div className="flex items-center gap-3 flex-1 min-w-0">
                               {/* 댓글 작성자 프로필 사진 */}

@@ -67,8 +67,8 @@ export default function LoginPage() {
         setIsLogin(true)
         setFormData({ email: '', password: '', confirmPassword: '', nickname: '' })
       }
-    } catch (error: any) {
-      alert('오류: ' + error.message)
+    } catch (error: unknown) {
+      alert('오류: ' + (error instanceof Error ? error.message : 'Unknown error'))
     } finally {
       setLoading(false)
     }

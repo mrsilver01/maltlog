@@ -79,8 +79,8 @@ export default function HomePage() {
       alert('로그아웃되었습니다.')
       // 페이지 새로고침으로 모든 상태 초기화
       window.location.reload()
-    } catch (error: any) {
-      alert('로그아웃 오류: ' + error.message)
+    } catch (error: unknown) {
+      alert('로그아웃 오류: ' + (error instanceof Error ? error.message : 'Unknown error'))
     }
   }
 
@@ -239,7 +239,7 @@ export default function HomePage() {
                 )}
                 {searchQuery.trim() && (
                   <h2 className="text-base font-bold text-gray-800 text-center">
-                    "{searchQuery}" ({filteredWhiskies.length}개)
+                    &quot;{searchQuery}&quot; ({filteredWhiskies.length}개)
                   </h2>
                 )}
               </div>
@@ -298,7 +298,7 @@ export default function HomePage() {
                 )}
                 {searchQuery.trim() && (
                   <h2 className="text-lg font-bold text-gray-800">
-                    "{searchQuery}" 검색 결과 ({filteredWhiskies.length}개)
+                    &quot;{searchQuery}&quot; 검색 결과 ({filteredWhiskies.length}개)
                   </h2>
                 )}
                 {!searchQuery.trim() && (
@@ -343,7 +343,7 @@ export default function HomePage() {
             {searchQuery.trim() && filteredWhiskies.length === 0 && (
               <div className="text-center py-12">
                 <div className="text-gray-500 text-lg mb-2">
-                  "{searchQuery}"에 대한 검색 결과가 없습니다.
+                  &quot;{searchQuery}&quot;에 대한 검색 결과가 없습니다.
                 </div>
                 <div className="text-gray-400 text-sm">
                   다른 검색어를 시도해보세요.
@@ -407,7 +407,7 @@ export default function HomePage() {
   )
 }
 
-function WhiskyCard({ whisky, router, navigateWithTransition }: { whisky: WhiskyData, router: any, navigateWithTransition: any }) {
+function WhiskyCard({ whisky, navigateWithTransition }: { whisky: WhiskyData, router: unknown, navigateWithTransition: (path: string, message: string) => void }) {
   const [currentLikes, setCurrentLikes] = useState(whisky.likes)
   const [isLikeHovered, setIsLikeHovered] = useState(false)
   const [isLiked, setIsLiked] = useState(false)

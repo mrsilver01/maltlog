@@ -95,8 +95,8 @@ export default function CommunityPage() {
       setIsLoggedIn(false)
       alert('로그아웃되었습니다.')
       router.push('/')
-    } catch (error: any) {
-      alert('로그아웃 오류: ' + error.message)
+    } catch (error: unknown) {
+      alert('로그아웃 오류: ' + (error instanceof Error ? error.message : 'Unknown error'))
     }
   }
 
