@@ -812,7 +812,7 @@ export function loadWhiskyDataFromStorage(): void {
       Object.keys(parsedData).forEach(key => {
         if (whiskeyDatabase[key]) {
           // 가격 정보는 코드의 최신 데이터를 유지하고, 사용자 활동 데이터만 로드
-          const { price: cachedPrice, ...userActivityData } = parsedData[key]
+          const { price: _, ...userActivityData } = parsedData[key]
           whiskeyDatabase[key] = { ...whiskeyDatabase[key], ...userActivityData }
         }
       })

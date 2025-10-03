@@ -32,7 +32,7 @@ export default function RatingSystem({
     }
   }, [currentRating, readOnly])
   const [hoverRating, setHoverRating] = useState(0)
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<{ id: string; user_metadata?: { nickname?: string } } | null>(null)
   const [loading, setLoading] = useState(false)
   const [showSaveButton, setShowSaveButton] = useState(false)
 
@@ -106,7 +106,7 @@ export default function RatingSystem({
         // 로그인하지 않은 사용자는 로그인 요청
         alert('별점을 저장하려면 로그인해주세요.')
       }
-    } catch (error) {
+    } catch {
       alert('별점 저장 중 오류가 발생했습니다.')
     } finally {
       setLoading(false)

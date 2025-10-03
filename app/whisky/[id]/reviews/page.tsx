@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
-import { getWhiskyData, getReviews, addReview, loadWhiskyDataFromStorage, loadReviewsFromStorage, updateAverageRating, saveWhiskyDataToStorage, WhiskyData, Review } from '../../../../lib/whiskyData'
+import { getWhiskyData, getReviews, loadWhiskyDataFromStorage, loadReviewsFromStorage, updateAverageRating, saveWhiskyDataToStorage, WhiskyData, Review } from '../../../../lib/whiskyData'
 import LoadingAnimation from '../../../../components/LoadingAnimation'
 import { usePageTransition } from '../../../../hooks/usePageTransition'
 

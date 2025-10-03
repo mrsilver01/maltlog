@@ -168,7 +168,7 @@ class WhiskyManager {
       const filePath = `whiskies/${fileName}`
 
       // Supabase Storage 업로드
-      const { data, error } = await supabase.storage
+      const { error } = await supabase.storage
         .from('whisky-images')
         .upload(filePath, file, {
           cacheControl: '3600',
@@ -182,8 +182,8 @@ class WhiskyManager {
       }
 
       return { path: `/whiskies/${fileName}`, error: null }
-    } catch (error) {
-      return { path: null, error: error instanceof Error ? error.message : 'Image upload failed' }
+    } catch {
+      return { path: null, error: 'Image upload failed' }
     }
   }
 
@@ -196,7 +196,7 @@ class WhiskyManager {
       localStorage.setItem(`whisky-image-${fileName}`, base64)
 
       return { path: `/whiskies/${fileName}`, error: null }
-    } catch (error) {
+    } catch {
       return { path: null, error: 'Local image save failed' }
     }
   }
@@ -233,7 +233,7 @@ class WhiskyManager {
       }
 
       return data || []
-    } catch (error) {
+    } catch {
       return this.getLocalWhiskies()
     }
   }
@@ -272,8 +272,8 @@ class WhiskyManager {
       await this.updateAverageRating(whiskyId)
 
       return { success: true }
-    } catch (error) {
-      return { success: false, error: error instanceof Error ? error.message : 'Rating save failed' }
+    } catch {
+      return { success: false, error: 'Rating save failed' }
     }
   }
 
@@ -309,7 +309,7 @@ class WhiskyManager {
       }
 
       return data.rating
-    } catch (error) {
+    } catch {
       return null
     }
   }
@@ -334,8 +334,8 @@ class WhiskyManager {
           })
           .eq('id', whiskyId)
       }
-    } catch (error) {
-      console.error('Average rating update error:', error)
+    } catch {
+      console.error('Average rating update error:')
     }
   }
 }
