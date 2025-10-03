@@ -6,7 +6,7 @@ import LoadingAnimation from '../components/LoadingAnimation'
 import { WhiskyCardSkeleton, HeaderSkeleton } from '../components/Skeleton'
 import { usePageTransition } from '../hooks/usePageTransition'
 import DrawerSidebar from '../components/DrawerSidebar'
-import { whiskeyDatabase, WhiskyData, addLike, removeLike, loadWhiskyDataFromStorage } from '../lib/whiskyData'
+import { whiskeyDatabase, WhiskyData, toggleLike, isWhiskyLiked, migrateTempLikesToUser, clearUserLikes, loadWhiskyDataFromStorage } from '../lib/whiskyData'
 import { authHelpers } from '../lib/supabase'
 
 export default function HomePage() {
@@ -15,8 +15,23 @@ export default function HomePage() {
   const [whiskies, setWhiskies] = useState<WhiskyData[]>([])
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [showAllWhiskies, setShowAllWhiskies] = useState(false)
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const router = useRouter()
   const { isTransitioning, transitionMessage, navigateWithTransition } = usePageTransition()
+
+  // 검색된 위스키 목록
+  const filteredWhiskies = whiskies.filter(whisky => {
+    if (!searchQuery.trim()) return true
+
+    const query = searchQuery.toLowerCase().trim()
+    return (
+      whisky.name.toLowerCase().includes(query) ||
+      whisky.region.toLowerCase().includes(query) ||
+      whisky.cask.toLowerCase().includes(query) ||
+      whisky.abv.toLowerCase().includes(query) ||
+      whisky.price.toLowerCase().includes(query)
+    )
+  })
 
   // 초기 로딩 및 위스키 데이터 로드
   useEffect(() => {
@@ -35,11 +50,32 @@ export default function HomePage() {
     return () => clearTimeout(timer)
   }, [])
 
+  // 모바일 메뉴 외부 클릭 시 닫기
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (isMobileMenuOpen) {
+        const target = event.target as HTMLElement
+        if (!target.closest('[data-mobile-menu]') && !target.closest('[data-hamburger-button]')) {
+          setIsMobileMenuOpen(false)
+        }
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [isMobileMenuOpen])
+
   // 로그아웃 함수
   const handleLogout = async () => {
     try {
       await authHelpers.signOut()
+
+      // 찜 데이터 정리 (임시 찜으로 전환하지 않고 완전 삭제)
+      clearUserLikes()
+
       setIsLoggedIn(false)
+      localStorage.removeItem('isLoggedIn')
+
       alert('로그아웃되었습니다.')
       // 페이지 새로고침으로 모든 상태 초기화
       window.location.reload()
@@ -61,7 +97,7 @@ export default function HomePage() {
 
         <section className="mb-12">
           <div className="h-6 w-32 bg-gray-200 rounded animate-pulse mb-6"></div>
-          <div className="grid grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
             {[...Array(4)].map((_, i) => (
               <WhiskyCardSkeleton key={i} />
             ))}
@@ -70,7 +106,7 @@ export default function HomePage() {
 
         <section className="mb-12">
           <div className="h-6 w-16 bg-gray-200 rounded animate-pulse mb-6"></div>
-          <div className="grid grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
             {[...Array(4)].map((_, i) => (
               <WhiskyCardSkeleton key={i} />
             ))}
@@ -81,7 +117,7 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-rose-50 p-6">
+    <div className="min-h-screen bg-rose-50 p-3 sm:p-6">
       {/* 페이지 전환 애니메이션 */}
       {isTransitioning && (
         <LoadingAnimation message={transitionMessage} />
@@ -90,39 +126,39 @@ export default function HomePage() {
         {/* 메인 콘텐츠 */}
         <div className="flex-1">
           {/* 헤더 */}
-          <header className="flex items-center justify-between mb-8">
-            <div className="flex items-center gap-6">
-              <div className="flex items-center gap-4">
+          <header className="flex flex-col sm:flex-row items-center justify-between mb-6 sm:mb-8 gap-4 sm:gap-0">
+            <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-6">
+              <div className="flex items-center gap-2 sm:gap-4">
                 {/* 로고 이미지 */}
-                <div className="w-12 h-16 flex items-center justify-center">
+                <div className="w-10 h-12 sm:w-12 sm:h-16 flex items-center justify-center">
                   <img
                     src="/whiskies/LOGO.png"
                     alt="Maltlog Logo"
-                    className="w-12 h-12 object-contain"
+                    className="w-10 h-10 sm:w-12 sm:h-12 object-contain"
                   />
                 </div>
-                <h1 className="text-4xl font-bold text-amber-800 font-[family-name:var(--font-jolly-lodger)]">Maltlog</h1>
+                <h1 className="text-2xl sm:text-4xl font-bold text-amber-800 font-[family-name:var(--font-jolly-lodger)]">Maltlog</h1>
               </div>
-              <span className="text-base text-gray-500 ml-4">몰트로그, 위스키의 모든 기록</span>
+              <span className="text-sm sm:text-base text-gray-500 text-center sm:text-left sm:ml-4">몰트로그, 위스키의 모든 기록</span>
             </div>
 
-            <div className="flex items-center gap-6">
-              <span className="text-xl font-bold text-red-500 font-[family-name:var(--font-jolly-lodger)]">HOME</span>
+            <div className="flex items-center gap-3 sm:gap-6">
+              <span className="text-lg sm:text-xl font-bold text-red-500 font-[family-name:var(--font-jolly-lodger)]">HOME</span>
               <button
                 onClick={() => navigateWithTransition('/profile', '프로필 페이지로 이동 중...')}
                 className="text-center hover:text-gray-600 transition-all duration-200 hover:scale-110 transform"
               >
-                <div className="text-lg font-bold text-gray-800 font-[family-name:var(--font-jolly-lodger)] hover:text-red-500 transition-colors">PROFILE/</div>
-                <div className="text-xs text-gray-600">내 노트 보러가기</div>
+                <div className="text-sm sm:text-lg font-bold text-gray-800 font-[family-name:var(--font-jolly-lodger)] hover:text-red-500 transition-colors">PROFILE/</div>
+                <div className="text-xs text-gray-600 hidden sm:block">내 노트 보러가기</div>
               </button>
               {isLoggedIn ? (
-                <div className="flex items-center gap-4">
-                  <span className="text-sm text-gray-600">
+                <div className="flex items-center gap-2 sm:gap-4">
+                  <span className="text-xs sm:text-sm text-gray-600 hidden sm:block">
                     {typeof window !== 'undefined' ? localStorage.getItem('userNickname') : ''}님
                   </span>
                   <button
                     onClick={handleLogout}
-                    className="bg-gray-600 text-white px-5 py-2 rounded-full text-sm hover:bg-gray-500 transition-colors"
+                    className="bg-gray-600 text-white px-3 sm:px-5 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm hover:bg-gray-500 transition-colors"
                   >
                     로그아웃
                   </button>
@@ -130,59 +166,208 @@ export default function HomePage() {
               ) : (
                 <button
                   onClick={() => navigateWithTransition('/login', '로그인 페이지로 이동 중...')}
-                  className="bg-amber-900 text-white px-5 py-2 rounded-full text-sm hover:bg-amber-800 transition-colors"
+                  className="bg-amber-900 text-white px-3 sm:px-5 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm hover:bg-amber-800 transition-all duration-200 hover:scale-110 transform shadow-md hover:shadow-lg"
                 >
                   로그인
                 </button>
               )}
-              {/* 햄버거 메뉴 */}
-              <div className="flex flex-col gap-1">
-                <div className="w-5 h-0.5 bg-gray-600"></div>
-                <div className="w-5 h-0.5 bg-gray-600"></div>
-                <div className="w-5 h-0.5 bg-gray-600"></div>
+
+              {/* 햄버거 메뉴 버튼 */}
+              <div className="relative">
+                <button
+                  data-hamburger-button
+                  onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                  className="flex flex-col gap-1 p-2 hover:bg-gray-100 rounded transition-colors"
+                >
+                  <div className={`w-5 h-0.5 bg-gray-600 transition-all duration-300 ${isMobileMenuOpen ? 'rotate-45 translate-y-1.5' : ''}`}></div>
+                  <div className={`w-5 h-0.5 bg-gray-600 transition-all duration-300 ${isMobileMenuOpen ? 'opacity-0' : ''}`}></div>
+                  <div className={`w-5 h-0.5 bg-gray-600 transition-all duration-300 ${isMobileMenuOpen ? '-rotate-45 -translate-y-1.5' : ''}`}></div>
+                </button>
+
+                {/* 드롭다운 메뉴 - 버튼 바로 아래 */}
+                {isMobileMenuOpen && (
+                  <div data-mobile-menu className="absolute top-full right-0 mt-1 bg-white border border-gray-200 shadow-lg rounded-lg overflow-hidden z-50 w-40">
+                    <div className="py-1">
+                      <button
+                        onClick={() => {
+                          setIsMobileMenuOpen(false)
+                          navigateWithTransition('/community', '커뮤니티로 이동 중...')
+                        }}
+                        className="w-full text-left px-3 py-2 text-sm font-medium text-gray-800 hover:bg-gray-50 transition-colors hover:text-red-500"
+                      >
+                        COMMUNITY
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          setIsMobileMenuOpen(false)
+                          navigateWithTransition('/profile', '프로필 페이지로 이동 중...')
+                        }}
+                        className="w-full text-left px-3 py-2 text-sm font-medium text-gray-800 hover:bg-gray-50 transition-colors hover:text-red-500"
+                      >
+                        PROFILE
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          setIsMobileMenuOpen(false)
+                          navigateWithTransition('/profile', '내 노트로 이동 중...')
+                        }}
+                        className="w-full text-left px-3 py-2 text-sm font-medium text-gray-800 hover:bg-gray-50 transition-colors hover:text-red-500"
+                      >
+                        NOTES
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </header>
 
+
           {/* 유행 위스키 섹션 - 검색창 오른쪽으로 이동 */}
-          <section className="mb-12">
-            <div className="flex justify-between items-center mb-6">
-              <div className="flex items-center gap-4">
-                {!showAllWhiskies && (
-                  <h2 className="text-lg font-bold text-gray-800">유행 위스키 (9월 기준)</h2>
+          <section className="mb-8 sm:mb-12">
+            {/* 모바일: 세로 레이아웃 */}
+            <div className="flex flex-col gap-4 sm:hidden">
+              {/* 제목 */}
+              <div className="flex items-center justify-center gap-2">
+                {!showAllWhiskies && !searchQuery.trim() && (
+                  <h2 className="text-base font-bold text-gray-800 text-center">유행 위스키 (9월 기준)</h2>
                 )}
-                {showAllWhiskies && (
-                  <h2 className="text-lg font-bold text-gray-800">모든 위스키</h2>
+                {showAllWhiskies && !searchQuery.trim() && (
+                  <h2 className="text-base font-bold text-gray-800 text-center">모든 위스키</h2>
                 )}
-                <button
-                  onClick={() => setShowAllWhiskies(!showAllWhiskies)}
-                  className="text-sm font-medium text-amber-700 hover:text-amber-800 transition-colors"
-                >
-                  {showAllWhiskies ? '돌아가기' : '모두 보기'}
-                </button>
+                {searchQuery.trim() && (
+                  <h2 className="text-base font-bold text-gray-800 text-center">
+                    "{searchQuery}" ({filteredWhiskies.length}개)
+                  </h2>
+                )}
               </div>
-              <div>
+
+              {/* 검색창 */}
+              <div className="relative">
                 <input
                   type="text"
-                  placeholder="검색"
+                  placeholder="위스키 검색..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="border border-rose-400 px-4 py-2 text-sm bg-rose-50 rounded-lg w-40 focus:outline-none focus:border-rose-600 placeholder-rose-600 text-rose-800"
+                  className="border border-rose-400 px-4 py-3 pr-10 text-sm bg-rose-50 rounded-lg w-full focus:outline-none focus:border-rose-600 focus:bg-white placeholder-rose-500 text-rose-800 transition-all duration-200"
                 />
+                <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-rose-500">
+                  🔍
+                </div>
+                {searchQuery.trim() && (
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-8 top-1/2 transform -translate-y-1/2 text-rose-400 hover:text-rose-600 text-sm"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+
+              {/* 버튼들 */}
+              <div className="flex justify-center gap-2">
+                {!searchQuery.trim() && (
+                  <button
+                    onClick={() => setShowAllWhiskies(!showAllWhiskies)}
+                    className="text-xs font-medium text-amber-700 hover:text-amber-800 transition-colors bg-amber-50 px-3 py-1.5 rounded-full"
+                  >
+                    {showAllWhiskies ? '돌아가기' : '모두 보기'}
+                  </button>
+                )}
+                {searchQuery.trim() && (
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    className="text-xs font-medium text-rose-700 hover:text-rose-800 transition-colors bg-rose-50 px-3 py-1.5 rounded-full"
+                  >
+                    검색 지우기
+                  </button>
+                )}
               </div>
             </div>
-            <div className="grid grid-cols-4 gap-6">
-              {(showAllWhiskies ? whiskies : whiskies.slice(0, 4)).map((whisky) => (
-                <WhiskyCard key={whisky.id} whisky={whisky} router={router} navigateWithTransition={navigateWithTransition} />
-              ))}
+
+            {/* 데스크톱: 가로 레이아웃 */}
+            <div className="hidden sm:flex justify-between items-center mb-6">
+              <div className="flex items-center gap-4">
+                {!showAllWhiskies && !searchQuery.trim() && (
+                  <h2 className="text-lg font-bold text-gray-800">유행 위스키 (9월 기준)</h2>
+                )}
+                {showAllWhiskies && !searchQuery.trim() && (
+                  <h2 className="text-lg font-bold text-gray-800">모든 위스키</h2>
+                )}
+                {searchQuery.trim() && (
+                  <h2 className="text-lg font-bold text-gray-800">
+                    "{searchQuery}" 검색 결과 ({filteredWhiskies.length}개)
+                  </h2>
+                )}
+                {!searchQuery.trim() && (
+                  <button
+                    onClick={() => setShowAllWhiskies(!showAllWhiskies)}
+                    className="text-sm font-medium text-amber-700 hover:text-amber-800 transition-colors"
+                  >
+                    {showAllWhiskies ? '돌아가기' : '모두 보기'}
+                  </button>
+                )}
+                {searchQuery.trim() && (
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    className="text-sm font-medium text-rose-700 hover:text-rose-800 transition-colors"
+                  >
+                    검색 지우기
+                  </button>
+                )}
+              </div>
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="위스키 이름, 지역, 캐스크 등..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="border border-rose-400 px-4 py-2 pr-10 text-sm bg-rose-50 rounded-lg w-64 focus:outline-none focus:border-rose-600 focus:bg-white placeholder-rose-500 text-rose-800 transition-all duration-200"
+                />
+                <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-rose-500">
+                  🔍
+                </div>
+                {searchQuery.trim() && (
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-8 top-1/2 transform -translate-y-1/2 text-rose-400 hover:text-rose-600 text-sm"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
             </div>
+            {/* 검색 결과가 없을 때 메시지 */}
+            {searchQuery.trim() && filteredWhiskies.length === 0 && (
+              <div className="text-center py-12">
+                <div className="text-gray-500 text-lg mb-2">
+                  "{searchQuery}"에 대한 검색 결과가 없습니다.
+                </div>
+                <div className="text-gray-400 text-sm">
+                  다른 검색어를 시도해보세요.
+                </div>
+              </div>
+            )}
+
+            {/* 위스키 카드 그리드 */}
+            {!(searchQuery.trim() && filteredWhiskies.length === 0) && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
+                {(searchQuery.trim() ? filteredWhiskies :
+                  showAllWhiskies ? filteredWhiskies : filteredWhiskies.slice(0, 4)
+                ).map((whisky) => (
+                  <WhiskyCard key={whisky.id} whisky={whisky} router={router} navigateWithTransition={navigateWithTransition} />
+                ))}
+              </div>
+            )}
           </section>
 
-          {/* 추천 섹션 - 모두 보기 시 숨김 */}
-          {!showAllWhiskies && (
+          {/* 추천 섹션 - 모두 보기나 검색 시 숨김 */}
+          {!showAllWhiskies && !searchQuery.trim() && (
             <section className="mb-12">
               <h2 className="text-lg font-bold text-gray-800 mb-6">추천</h2>
-              <div className="grid grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
                 {whiskies.slice(4, 8).map((whisky) => (
                   <WhiskyCard key={whisky.id} whisky={whisky} router={router} navigateWithTransition={navigateWithTransition} />
                 ))}
@@ -190,18 +375,18 @@ export default function HomePage() {
             </section>
           )}
 
-          {/* 커뮤니티 섹션 - 모두 보기 시 숨김 */}
-          {!showAllWhiskies && (
+          {/* 커뮤니티 섹션 - 모두 보기나 검색 시 숨김 */}
+          {!showAllWhiskies && !searchQuery.trim() && (
             <section>
-              <div className="flex items-center gap-8 mb-6">
+              <div className="flex flex-col sm:flex-row items-center sm:gap-8 gap-2 mb-4 sm:mb-6">
                 <h2
-                  className="text-xl font-bold text-red-500 hover:scale-110 transition-all duration-200 transform cursor-pointer"
+                  className="text-lg sm:text-xl font-bold text-red-500 hover:scale-110 transition-all duration-200 transform cursor-pointer"
                   onClick={() => navigateWithTransition('/community', '커뮤니티로 이동 중...')}
                 >
                   COMMUNITY
                 </h2>
                 <span
-                  className="text-lg font-bold text-gray-800 hover:text-red-600 hover:scale-110 transition-all duration-200 transform cursor-pointer"
+                  className="text-sm sm:text-lg font-bold text-gray-800 hover:text-red-600 hover:scale-110 transition-all duration-200 transform cursor-pointer"
                   onClick={() => navigateWithTransition('/community', '커뮤니티로 이동 중...')}
                 >
                   바로가기
@@ -213,8 +398,10 @@ export default function HomePage() {
           )}
         </div>
 
-        {/* 서랍장 스타일 사이드바 */}
-        <DrawerSidebar />
+        {/* 서랍장 스타일 사이드바 - 데스크톱에서만 표시 */}
+        <div className="hidden lg:block">
+          <DrawerSidebar />
+        </div>
       </div>
     </div>
   )
@@ -224,27 +411,57 @@ function WhiskyCard({ whisky, router, navigateWithTransition }: { whisky: Whisky
   const [currentLikes, setCurrentLikes] = useState(whisky.likes)
   const [isLikeHovered, setIsLikeHovered] = useState(false)
   const [isLiked, setIsLiked] = useState(false)
+  const [currentUser, setCurrentUser] = useState<{ id: string } | null>(null)
 
-  // 컴포넌트 마운트 시와 로그인 상태 변경 시 찜 상태 설정
+  // 현재 로그인한 사용자 정보 가져오기
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true'
-      if (isLoggedIn) {
-        const likedWhiskies = JSON.parse(localStorage.getItem('likedWhiskies') || '{}')
-        setIsLiked(likedWhiskies[whisky.id] || false)
-      } else {
-        // 로그아웃 상태면 찜 상태를 false로 설정
-        setIsLiked(false)
+    const checkUser = async () => {
+      try {
+        const user = await authHelpers.getCurrentUser()
+        setCurrentUser(user)
+      } catch {
+        setCurrentUser(null)
       }
     }
-  }, [whisky.id])
+    checkUser()
+  }, [])
 
-  // 로그인 상태 변경을 감지하기 위한 효과
+  // 찜 상태 초기화 및 업데이트
   useEffect(() => {
-    const handleStorageChange = () => {
+    const updateLikeStatus = () => {
       const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true'
-      if (!isLoggedIn) {
+
+      if (isLoggedIn && currentUser) {
+        // 로그인된 사용자: 해당 사용자의 찜 상태 확인
+        setIsLiked(isWhiskyLiked(whisky.id, currentUser.id))
+      } else if (isLoggedIn) {
+        // 로그인은 되어있지만 사용자 정보 로딩 중
+        setIsLiked(isWhiskyLiked(whisky.id))
+      } else {
+        // 로그아웃 상태: 찜 상태 false
         setIsLiked(false)
+      }
+
+      // 현재 찜 수 업데이트
+      setCurrentLikes(whisky.likes)
+    }
+
+    updateLikeStatus()
+  }, [whisky.id, whisky.likes, currentUser])
+
+  // 로그인 상태 변경 감지
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'isLoggedIn' || e.key?.startsWith('likedWhiskies_')) {
+        // 로그인 상태 또는 찜 데이터 변경 시 상태 업데이트
+        const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true'
+        if (!isLoggedIn) {
+          setIsLiked(false)
+          setCurrentUser(null)
+        } else {
+          // 로그인 상태로 변경 시 사용자 정보 재확인
+          authHelpers.getCurrentUser().then(setCurrentUser).catch(() => setCurrentUser(null))
+        }
       }
     }
 
@@ -267,37 +484,28 @@ function WhiskyCard({ whisky, router, navigateWithTransition }: { whisky: Whisky
       return
     }
 
-    if (isLiked) {
-      // 찜 취소
-      removeLike(whisky.id)
-      setCurrentLikes(currentLikes - 1)
-      setIsLiked(false)
+    // 새로운 찜 시스템 사용 (중복 방지 및 동기화)
+    const result = toggleLike(whisky.id, currentUser?.id)
 
-      // 로컬스토리지에서 제거
-      if (typeof window !== 'undefined') {
-        const likedWhiskies = JSON.parse(localStorage.getItem('likedWhiskies') || '{}')
-        delete likedWhiskies[whisky.id]
-        localStorage.setItem('likedWhiskies', JSON.stringify(likedWhiskies))
+    if (result.success) {
+      setIsLiked(result.isLiked)
+      setCurrentLikes(result.newLikeCount)
+
+      // 피드백 메시지
+      if (result.isLiked) {
+        console.log(`${whisky.name}을(를) 찜 목록에 추가했습니다.`)
+      } else {
+        console.log(`${whisky.name}을(를) 찜 목록에서 제거했습니다.`)
       }
     } else {
-      // 찜 추가
-      addLike(whisky.id)
-      setCurrentLikes(currentLikes + 1)
-      setIsLiked(true)
-
-      // 로컬스토리지에 저장
-      if (typeof window !== 'undefined') {
-        const likedWhiskies = JSON.parse(localStorage.getItem('likedWhiskies') || '{}')
-        likedWhiskies[whisky.id] = true
-        localStorage.setItem('likedWhiskies', JSON.stringify(likedWhiskies))
-      }
+      alert('찜 처리 중 오류가 발생했습니다.')
     }
   }
 
   return (
-    <div className="bg-white rounded border border-gray-200 p-3 text-center hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
+    <div className="bg-white rounded border border-gray-200 p-2 sm:p-3 text-center hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
       {/* 위스키 이미지/글래스 영역 */}
-      <div className="h-40 mb-3 bg-gray-100 rounded flex items-center justify-center relative">
+      <div className="h-32 sm:h-40 mb-2 sm:mb-3 bg-gray-100 rounded flex items-center justify-center relative">
         <img
           src={whisky.image}
           alt={whisky.name}
@@ -327,7 +535,7 @@ function WhiskyCard({ whisky, router, navigateWithTransition }: { whisky: Whisky
 
       {/* 위스키 이름 - 모든 위스키에 표시 */}
       <button
-        className="text-sm font-bold mb-2 hover:scale-110 transition-all duration-200 cursor-pointer block w-full text-gray-600 hover:text-red-600"
+        className="text-xs sm:text-sm font-bold mb-1 sm:mb-2 hover:scale-110 transition-all duration-200 cursor-pointer block w-full text-gray-600 hover:text-red-600 leading-tight"
         onClick={handleClick}
       >
         {whisky.name}
@@ -335,7 +543,7 @@ function WhiskyCard({ whisky, router, navigateWithTransition }: { whisky: Whisky
 
       {/* 평점 */}
       <div className="flex items-center justify-center gap-1 text-xs text-gray-500">
-        <span>평균</span>
+        <span className="hidden sm:inline">평균</span>
         <span className="text-yellow-400">⭐</span>
         <span>{whisky.avgRating > 0 ? whisky.avgRating : '-'}</span>
       </div>

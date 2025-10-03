@@ -3,6 +3,7 @@
 import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { authHelpers } from '../../lib/supabase'
+import { migrateTempLikesToUser } from '../../lib/whiskyData'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -43,6 +44,11 @@ export default function LoginPage() {
         } else {
           // 닉네임이 없는 경우 이메일로 대체
           localStorage.setItem('userNickname', formData.email.split('@')[0])
+        }
+
+        // 로그인 전 임시 찜을 사용자 찜으로 이동
+        if (user?.id) {
+          migrateTempLikesToUser(user.id)
         }
 
         alert('로그인 성공!')

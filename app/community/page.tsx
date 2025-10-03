@@ -115,14 +115,14 @@ export default function CommunityPage() {
   }
 
   // 개선된 이미지 압축 함수 (화질 vs 용량 균형)
-  const compressImage = (file: File, maxWidth: number = 400, quality: number = 0.4): Promise<string> => {
+  const compressImage = (file: File, maxWidth: number = 600, quality: number = 0.7): Promise<string> => {
     return new Promise((resolve, reject) => {
       const canvas = document.createElement('canvas')
       const ctx = canvas.getContext('2d')
       const img = new Image()
 
       img.onload = () => {
-        // 적당한 크기로 조정 (최대 400px)
+        // 적절한 크기로 조정 (최대 600px로 증가)
         const ratio = Math.min(maxWidth / img.width, maxWidth / img.height)
         const newWidth = Math.floor(img.width * ratio)
         const newHeight = Math.floor(img.height * ratio)
@@ -137,8 +137,14 @@ export default function CommunityPage() {
           ctx.drawImage(img, 0, 0, newWidth, newHeight)
         }
 
-        // 적당한 품질로 압축 (40%)
-        const compressedDataUrl = canvas.toDataURL('image/jpeg', quality)
+        // SVG와 GIF 파일 처리
+        let outputFormat = 'image/jpeg'
+        if (file.type === 'image/png' || file.type === 'image/gif' || file.type === 'image/webp') {
+          outputFormat = file.type
+        }
+
+        // 개선된 품질로 압축 (70%)
+        const compressedDataUrl = canvas.toDataURL(outputFormat, quality)
         resolve(compressedDataUrl)
       }
 
@@ -151,16 +157,21 @@ export default function CommunityPage() {
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (file) {
-      // 파일 크기 체크 (5MB 제한)
-      if (file.size > 5 * 1024 * 1024) {
-        alert('이미지 파일 크기는 5MB 이하로 해주세요.')
+      // 파일 크기 체크 (20MB 제한으로 확대)
+      if (file.size > 20 * 1024 * 1024) {
+        alert('이미지 파일 크기는 20MB 이하로 해주세요.')
         event.target.value = ''
         return
       }
 
-      // 파일 타입 체크
-      if (!file.type.startsWith('image/')) {
-        alert('이미지 파일만 업로드 가능합니다.')
+      // 지원하는 이미지 포맷 확인
+      const supportedFormats = [
+        'image/jpeg', 'image/jpg', 'image/png', 'image/gif',
+        'image/webp', 'image/bmp', 'image/tiff', 'image/svg+xml'
+      ]
+
+      if (!supportedFormats.includes(file.type)) {
+        alert('지원하는 이미지 포맷: JPEG, PNG, GIF, WebP, BMP, TIFF, SVG')
         event.target.value = ''
         return
       }
@@ -168,21 +179,21 @@ export default function CommunityPage() {
       setUploading(true)
 
       try {
-        // 1단계: 적당한 압축 (400px, 40% 품질)
-        let compressedImage = await compressImage(file, 400, 0.4)
+        // 1단계: 개선된 압축 (600px, 70% 품질)
+        let compressedImage = await compressImage(file, 600, 0.7)
 
         // 압축된 이미지 크기 체크
         let estimatedSize = (compressedImage.length * 0.75) / 1024 / 1024 // MB 단위
 
-        // 2단계: 크면 더 압축 (300px, 30% 품질)
-        if (estimatedSize > 0.8) {
-          compressedImage = await compressImage(file, 300, 0.3)
+        // 2단계: 크면 더 압축 (500px, 60% 품질)
+        if (estimatedSize > 1.2) {
+          compressedImage = await compressImage(file, 500, 0.6)
           estimatedSize = (compressedImage.length * 0.75) / 1024 / 1024
         }
 
-        // 3단계: 여전히 크면 작게 (200px, 20% 품질)
-        if (estimatedSize > 0.5) {
-          compressedImage = await compressImage(file, 200, 0.2)
+        // 3단계: 여전히 크면 더 압축 (400px, 50% 품질)
+        if (estimatedSize > 0.8) {
+          compressedImage = await compressImage(file, 400, 0.5)
         }
 
         setNewPost(prev => ({
@@ -599,7 +610,7 @@ export default function CommunityPage() {
                     <div>
                       <input
                         type="file"
-                        accept="image/*"
+                        accept="image/jpeg,image/jpg,image/png,image/gif,image/webp,image/bmp,image/tiff,image/svg+xml"
                         onChange={handleImageUpload}
                         className="hidden"
                         id="image-upload"
@@ -614,7 +625,7 @@ export default function CommunityPage() {
                         </svg>
                         {uploading ? '업로드 중...' : '이미지 선택'}
                       </label>
-                      <p className="text-xs text-gray-500 mt-1">JPG, PNG, GIF 파일 (5MB 이하, 최대 400px로 자동 압축)</p>
+                      <p className="text-xs text-gray-500 mt-1">JPEG, PNG, GIF, WebP, BMP, TIFF, SVG 파일 (20MB 이하, 자동 압축)</p>
                     </div>
                   )}
                 </div>
