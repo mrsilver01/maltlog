@@ -37,19 +37,16 @@ export default function HomePage() {
 
   // 초기 로딩 및 위스키 데이터 로드
   useEffect(() => {
-    const timer = setTimeout(() => {
-      // localStorage에서 데이터 로드
-      loadWhiskyDataFromStorage()
-      const whiskyArray = Object.values(whiskeyDatabase)
-      setWhiskies(whiskyArray)
+    // localStorage에서 데이터 로드 (즉시 실행)
+    loadWhiskyDataFromStorage()
+    const whiskyArray = Object.values(whiskeyDatabase)
+    setWhiskies(whiskyArray)
 
-      // 로그인 상태 확인
-      const loginStatus = localStorage.getItem('isLoggedIn') === 'true'
-      setIsLoggedIn(loginStatus)
+    // 로그인 상태 확인
+    const loginStatus = localStorage.getItem('isLoggedIn') === 'true'
+    setIsLoggedIn(loginStatus)
 
-      setIsLoading(false)
-    }, 3500)
-    return () => clearTimeout(timer)
+    setIsLoading(false)
   }, [])
 
   // 모바일 메뉴 외부 클릭 시 닫기
@@ -574,9 +571,20 @@ function WhiskyCard({ whisky, navigateWithTransition }: { whisky: WhiskyData, ro
       {/* 위스키 이미지/글래스 영역 */}
       <div className="h-32 sm:h-40 mb-2 sm:mb-3 bg-gray-100 rounded flex items-center justify-center relative">
         <img
-          src={whisky.image}
+          src={encodeURI(whisky.image)}
           alt={whisky.name}
           className="max-w-full max-h-full object-contain"
+          onError={(e) => {
+            const target = e.target as HTMLImageElement;
+            console.log('Image loading failed for:', target.src, 'whisky:', whisky.name);
+            if (target.src !== window.location.origin + '/whiskies/no.pic whisky.png') {
+              target.src = '/whiskies/no.pic whisky.png';
+            }
+          }}
+          onLoad={(e) => {
+            const target = e.target as HTMLImageElement;
+            console.log('Image loaded successfully for:', target.src, 'whisky:', whisky.name);
+          }}
         />
 
         {/* 추천해요 버튼 */}
@@ -626,8 +634,19 @@ function CommunityPreview({ navigateWithTransition }: { navigateWithTransition: 
     // localStorage에서 커뮤니티 게시글 로드
     const savedPosts = localStorage.getItem('communityPosts')
     if (savedPosts) {
-      const parsedPosts = JSON.parse(savedPosts)
-      setPosts(parsedPosts.slice(0, 3)) // 최대 3개만 표시
+      const posts = JSON.parse(savedPosts)
+      const currentUserNickname = localStorage.getItem('userNickname')
+      const currentUserProfileImage = localStorage.getItem('userProfileImage')
+
+      // 현재 사용자의 게시글에 프로필 이미지 업데이트
+      const updatedPosts = posts.map((post: any) => {
+        if (post.author === currentUserNickname && !post.authorImage && currentUserProfileImage) {
+          return { ...post, authorImage: currentUserProfileImage }
+        }
+        return post
+      })
+
+      setPosts(updatedPosts.slice(0, 3)) // 최대 3개만 표시
     } else {
       // 초기 더미 데이터
       const initialPosts = [
@@ -680,7 +699,19 @@ function CommunityPreview({ navigateWithTransition }: { navigateWithTransition: 
               <h4 className="font-medium text-gray-800 mb-2 line-clamp-1">{post.title}</h4>
               <div className="flex items-center justify-between text-sm text-gray-500">
                 <div className="flex items-center gap-3">
-                  <span>{post.author}</span>
+                  {/* 프로필 이미지 */}
+                  {post.authorImage ? (
+                    <img
+                      src={post.authorImage}
+                      alt={post.author}
+                      className="w-6 h-6 rounded-full object-cover border border-gray-200"
+                    />
+                  ) : (
+                    <div className="w-6 h-6 rounded-full bg-gradient-to-br from-rose-400 to-pink-500 flex items-center justify-center text-white text-xs font-bold">
+                      {post.author.charAt(0)}
+                    </div>
+                  )}
+                  <span className="font-medium text-gray-700">{post.author}</span>
                   <span>{formatDate(post.createdAt)}</span>
                 </div>
                 <div className="flex items-center gap-3">

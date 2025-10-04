@@ -15,49 +15,112 @@ export default function LoadingAnimation({ message = "로딩 중..." }: LoadingA
       {/* CSS 애니메이션 */}
       <style jsx>{`
         @keyframes bottle-fall {
-          0% { 
-            transform: translate(0, 0) rotate(0deg); 
+          0% {
+            transform: translate(0, 0) rotate(0deg);
             opacity: 1;
           }
-          30% { 
-            transform: translate(0, 0) rotate(0deg); 
+          15% {
+            transform: translate(0, 0) rotate(0deg);
             opacity: 1;
           }
-          70% { 
-            transform: translate(20px, 80px) rotate(90deg); 
+          45% {
+            transform: translate(8px, 80px) rotate(25deg);
             opacity: 1;
           }
-          100% { 
-            transform: translate(20px, 80px) rotate(90deg); 
+          70% {
+            transform: translate(18px, 150px) rotate(60deg);
+            opacity: 1;
+          }
+          85% {
+            transform: translate(25px, 200px) rotate(80deg);
+            opacity: 1;
+          }
+          95% {
+            transform: translate(30px, 230px) rotate(90deg);
+            opacity: 1;
+          }
+          100% {
+            transform: translate(30px, 240px) rotate(90deg);
             opacity: 1;
           }
         }
 
         @keyframes cork-pop {
-          0%, 60% { 
-            transform: translate(0, 0) rotate(0deg); 
-            opacity: 1; 
+          0%, 84% {
+            transform: translate(0, 0) rotate(0deg);
+            opacity: 1;
           }
-          62% { 
-            transform: translate(-15px, -15px) rotate(-30deg); 
-            opacity: 1; 
+          85% {
+            transform: translate(-5px, -8px) rotate(-15deg);
+            opacity: 1;
           }
-          75% { 
-            transform: translate(-80px, -80px) rotate(-180deg); 
-            opacity: 0.8; 
+          87% {
+            transform: translate(-15px, -20px) rotate(-30deg);
+            opacity: 1;
           }
-          100% { 
-            transform: translate(-150px, -150px) rotate(-360deg); 
-            opacity: 0; 
+          90% {
+            transform: translate(-35px, -45px) rotate(-75deg);
+            opacity: 0.9;
+          }
+          94% {
+            transform: translate(-65px, -80px) rotate(-150deg);
+            opacity: 0.7;
+          }
+          97% {
+            transform: translate(-100px, -120px) rotate(-240deg);
+            opacity: 0.4;
+          }
+          100% {
+            transform: translate(-140px, -160px) rotate(-360deg);
+            opacity: 0;
+          }
+        }
+
+        @keyframes impact-shake {
+          84%, 86% {
+            transform: translate(30px, 240px) rotate(90deg);
+          }
+          85% {
+            transform: translate(32px, 242px) rotate(92deg);
+          }
+          87%, 100% {
+            transform: translate(30px, 240px) rotate(90deg);
           }
         }
 
         .bottle-container {
-          animation: bottle-fall 3s ease-in-out infinite;
+          animation: bottle-fall 4s ease-in-out forwards, impact-shake 4s ease-out forwards;
         }
 
         .cork {
-          animation: cork-pop 3s ease-out infinite;
+          animation: cork-pop 4s ease-out forwards;
+        }
+
+        .impact-splash {
+          animation: splash-effect 4s ease-out forwards;
+        }
+
+        @keyframes splash-effect {
+          0%, 84% {
+            opacity: 0;
+            transform: scale(0);
+          }
+          85% {
+            opacity: 0.8;
+            transform: scale(0.5);
+          }
+          88% {
+            opacity: 0.6;
+            transform: scale(1.2);
+          }
+          92% {
+            opacity: 0.3;
+            transform: scale(1.8);
+          }
+          100% {
+            opacity: 0;
+            transform: scale(2.5);
+          }
         }
       `}</style>
 
@@ -167,6 +230,14 @@ export default function LoadingAnimation({ message = "로딩 중..." }: LoadingA
                          fill="#CD853F"/>
               </svg>
             </div>
+          </div>
+
+          {/* 충격 효과 */}
+          <div className="impact-splash absolute bottom-16 left-1/2 -translate-x-1/2">
+            <div className="w-4 h-4 bg-amber-300/60 rounded-full blur-sm"></div>
+          </div>
+          <div className="impact-splash absolute bottom-14 left-1/2 -translate-x-1/2" style={{ animationDelay: '0.1s' }}>
+            <div className="w-6 h-2 bg-amber-200/40 rounded-full blur-md"></div>
           </div>
 
           {/* 반짝임 효과 */}

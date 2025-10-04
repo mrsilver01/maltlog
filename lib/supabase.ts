@@ -94,5 +94,24 @@ export const authHelpers = {
     }
 
     return JSON.parse(userData)
+  },
+
+  signInWithKakao: async () => {
+    if (hasValidConfig) {
+      console.log('Using Supabase Kakao authentication')
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'kakao',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`
+        }
+      })
+      return { data, error }
+    } else {
+      console.log('Supabase not configured, Kakao login not available')
+      return {
+        data: null,
+        error: { message: 'Kakao 로그인이 설정되지 않았습니다.' }
+      }
+    }
   }
 }

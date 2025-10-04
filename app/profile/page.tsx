@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { loadWhiskyDataFromStorage, whiskeyDatabase, reviewsDatabase } from '../../lib/whiskyData'
+import LoadingAnimation from '../../components/LoadingAnimation'
 
 interface Comment {
   id: number
@@ -85,6 +86,7 @@ export default function ProfilePage() {
         setProfileImage(savedProfileImage)
       }
 
+      // 즉시 로딩 완료
       setIsLoading(false)
     }
 
@@ -405,8 +407,13 @@ export default function ProfilePage() {
   //   setExpandedComments({})
   // }
 
-  // 로딩 중이거나 로그인되지 않은 경우
-  if (isLoading || !isLoggedIn) {
+  // 로딩 중일 때 로딩 애니메이션 표시
+  if (isLoading) {
+    return <LoadingAnimation message="프로필을 불러오는 중..." />
+  }
+
+  // 로그인되지 않은 경우
+  if (!isLoggedIn) {
     return (
       <div className="min-h-screen bg-rose-50 flex items-center justify-center">
         <div className="text-center">

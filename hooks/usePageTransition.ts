@@ -12,14 +12,14 @@ export function usePageTransition() {
     setTransitionMessage(message)
     setIsTransitioning(true)
 
-    // 애니메이션 시간 후 실제 네비게이션
+    // 애니메이션 시간 후 실제 네비게이션 (4.2초 완전한 애니메이션)
     setTimeout(() => {
       router.push(path)
       // 페이지 로드 후 애니메이션 종료
       setTimeout(() => {
         setIsTransitioning(false)
-      }, 500)
-    }, 1000)
+      }, 100)
+    }, 4200)
   }
 
   return {

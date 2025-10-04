@@ -40,10 +40,10 @@ export default function ReviewsPage() {
       setWhiskyData(data)
       setReviews(reviewData)
 
-      // 애니메이션 완료를 위해 최소 3.5초 대기
+      // 애니메이션 완료를 위해 1초 대기 (직접 URL 접근 시에만)
       setTimeout(() => {
         setLoading(false)
-      }, 3500)
+      }, 1000)
     }
   }, [params?.id])
 
@@ -405,9 +405,13 @@ export default function ReviewsPage() {
           <div className="flex items-center gap-6">
             <div className="w-20 h-28 bg-gray-100 rounded flex items-center justify-center">
               <img
-                src={whiskyData.image}
+                src={encodeURI(whiskyData.image)}
                 alt={whiskyData.name}
                 className="max-w-full max-h-full object-contain"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.src = '/whiskies/no.pic whisky.png';
+                }}
               />
             </div>
             <div>

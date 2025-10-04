@@ -26,7 +26,7 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
-    
+
     try {
       if (isLogin) {
         // 로그인
@@ -68,7 +68,7 @@ export default function LoginPage() {
           console.error('Signup error:', error)
           throw new Error(error.message || '회원가입에 실패했습니다.')
         }
-        
+
         alert('회원가입이 완료되었습니다. 로그인해주세요.')
         setIsLogin(true)
         setFormData({ email: '', password: '', confirmPassword: '', nickname: '' })
@@ -76,6 +76,21 @@ export default function LoginPage() {
     } catch (error: unknown) {
       alert('오류: ' + (error instanceof Error ? error.message : 'Unknown error'))
     } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleKakaoLogin = async () => {
+    setLoading(true)
+    try {
+      const { data, error } = await authHelpers.signInWithKakao()
+      if (error) {
+        console.error('Kakao login error:', error)
+        throw new Error(error.message || 'Kakao 로그인에 실패했습니다.')
+      }
+      // OAuth 리다이렉트 처리는 callback 페이지에서 진행
+    } catch (error: unknown) {
+      alert('오류: ' + (error instanceof Error ? error.message : 'Unknown error'))
       setLoading(false)
     }
   }
@@ -215,6 +230,25 @@ export default function LoginPage() {
               {loading ? '처리 중...' : (isLogin ? '로그인' : '회원가입')}
             </button>
           </form>
+
+          {/* 구분선 */}
+          <div className="flex items-center my-4">
+            <div className="flex-1 border-t border-gray-300"></div>
+            <div className="px-3 text-gray-500 text-sm">또는</div>
+            <div className="flex-1 border-t border-gray-300"></div>
+          </div>
+
+          {/* 카카오 로그인 버튼 */}
+          <button
+            onClick={handleKakaoLogin}
+            disabled={loading}
+            className="w-full bg-yellow-400 text-black py-2 px-4 rounded-md hover:bg-yellow-500 transition-colors font-medium disabled:opacity-50 flex items-center justify-center gap-2"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 3C7.1 3 3 6.4 3 10.6c0 2.7 1.8 5.1 4.5 6.5L6.5 21l4.3-2.3c.4 0 .8.1 1.2.1 4.9 0 9-3.4 9-7.6C21 6.4 16.9 3 12 3z"/>
+            </svg>
+            {loading ? '처리 중...' : '카카오톡으로 로그인'}
+          </button>
 
           {/* 홈으로 돌아가기 */}
           <div className="mt-6 text-center">

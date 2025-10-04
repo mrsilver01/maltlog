@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { authHelpers } from '../../lib/supabase'
+import LoadingAnimation from '../../components/LoadingAnimation'
 
 interface Post {
   id: string
@@ -66,6 +67,8 @@ export default function CommunityPage() {
       }
 
       loadPosts()
+
+      // 즉시 로딩 완료
       setLoading(false)
     }
   }, [])
@@ -74,7 +77,24 @@ export default function CommunityPage() {
   const loadPosts = () => {
     const savedPosts = localStorage.getItem('communityPosts')
     if (savedPosts) {
-      setPosts(JSON.parse(savedPosts))
+      const posts = JSON.parse(savedPosts)
+      const currentUserNickname = localStorage.getItem('userNickname')
+      const currentUserProfileImage = localStorage.getItem('userProfileImage')
+
+      // 현재 사용자의 게시글에 프로필 이미지 업데이트
+      const updatedPosts = posts.map((post: any) => {
+        if (post.author === currentUserNickname && !post.authorImage && currentUserProfileImage) {
+          return { ...post, authorImage: currentUserProfileImage }
+        }
+        return post
+      })
+
+      // 업데이트된 게시글을 다시 저장
+      if (JSON.stringify(posts) !== JSON.stringify(updatedPosts)) {
+        localStorage.setItem('communityPosts', JSON.stringify(updatedPosts))
+      }
+
+      setPosts(updatedPosts)
     } else {
       // 빈 초기 상태
       setPosts([])
@@ -225,6 +245,7 @@ export default function CommunityPage() {
 
     try {
       const userNickname = localStorage.getItem('userNickname') || '익명'
+      const userProfileImage = localStorage.getItem('userProfileImage')
 
       // 이미지 없는 최소한의 게시글 생성
       const post: Post = {
@@ -232,7 +253,8 @@ export default function CommunityPage() {
         title: newPost.title.trim(),
         content: newPost.content.trim(),
         author: userNickname,
-        image: newPost.image || undefined, // 이미지가 있으면 포함
+        authorImage: userProfileImage || undefined, // 사용자 프로필 이미지
+        image: newPost.image || undefined, // 게시글 이미지가 있으면 포함
         createdAt: new Date().toISOString(),
         likes: 0,
         comments: 0
@@ -396,13 +418,7 @@ export default function CommunityPage() {
   }
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-rose-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-2xl text-gray-600 mb-4">로딩 중...</div>
-        </div>
-      </div>
-    )
+    return <LoadingAnimation message="커뮤니티를 불러오는 중..." />
   }
 
   return (
@@ -507,9 +523,23 @@ export default function CommunityPage() {
                     {post.content}
                   </p>
                   <div className="flex items-center justify-between text-sm text-gray-500">
-                    <div className="flex items-center gap-4">
-                      <span className="font-medium">{post.author}</span>
-                      <span>{formatDate(post.createdAt)}</span>
+                    <div className="flex items-center gap-3">
+                      {/* 프로필 이미지 */}
+                      {post.authorImage ? (
+                        <img
+                          src={post.authorImage}
+                          alt={post.author}
+                          className="w-8 h-8 rounded-full object-cover border border-gray-200"
+                        />
+                      ) : (
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-rose-400 to-pink-500 flex items-center justify-center text-white text-xs font-bold">
+                          {post.author.charAt(0)}
+                        </div>
+                      )}
+                      <div className="flex flex-col">
+                        <span className="font-medium text-gray-700">{post.author}</span>
+                        <span className="text-xs">{formatDate(post.createdAt)}</span>
+                      </div>
                     </div>
                     <div className="flex items-center gap-4">
                       <span>❤️ {post.likes}</span>

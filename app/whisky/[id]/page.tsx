@@ -54,10 +54,10 @@ export default function WhiskyDetailPage() {
       // 사용자가 이미 평가했는지 확인
       checkUserRatingStatus(whiskyId, reviewData)
 
-      // 애니메이션 완료를 위해 최소 3.5초 대기
+      // 애니메이션 완료를 위해 1초 대기 (직접 URL 접근 시에만)
       setTimeout(() => {
         setLoading(false)
-      }, 3500)
+      }, 1000)
     }
   }, [params?.id])
 
@@ -654,9 +654,13 @@ export default function WhiskyDetailPage() {
           <div className="flex-shrink-0">
             <div className="w-72 h-[500px] bg-white border border-gray-200 rounded-xl p-6 flex items-center justify-center shadow-sm">
               <img
-                src={whiskyData.image}
+                src={encodeURI(whiskyData.image)}
                 alt={whiskyData.name}
                 className="max-w-full max-h-full object-contain"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.src = '/whiskies/no.pic whisky.png';
+                }}
               />
             </div>
           </div>
@@ -804,8 +808,8 @@ export default function WhiskyDetailPage() {
                 <textarea
                   value={userNote}
                   onChange={(e) => setUserNote(e.target.value)}
-                  placeholder="이 위스키에 대한 노트를 남겨보세요..."
-                  className="w-full h-28 p-4 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-gray-800"
+                  placeholder="노즈: 바닐라, 캬라멜이 느껴짐&#10;팔레트: &#10;피니시: 긴 여운..."
+                  className="w-full h-28 p-4 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-gray-800 placeholder-gray-500"
                 />
               </div>
 

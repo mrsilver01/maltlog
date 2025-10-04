@@ -81,6 +81,332 @@ export const whiskeyDatabase: Record<string, WhiskyData> = {
     totalReviews: 0,
     likes: 0
   },
+  // 러셀 리저브 시리즈
+  'russell-reserve-10': {
+    id: 'russell-reserve-10',
+    name: '러셀 리저브 10년',
+    image: '/whiskies/러셀 리저브 10년.png',
+    abv: '50.0%',
+    region: '미국 (켄터키)',
+    price: '4-6만원',
+    cask: '버번 배럴',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+  'russell-reserve-15-bourbon': {
+    id: 'russell-reserve-15-bourbon',
+    name: '러셀 리저브 15년 버번',
+    image: '/whiskies/러셀 리저브 15년 버번.png',
+    abv: '50.0%',
+    region: '미국 (켄터키)',
+    price: '8-12만원',
+    cask: '프리미엄 버번 배럴',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+  'russell-reserve-15': {
+    id: 'russell-reserve-15',
+    name: '러셀 리저브 15년',
+    image: '/whiskies/러셀 리저브 15년.png',
+    abv: '50.0%',
+    region: '미국 (켄터키)',
+    price: '8-12만원',
+    cask: '프리미엄 버번 배럴',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+  'russell-reserve-single-barrel': {
+    id: 'russell-reserve-single-barrel',
+    name: '러셀 리저브 싱글배럴',
+    image: '/whiskies/러셀 리저브 싱글배럴 .png',
+    abv: '55.0%',
+    region: '미국 (켄터키)',
+    price: '6-9만원',
+    cask: '싱글 배럴',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+  'russell-reserve-single-barrel-rye': {
+    id: 'russell-reserve-single-barrel-rye',
+    name: '러셀 리저브 싱글배럴 라이',
+    image: '/whiskies/러셀 리저브 싱글배럴 라이.png',
+    abv: '52.0%',
+    region: '미국 (켄터키)',
+    price: '6-9만원',
+    cask: '라이 위스키 배럴',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+
+  // 메이커스 마크
+  'makers-mark': {
+    id: 'makers-mark',
+    name: '메이커스 마크',
+    image: '/whiskies/메이커스 마크 .png',
+    abv: '45.0%',
+    region: '미국 (켄터키)',
+    price: '3-5만원',
+    cask: '레드 윈터 위트 배럴',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+
+  // 버팔로 트레이스
+  'buffalo-trace': {
+    id: 'buffalo-trace',
+    name: '버팔로 트레이스',
+    image: '/whiskies/버팔로 트레이스.png',
+    abv: '40.0%',
+    region: '미국 (켄터키)',
+    price: '3-4만원',
+    cask: '아메리칸 오크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+
+  // 에반 윌리엄스
+  'evan-williams-black': {
+    id: 'evan-williams-black',
+    name: '에반 윌리엄스 블랙',
+    image: '/whiskies/에반 윌리엄스 블랙.png',
+    abv: '43.0%',
+    region: '미국 (켄터키)',
+    price: '2-3만원',
+    cask: '아메리칸 오크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+
+  // 와일드 터키 시리즈
+  'wild-turkey-101': {
+    id: 'wild-turkey-101',
+    name: '와일드 터키 101',
+    image: '/whiskies/와일드 터키 101.png',
+    abv: '50.5%',
+    region: '미국 (켄터키)',
+    price: '4-6만원',
+    cask: '아메리칸 오크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+  'wild-turkey-101-rye': {
+    id: 'wild-turkey-101-rye',
+    name: '와일드 터키 101 라이',
+    image: '/whiskies/와일드 터키 101 라이.png',
+    abv: '50.5%',
+    region: '미국 (켄터키)',
+    price: '4-6만원',
+    cask: '라이 위스키 배럴',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+  'wild-turkey-rye': {
+    id: 'wild-turkey-rye',
+    name: '와일드 터키 라이',
+    image: '/whiskies/와일드 터키 라이.png',
+    abv: '40.5%',
+    region: '미국 (켄터키)',
+    price: '3-5만원',
+    cask: '라이 위스키 배럴',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+
+  // 사가모어
+  'sagamore-cs': {
+    id: 'sagamore-cs',
+    name: '사가모어 캐스크 스트렝스',
+    image: '/whiskies/사가모어 cs.png',
+    abv: '56.0%',
+    region: '미국 (메릴랜드)',
+    price: '8-12만원',
+    cask: '라이 위스키 배럴',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+
+  // 조니워커 시리즈
+  'johnnie-walker-black': {
+    id: 'johnnie-walker-black',
+    name: '조니워커 블랙 라벨',
+    image: '/whiskies/조니워커 블랙 라벨.png',
+    abv: '40.0%',
+    region: '스코틀랜드',
+    price: '3-5만원',
+    cask: '블렌디드 스카치',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+  'johnnie-walker-blue': {
+    id: 'johnnie-walker-blue',
+    name: '조니워커 블루 라벨',
+    image: '/whiskies/조니워커 블루 라벨.png',
+    abv: '40.0%',
+    region: '스코틀랜드',
+    price: '18-25만원',
+    cask: '프리미엄 블렌디드',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+
+  // 아드벡
+  'ardbeg-10': {
+    id: 'ardbeg-10',
+    name: '아드벡 10년',
+    image: '/whiskies/아드벡 10년.png',
+    abv: '46.0%',
+    region: '스코틀랜드 (아일라)',
+    price: '8-12만원',
+    cask: 'ex-버번 배럴',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+
+  // 탈리스커
+  'talisker-10': {
+    id: 'talisker-10',
+    name: '탈리스커 10년',
+    image: '/whiskies/탈리스커 10년.png',
+    abv: '45.8%',
+    region: '스코틀랜드 (아일 오브 스카이)',
+    price: '6-9만원',
+    cask: 'ex-버번 & 셰리 배럴',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+  'talisker-storm': {
+    id: 'talisker-storm',
+    name: '탈리스커 스톰',
+    image: '/whiskies/탈리스커 스톰.png',
+    abv: '45.8%',
+    region: '스코틀랜드 (아일 오브 스카이)',
+    price: '5-8만원',
+    cask: 'ex-버번 & 셰리 배럴',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+
+  // 킬커란
+  'kilkerran-12': {
+    id: 'kilkerran-12',
+    name: '킬커란 12년',
+    image: '/whiskies/킬커란 12년.png',
+    abv: '46.0%',
+    region: '스코틀랜드 (캠벨타운)',
+    price: '8-12만원',
+    cask: 'ex-버번 & 셰리 배럴',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+
+  // 라프로익
+  'laphroaig-10': {
+    id: 'laphroaig-10',
+    name: '라프로익 10년',
+    image: '/whiskies/라프로익 10년.png',
+    abv: '40.0%',
+    region: '스코틀랜드 (아일라)',
+    price: '6-9만원',
+    cask: 'ex-버번 배럴',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+  'laphroaig-lore': {
+    id: 'laphroaig-lore',
+    name: '라프로익 로어',
+    image: '/whiskies/라프로익 로어.png',
+    abv: '48.0%',
+    region: '스코틀랜드 (아일라)',
+    price: '12-18만원',
+    cask: '다양한 캐스크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+
+  // 일본 위스키
+  'yamazaki-dr': {
+    id: 'yamazaki-dr',
+    name: '야마자키 디스틸러스 리저브',
+    image: '/whiskies/야마자키 DR.png',
+    abv: '43.0%',
+    region: '일본',
+    price: '10-15만원',
+    cask: '미즈나라 & 아메리칸 오크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+  'hakushu-12': {
+    id: 'hakushu-12',
+    name: '하쿠슈 12년',
+    image: '/whiskies/하쿠슈 12년.png',
+    abv: '43.0%',
+    region: '일본',
+    price: '15-25만원',
+    cask: '아메리칸 & 스패니시 오크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+  'hakushu-dr': {
+    id: 'hakushu-dr',
+    name: '하쿠슈 디스틸러스 리저브',
+    image: '/whiskies/하쿠슈 DR.png',
+    abv: '43.0%',
+    region: '일본',
+    price: '8-12만원',
+    cask: '아메리칸 & 스패니시 오크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+  'hibiki-harmony': {
+    id: 'hibiki-harmony',
+    name: '히비키 하모니',
+    image: '/whiskies/히비키 하모니.png',
+    abv: '43.0%',
+    region: '일본',
+    price: '12-18만원',
+    cask: '일본산 오크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+
+  // 기원 유니콘
+  'kiwon-unicorn': {
+    id: 'kiwon-unicorn',
+    name: '기원 유니콘',
+    image: '/whiskies/기원 유니콘.png',
+    abv: '40.0%',
+    region: '한국',
+    price: '4-6만원',
+    cask: '아메리칸 오크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+
   // 이미지가 있는 기타 위스키들
   'macallan-12': {
     id: 'macallan-12',
@@ -614,10 +940,10 @@ export const whiskeyDatabase: Record<string, WhiskyData> = {
   // === 추가 인기 위스키 300개 ===
 
   // 스코틀랜드 싱글몰트 - 스페이사이드
-  'glenfiddich-12': {
-    id: 'glenfiddich-12',
-    name: '글렌피딕 12년',
-    image: '/whiskies/no.pic whisky.png',
+  'glenfiddich-15': {
+    id: 'glenfiddich-15',
+    name: '글렌피딕 15년',
+    image: '/whiskies/글렌피딕 15년.png',
     abv: '40.0%',
     region: '스코틀랜드 (스페이사이드)',
     price: '6-8만원',
