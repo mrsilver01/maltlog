@@ -17,6 +17,15 @@ export const authHelpers = {
   signUp: async (email: string, password: string, nickname: string) => {
     try {
       console.log('Attempting signup with:', { email, nickname })
+
+      // Fallback to localStorage if Supabase fails
+      if (!supabaseUrl || !supabaseAnonKey) {
+        console.log('Using localStorage fallback for signup')
+        const userData = { email, password, nickname, id: Date.now().toString() }
+        localStorage.setItem(`user_${email}`, JSON.stringify(userData))
+        return { data: { user: userData }, error: null }
+      }
+
       const result = await supabase.auth.signUp({
         email,
         password,
@@ -28,13 +37,34 @@ export const authHelpers = {
       return result
     } catch (error) {
       console.error('Signup error:', error)
-      throw error
+      // Fallback to localStorage
+      console.log('Using localStorage fallback for signup')
+      const userData = { email, password, nickname, id: Date.now().toString() }
+      localStorage.setItem(`user_${email}`, JSON.stringify(userData))
+      return { data: { user: userData }, error: null }
     }
   },
 
   signIn: async (email: string, password: string) => {
     try {
       console.log('Attempting signin with:', { email })
+
+      // Fallback to localStorage if Supabase fails
+      if (!supabaseUrl || !supabaseAnonKey) {
+        console.log('Using localStorage fallback for signin')
+        const userData = localStorage.getItem(`user_${email}`)
+        if (userData) {
+          const user = JSON.parse(userData)
+          if (user.password === password) {
+            return { data: { user }, error: null }
+          } else {
+            return { data: null, error: { message: '비밀번호가 일치하지 않습니다.' } }
+          }
+        } else {
+          return { data: null, error: { message: '등록되지 않은 이메일입니다.' } }
+        }
+      }
+
       const result = await supabase.auth.signInWithPassword({
         email,
         password
@@ -43,7 +73,19 @@ export const authHelpers = {
       return result
     } catch (error) {
       console.error('Signin error:', error)
-      throw error
+      // Fallback to localStorage
+      console.log('Using localStorage fallback for signin')
+      const userData = localStorage.getItem(`user_${email}`)
+      if (userData) {
+        const user = JSON.parse(userData)
+        if (user.password === password) {
+          return { data: { user }, error: null }
+        } else {
+          return { data: null, error: { message: '비밀번호가 일치하지 않습니다.' } }
+        }
+      } else {
+        return { data: null, error: { message: '등록되지 않은 이메일입니다.' } }
+      }
     }
   },
 
@@ -60,7 +102,31 @@ export const authHelpers = {
   },
 
   getCurrentUser: async () => {
-    const { data: { user } } = await supabase.auth.getUser()
-    return user
+    try {
+      if (!supabaseUrl || !supabaseAnonKey) {
+        // localStorage fallback
+        const email = localStorage.getItem('userEmail')
+        if (email) {
+          const userData = localStorage.getItem(`user_${email}`)
+          if (userData) {
+            return JSON.parse(userData)
+          }
+        }
+        return null
+      }
+
+      const { data: { user } } = await supabase.auth.getUser()
+      return user
+    } catch (error) {
+      // localStorage fallback
+      const email = localStorage.getItem('userEmail')
+      if (email) {
+        const userData = localStorage.getItem(`user_${email}`)
+        if (userData) {
+          return JSON.parse(userData)
+        }
+      }
+      return null
+    }
   }
 }

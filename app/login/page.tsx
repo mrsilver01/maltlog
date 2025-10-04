@@ -144,7 +144,7 @@ export default function LoginPage() {
                 name="email"
                 value={formData.email}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 text-black"
                 placeholder="example@email.com"
                 required
                 disabled={loading}
@@ -162,7 +162,7 @@ export default function LoginPage() {
                   name="nickname"
                   value={formData.nickname}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 text-black"
                   placeholder="닉네임을 입력하세요"
                   required={!isLogin}
                   disabled={loading}
@@ -180,7 +180,7 @@ export default function LoginPage() {
                 name="password"
                 value={formData.password}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 text-black"
                 placeholder="비밀번호를 입력하세요"
                 required
                 disabled={loading}
@@ -198,7 +198,7 @@ export default function LoginPage() {
                   name="confirmPassword"
                   value={formData.confirmPassword}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 text-black"
                   placeholder="비밀번호를 다시 입력하세요"
                   required={!isLogin}
                   disabled={loading}
