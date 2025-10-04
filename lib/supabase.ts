@@ -1,14 +1,16 @@
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co'
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key'
 
 // 디버깅을 위한 로그
-console.log('Supabase URL:', supabaseUrl ? 'Set' : 'Missing')
-console.log('Supabase Key:', supabaseAnonKey ? 'Set' : 'Missing')
+console.log('Supabase URL:', supabaseUrl !== 'https://placeholder.supabase.co' ? 'Set' : 'Missing')
+console.log('Supabase Key:', supabaseAnonKey !== 'placeholder-key' ? 'Set' : 'Missing')
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.error('Supabase configuration missing!')
+const hasValidConfig = supabaseUrl !== 'https://placeholder.supabase.co' && supabaseAnonKey !== 'placeholder-key'
+
+if (!hasValidConfig) {
+  console.error('Supabase configuration missing! Using localStorage fallback.')
 }
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
@@ -19,7 +21,7 @@ export const authHelpers = {
       console.log('Attempting signup with:', { email, nickname })
 
       // Fallback to localStorage if Supabase fails
-      if (!supabaseUrl || !supabaseAnonKey) {
+      if (!hasValidConfig) {
         console.log('Using localStorage fallback for signup')
         const userData = { email, password, nickname, id: Date.now().toString() }
         localStorage.setItem(`user_${email}`, JSON.stringify(userData))
@@ -50,7 +52,7 @@ export const authHelpers = {
       console.log('Attempting signin with:', { email })
 
       // Fallback to localStorage if Supabase fails
-      if (!supabaseUrl || !supabaseAnonKey) {
+      if (!hasValidConfig) {
         console.log('Using localStorage fallback for signin')
         const userData = localStorage.getItem(`user_${email}`)
         if (userData) {
@@ -103,7 +105,7 @@ export const authHelpers = {
 
   getCurrentUser: async () => {
     try {
-      if (!supabaseUrl || !supabaseAnonKey) {
+      if (!hasValidConfig) {
         // localStorage fallback
         const email = localStorage.getItem('userEmail')
         if (email) {
