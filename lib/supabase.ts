@@ -17,82 +17,58 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
 export const authHelpers = {
   signUp: async (email: string, password: string, nickname: string) => {
-    try {
-      console.log('Attempting signup with:', { email, nickname })
+    console.log('Using localStorage-only authentication for signup')
 
-      // Fallback to localStorage if Supabase fails
-      if (!hasValidConfig) {
-        console.log('Using localStorage fallback for signup')
-        const userData = { email, password, nickname, id: Date.now().toString() }
-        localStorage.setItem(`user_${email}`, JSON.stringify(userData))
-        return { data: { user: userData }, error: null }
+    // 기존 사용자 확인
+    const existingUser = localStorage.getItem(`user_${email}`)
+    if (existingUser) {
+      return {
+        data: null,
+        error: { message: '이미 등록된 이메일입니다.' }
       }
-
-      const result = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: { nickname }
-        }
-      })
-      console.log('Signup result:', result)
-      return result
-    } catch (error) {
-      console.error('Signup error:', error)
-      // Fallback to localStorage
-      console.log('Using localStorage fallback for signup')
-      const userData = { email, password, nickname, id: Date.now().toString() }
-      localStorage.setItem(`user_${email}`, JSON.stringify(userData))
-      return { data: { user: userData }, error: null }
     }
+
+    // 새 사용자 생성
+    const userData = {
+      email,
+      password,
+      nickname,
+      id: Date.now().toString(),
+      user_metadata: { nickname }
+    }
+
+    localStorage.setItem(`user_${email}`, JSON.stringify(userData))
+    console.log('User created successfully in localStorage')
+
+    return { data: { user: userData }, error: null }
   },
 
   signIn: async (email: string, password: string) => {
-    try {
-      console.log('Attempting signin with:', { email })
+    console.log('Using localStorage-only authentication for signin')
 
-      // Fallback to localStorage if Supabase fails
-      if (!hasValidConfig) {
-        console.log('Using localStorage fallback for signin')
-        const userData = localStorage.getItem(`user_${email}`)
-        if (userData) {
-          const user = JSON.parse(userData)
-          if (user.password === password) {
-            return { data: { user }, error: null }
-          } else {
-            return { data: null, error: { message: '비밀번호가 일치하지 않습니다.' } }
-          }
-        } else {
-          return { data: null, error: { message: '등록되지 않은 이메일입니다.' } }
-        }
-      }
-
-      const result = await supabase.auth.signInWithPassword({
-        email,
-        password
-      })
-      console.log('Signin result:', result)
-      return result
-    } catch (error) {
-      console.error('Signin error:', error)
-      // Fallback to localStorage
-      console.log('Using localStorage fallback for signin')
-      const userData = localStorage.getItem(`user_${email}`)
-      if (userData) {
-        const user = JSON.parse(userData)
-        if (user.password === password) {
-          return { data: { user }, error: null }
-        } else {
-          return { data: null, error: { message: '비밀번호가 일치하지 않습니다.' } }
-        }
-      } else {
-        return { data: null, error: { message: '등록되지 않은 이메일입니다.' } }
+    const userData = localStorage.getItem(`user_${email}`)
+    if (!userData) {
+      return {
+        data: null,
+        error: { message: '등록되지 않은 이메일입니다.' }
       }
     }
+
+    const user = JSON.parse(userData)
+    if (user.password !== password) {
+      return {
+        data: null,
+        error: { message: '비밀번호가 일치하지 않습니다.' }
+      }
+    }
+
+    console.log('User signed in successfully')
+    return { data: { user }, error: null }
   },
 
   signOut: async () => {
-    const result = await supabase.auth.signOut()
+    console.log('Using localStorage-only authentication for signout')
+
     // localStorage 초기화
     if (typeof window !== 'undefined') {
       localStorage.removeItem('isLoggedIn')
@@ -100,35 +76,23 @@ export const authHelpers = {
       localStorage.removeItem('userNickname')
       localStorage.removeItem('userRatings')
     }
-    return result
+
+    return { error: null }
   },
 
   getCurrentUser: async () => {
-    try {
-      if (!hasValidConfig) {
-        // localStorage fallback
-        const email = localStorage.getItem('userEmail')
-        if (email) {
-          const userData = localStorage.getItem(`user_${email}`)
-          if (userData) {
-            return JSON.parse(userData)
-          }
-        }
-        return null
-      }
+    console.log('Using localStorage-only authentication for getCurrentUser')
 
-      const { data: { user } } = await supabase.auth.getUser()
-      return user
-    } catch (error) {
-      // localStorage fallback
-      const email = localStorage.getItem('userEmail')
-      if (email) {
-        const userData = localStorage.getItem(`user_${email}`)
-        if (userData) {
-          return JSON.parse(userData)
-        }
-      }
+    const email = localStorage.getItem('userEmail')
+    if (!email) {
       return null
     }
+
+    const userData = localStorage.getItem(`user_${email}`)
+    if (!userData) {
+      return null
+    }
+
+    return JSON.parse(userData)
   }
 }
