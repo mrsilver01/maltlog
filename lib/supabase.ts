@@ -1,117 +1,51 @@
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co'
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key'
+// 1. 환경변수 불러오기
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
-// 디버깅을 위한 로그
-console.log('Supabase URL:', supabaseUrl !== 'https://placeholder.supabase.co' ? 'Set' : 'Missing')
-console.log('Supabase Key:', supabaseAnonKey !== 'placeholder-key' ? 'Set' : 'Missing')
-
-const hasValidConfig = supabaseUrl !== 'https://placeholder.supabase.co' && supabaseAnonKey !== 'placeholder-key'
-
-if (!hasValidConfig) {
-  console.error('Supabase configuration missing! Using localStorage fallback.')
-}
-
+// 2. Supabase 클라이언트 생성
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
+// 3. Supabase의 기본 함수를 사용하는 authHelpers
 export const authHelpers = {
-  signUp: async (email: string, password: string, nickname: string) => {
-    console.log('Using localStorage-only authentication for signup')
-
-    // 기존 사용자 확인
-    const existingUser = localStorage.getItem(`user_${email}`)
-    if (existingUser) {
-      return {
-        data: null,
-        error: { message: '이미 등록된 이메일입니다.' }
-      }
-    }
-
-    // 새 사용자 생성
-    const userData = {
+  // 회원가입
+  signUp: (email: string, password: string, nickname: string) => {
+    return supabase.auth.signUp({
       email,
       password,
-      nickname,
-      id: Date.now().toString(),
-      user_metadata: { nickname }
-    }
-
-    localStorage.setItem(`user_${email}`, JSON.stringify(userData))
-    console.log('User created successfully in localStorage')
-
-    return { data: { user: userData }, error: null }
+      options: {
+        data: {
+          nickname, // 닉네임은 options.data에 담아 보냅니다.
+        },
+      },
+    })
   },
 
-  signIn: async (email: string, password: string) => {
-    console.log('Using localStorage-only authentication for signin')
-
-    const userData = localStorage.getItem(`user_${email}`)
-    if (!userData) {
-      return {
-        data: null,
-        error: { message: '등록되지 않은 이메일입니다.' }
-      }
-    }
-
-    const user = JSON.parse(userData)
-    if (user.password !== password) {
-      return {
-        data: null,
-        error: { message: '비밀번호가 일치하지 않습니다.' }
-      }
-    }
-
-    console.log('User signed in successfully')
-    return { data: { user }, error: null }
+  // 이메일 로그인
+  signIn: (email: string, password: string) => {
+    return supabase.auth.signInWithPassword({ email, password })
   },
 
-  signOut: async () => {
-    console.log('Using localStorage-only authentication for signout')
-
-    // localStorage 초기화
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('isLoggedIn')
-      localStorage.removeItem('userEmail')
-      localStorage.removeItem('userNickname')
-      localStorage.removeItem('userRatings')
-    }
-
-    return { error: null }
+  // 로그아웃
+  signOut: () => {
+    return supabase.auth.signOut()
   },
 
+  // 현재 사용자 정보 가져오기
   getCurrentUser: async () => {
-    console.log('Using localStorage-only authentication for getCurrentUser')
-
-    const email = localStorage.getItem('userEmail')
-    if (!email) {
-      return null
-    }
-
-    const userData = localStorage.getItem(`user_${email}`)
-    if (!userData) {
-      return null
-    }
-
-    return JSON.parse(userData)
+    const { data: { user } } = await supabase.auth.getUser()
+    return user
   },
 
-  signInWithKakao: async () => {
-    if (hasValidConfig) {
-      console.log('Using Supabase Kakao authentication')
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'kakao',
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`
-        }
-      })
-      return { data, error }
-    } else {
-      console.log('Supabase not configured, Kakao login not available')
-      return {
-        data: null,
-        error: { message: 'Kakao 로그인이 설정되지 않았습니다.' }
-      }
-    }
-  }
+  // 카카오 로그인
+  signInWithKakao: () => {
+    return supabase.auth.signInWithOAuth({
+      provider: 'kakao',
+      options: {
+        // 로그인 완료 후 돌아올 페이지를 홈페이지('/')로 설정합니다.
+        redirectTo: `${window.location.origin}/`,
+      },
+    })
+  },
 }

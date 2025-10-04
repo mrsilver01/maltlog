@@ -11,6 +11,7 @@ export default function AuthCallback() {
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
+        // URL에서 인증 토큰을 처리합니다
         const { data, error } = await supabase.auth.getSession()
 
         if (error) {
@@ -23,16 +24,14 @@ export default function AuthCallback() {
         if (data.session && data.session.user) {
           const user = data.session.user
 
-          // 로그인 상태를 localStorage에 저장
-          localStorage.setItem('isLoggedIn', 'true')
-          localStorage.setItem('userEmail', user.email || '')
-
           // 카카오 사용자 정보에서 닉네임 설정
-          const nickname = user.user_metadata?.full_name ||
+          const nickname = user.user_metadata?.nickname ||
+                          user.user_metadata?.full_name ||
                           user.user_metadata?.name ||
                           user.email?.split('@')[0] ||
                           '카카오사용자'
 
+          // Supabase 세션이 자동으로 관리되므로 localStorage는 필요 시에만 사용
           localStorage.setItem('userNickname', nickname)
 
           // 프로필 이미지가 있다면 저장

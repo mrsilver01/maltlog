@@ -36,26 +36,17 @@ export default function LoginPage() {
           throw new Error(error.message || '로그인에 실패했습니다.')
         }
 
-        // 로그인 상태를 localStorage에 저장
-        localStorage.setItem('isLoggedIn', 'true')
-        localStorage.setItem('userEmail', formData.email)
+        if (data.user) {
+          // 사용자 정보에서 닉네임 설정
+          const nickname = data.user.user_metadata?.nickname || formData.email.split('@')[0]
+          localStorage.setItem('userNickname', nickname)
 
-        // 사용자 정보 가져와서 닉네임 저장
-        const user = await authHelpers.getCurrentUser()
-        if (user && user.user_metadata && user.user_metadata.nickname) {
-          localStorage.setItem('userNickname', user.user_metadata.nickname)
-        } else {
-          // 닉네임이 없는 경우 이메일로 대체
-          localStorage.setItem('userNickname', formData.email.split('@')[0])
+          // 로그인 전 임시 찜을 사용자 찜으로 이동
+          migrateTempLikesToUser(data.user.id)
+
+          alert('로그인 성공!')
+          router.push('/')
         }
-
-        // 로그인 전 임시 찜을 사용자 찜으로 이동
-        if (user?.id) {
-          migrateTempLikesToUser(user.id)
-        }
-
-        alert('로그인 성공!')
-        router.push('/')
       } else {
         // 회원가입
         if (formData.password !== formData.confirmPassword) {
@@ -69,7 +60,7 @@ export default function LoginPage() {
           throw new Error(error.message || '회원가입에 실패했습니다.')
         }
 
-        alert('회원가입이 완료되었습니다. 로그인해주세요.')
+        alert('회원가입이 완료되었습니다. 이메일을 확인해주세요.')
         setIsLogin(true)
         setFormData({ email: '', password: '', confirmPassword: '', nickname: '' })
       }
