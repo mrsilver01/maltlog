@@ -16,6 +16,8 @@ export default function HomePage() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [showAllWhiskies, setShowAllWhiskies] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 20
   const router = useRouter()
   const { isTransitioning, transitionMessage, navigateWithTransition } = usePageTransition()
 
@@ -270,7 +272,10 @@ export default function HomePage() {
               <div className="flex justify-center gap-2">
                 {!searchQuery.trim() && (
                   <button
-                    onClick={() => setShowAllWhiskies(!showAllWhiskies)}
+                    onClick={() => {
+                      setShowAllWhiskies(!showAllWhiskies)
+                      setCurrentPage(1) // 페이지 리셋
+                    }}
                     className="text-xs font-medium text-amber-700 hover:text-amber-800 transition-colors bg-amber-50 px-3 py-1.5 rounded-full"
                   >
                     {showAllWhiskies ? '돌아가기' : '모두 보기'}
@@ -353,13 +358,75 @@ export default function HomePage() {
 
             {/* 위스키 카드 그리드 */}
             {!(searchQuery.trim() && filteredWhiskies.length === 0) && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
-                {(searchQuery.trim() ? filteredWhiskies :
-                  showAllWhiskies ? filteredWhiskies : filteredWhiskies.slice(0, 4)
-                ).map((whisky) => (
-                  <WhiskyCard key={whisky.id} whisky={whisky} router={router} navigateWithTransition={navigateWithTransition} />
-                ))}
-              </div>
+              <>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
+                  {(() => {
+                    let whiskiesToShow
+                    if (searchQuery.trim()) {
+                      whiskiesToShow = filteredWhiskies
+                    } else if (showAllWhiskies) {
+                      // 페이지네이션 적용
+                      const startIndex = (currentPage - 1) * itemsPerPage
+                      const endIndex = startIndex + itemsPerPage
+                      whiskiesToShow = filteredWhiskies.slice(startIndex, endIndex)
+                    } else {
+                      whiskiesToShow = filteredWhiskies.slice(0, 4)
+                    }
+
+                    return whiskiesToShow.map((whisky) => (
+                      <WhiskyCard key={whisky.id} whisky={whisky} router={router} navigateWithTransition={navigateWithTransition} />
+                    ))
+                  })()}
+                </div>
+
+                {/* 페이지네이션 - 모두 보기일 때만 표시 */}
+                {showAllWhiskies && !searchQuery.trim() && filteredWhiskies.length > itemsPerPage && (
+                  <div className="flex justify-center items-center gap-2 mt-8">
+                    <button
+                      onClick={() => {
+                        setCurrentPage(Math.max(1, currentPage - 1))
+                        window.scrollTo({ top: 0, behavior: 'smooth' })
+                      }}
+                      disabled={currentPage === 1}
+                      className="px-3 py-2 rounded-lg bg-rose-100 text-rose-700 hover:bg-rose-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      이전
+                    </button>
+
+                    <div className="flex gap-1">
+                      {Array.from({ length: Math.ceil(filteredWhiskies.length / itemsPerPage) }, (_, i) => i + 1)
+                        .slice(Math.max(0, currentPage - 3), Math.min(Math.ceil(filteredWhiskies.length / itemsPerPage), currentPage + 2))
+                        .map((page) => (
+                          <button
+                            key={page}
+                            onClick={() => {
+                              setCurrentPage(page)
+                              window.scrollTo({ top: 0, behavior: 'smooth' })
+                            }}
+                            className={`px-3 py-2 rounded-lg transition-colors ${
+                              page === currentPage
+                                ? 'bg-rose-500 text-white'
+                                : 'bg-rose-100 text-rose-700 hover:bg-rose-200'
+                            }`}
+                          >
+                            {page}
+                          </button>
+                        ))}
+                    </div>
+
+                    <button
+                      onClick={() => {
+                        setCurrentPage(Math.min(Math.ceil(filteredWhiskies.length / itemsPerPage), currentPage + 1))
+                        window.scrollTo({ top: 0, behavior: 'smooth' })
+                      }}
+                      disabled={currentPage === Math.ceil(filteredWhiskies.length / itemsPerPage)}
+                      className="px-3 py-2 rounded-lg bg-rose-100 text-rose-700 hover:bg-rose-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      다음
+                    </button>
+                  </div>
+                )}
+              </>
             )}
           </section>
 

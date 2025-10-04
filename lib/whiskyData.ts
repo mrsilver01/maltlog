@@ -609,6 +609,1354 @@ export const whiskeyDatabase: Record<string, WhiskyData> = {
     avgRating: 0,
     totalReviews: 0,
     likes: 0
+  },
+
+  // === 추가 인기 위스키 300개 ===
+
+  // 스코틀랜드 싱글몰트 - 스페이사이드
+  'glenfiddich-12': {
+    id: 'glenfiddich-12',
+    name: '글렌피딕 12년',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '40.0%',
+    region: '스코틀랜드 (스페이사이드)',
+    price: '6-8만원',
+    cask: '버번 & 셰리 캐스크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+  'glenfiddich-18': {
+    id: 'glenfiddich-18',
+    name: '글렌피딕 18년',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '40.0%',
+    region: '스코틀랜드 (스페이사이드)',
+    price: '18-22만원',
+    cask: '버번 & 셰리 캐스크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+  'glenfiddich-21': {
+    id: 'glenfiddich-21',
+    name: '글렌피딕 21년',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '40.0%',
+    region: '스코틀랜드 (스페이사이드)',
+    price: '35-45만원',
+    cask: '카리비안 럼 캐스크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+  'glenlivet-12': {
+    id: 'glenlivet-12',
+    name: '글렌리벳 12년',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '40.0%',
+    region: '스코틀랜드 (스페이사이드)',
+    price: '6-8만원',
+    cask: '아메리칸 오크 & 셰리 캐스크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+  'glenlivet-18': {
+    id: 'glenlivet-18',
+    name: '글렌리벳 18년',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '43.0%',
+    region: '스코틀랜드 (스페이사이드)',
+    price: '18-25만원',
+    cask: '셰리 & 버번 캐스크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+  'glendronach-15': {
+    id: 'glendronach-15',
+    name: '글렌드로낙 15년 리바이벌',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '46.0%',
+    region: '스코틀랜드 (스페이사이드)',
+    price: '15-20만원',
+    cask: '올로로소 셰리 캐스크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+  'glendronach-21': {
+    id: 'glendronach-21',
+    name: '글렌드로낙 21년 의회',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '48.0%',
+    region: '스코틀랜드 (스페이사이드)',
+    price: '45-55만원',
+    cask: '올로로소 & PX 셰리 캐스크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+  'dalmore-12': {
+    id: 'dalmore-12',
+    name: '달모어 12년',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '40.0%',
+    region: '스코틀랜드 (하이랜드)',
+    price: '12-15만원',
+    cask: '아메리칸 화이트 오크 & 셰리 캐스크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+  'dalmore-15': {
+    id: 'dalmore-15',
+    name: '달모어 15년',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '40.0%',
+    region: '스코틀랜드 (하이랜드)',
+    price: '20-25만원',
+    cask: '3 캐스크 마츄레이션',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+  'dalmore-18': {
+    id: 'dalmore-18',
+    name: '달모어 18년',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '43.0%',
+    region: '스코틀랜드 (하이랜드)',
+    price: '45-55만원',
+    cask: '아메리칸 화이트 오크 & 셰리 캐스크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+  'oban-14': {
+    id: 'oban-14',
+    name: '오반 14년',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '43.0%',
+    region: '스코틀랜드 (하이랜드)',
+    price: '12-15만원',
+    cask: '아메리칸 & 유러피언 오크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+  'aberfeldy-12': {
+    id: 'aberfeldy-12',
+    name: '애버펠디 12년',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '40.0%',
+    region: '스코틀랜드 (하이랜드)',
+    price: '8-10만원',
+    cask: '버번 & 셰리 캐스크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+  'glenmorangie-10': {
+    id: 'glenmorangie-10',
+    name: '글렌모렌지 오리지널 10년',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '40.0%',
+    region: '스코틀랜드 (하이랜드)',
+    price: '7-9만원',
+    cask: '버번 캐스크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+  'glenmorangie-18': {
+    id: 'glenmorangie-18',
+    name: '글렌모렌지 18년',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '43.0%',
+    region: '스코틀랜드 (하이랜드)',
+    price: '28-35만원',
+    cask: '셰리 캐스크 피니쉬',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+  'balvenie-12': {
+    id: 'balvenie-12',
+    name: '발베니 더블우드 12년',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '40.0%',
+    region: '스코틀랜드 (스페이사이드)',
+    price: '12-15만원',
+    cask: '버번 캐스크 + 셰리 피니쉬',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+  'balvenie-14': {
+    id: 'balvenie-14',
+    name: '발베니 카리비안 캐스크 14년',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '43.0%',
+    region: '스코틀랜드 (스페이사이드)',
+    price: '15-18만원',
+    cask: '럼 캐스크 피니쉬',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+  'balvenie-21': {
+    id: 'balvenie-21',
+    name: '발베니 포트우드 21년',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '40.0%',
+    region: '스코틀랜드 (스페이사이드)',
+    price: '45-55만원',
+    cask: '포트 와인 캐스크 피니쉬',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+  'cardhu-12': {
+    id: 'cardhu-12',
+    name: '카듀 12년',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '40.0%',
+    region: '스코틀랜드 (스페이사이드)',
+    price: '8-10만원',
+    cask: '아메리칸 & 유러피언 오크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+  'craigellachie-13': {
+    id: 'craigellachie-13',
+    name: '크레이겔라히 13년',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '46.0%',
+    region: '스코틀랜드 (스페이사이드)',
+    price: '10-12만원',
+    cask: '버번 & 셰리 캐스크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+
+  // 스코틀랜드 - 아일라
+  'lagavulin-8': {
+    id: 'lagavulin-8',
+    name: '라가불린 8년',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '48.0%',
+    region: '스코틀랜드 (아일라)',
+    price: '12-15만원',
+    cask: 'ex-버번 배럴',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+  'bowmore-15': {
+    id: 'bowmore-15',
+    name: '보모어 15년 다키스트',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '43.0%',
+    region: '스코틀랜드 (아일라)',
+    price: '18-22만원',
+    cask: '셰리 캐스크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+  'bowmore-25': {
+    id: 'bowmore-25',
+    name: '보모어 25년',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '43.0%',
+    region: '스코틀랜드 (아일라)',
+    price: '80-100만원',
+    cask: '셰리 & 버번 캐스크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+  'ardbeg-uigeadail': {
+    id: 'ardbeg-uigeadail',
+    name: '아드벡 우거다일',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '54.2%',
+    region: '스코틀랜드 (아일라)',
+    price: '15-18만원',
+    cask: '버번 & 셰리 캐스크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+  'ardbeg-corryvreckan': {
+    id: 'ardbeg-corryvreckan',
+    name: '아드벡 코리브렉칸',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '57.1%',
+    region: '스코틀랜드 (아일라)',
+    price: '15-18만원',
+    cask: '버번 & 프렌치 오크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+  'bruichladdich-classic': {
+    id: 'bruichladdich-classic',
+    name: '브루이클라디 클래식 라디',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '50.0%',
+    region: '스코틀랜드 (아일라)',
+    price: '10-12만원',
+    cask: '아메리칸 오크 & 와인 캐스크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+  'bruichladdich-port': {
+    id: 'bruichladdich-port',
+    name: '브루이클라디 포트 샬롯',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '50.0%',
+    region: '스코틀랜드 (아일라)',
+    price: '12-15만원',
+    cask: '아메리칸 오크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+  'caol-ila-12': {
+    id: 'caol-ila-12',
+    name: '카올 일라 12년',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '43.0%',
+    region: '스코틀랜드 (아일라)',
+    price: '10-12만원',
+    cask: 'ex-버번 캐스크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+  'bunnahabhain-12': {
+    id: 'bunnahabhain-12',
+    name: '부나하벤 12년',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '46.3%',
+    region: '스코틀랜드 (아일라)',
+    price: '12-15만원',
+    cask: 'ex-버번 & 셰리 캐스크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+  'kilchoman-machir': {
+    id: 'kilchoman-machir',
+    name: '킬커맨 마키르 베이',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '46.0%',
+    region: '스코틀랜드 (아일라)',
+    price: '12-15만원',
+    cask: '버번 & 셰리 캐스크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+
+  // 스코틀랜드 - 캠벨타운
+  'glen-scotia-15': {
+    id: 'glen-scotia-15',
+    name: '글렌 스코시아 15년',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '46.0%',
+    region: '스코틀랜드 (캠벨타운)',
+    price: '15-18만원',
+    cask: '버번 캐스크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+  'hazelburn-10': {
+    id: 'hazelburn-10',
+    name: '헤이즐번 10년',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '46.0%',
+    region: '스코틀랜드 (캠벨타운)',
+    price: '18-22만원',
+    cask: '버번 & 셰리 캐스크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+  'longrow-10': {
+    id: 'longrow-10',
+    name: '롱로우 10년',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '46.0%',
+    region: '스코틀랜드 (캠벨타운)',
+    price: '15-18만원',
+    cask: 'ex-버번 캐스크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+
+  // 스코틀랜드 - 로우랜드
+  'auchentoshan-12': {
+    id: 'auchentoshan-12',
+    name: '오켄토산 12년',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '40.0%',
+    region: '스코틀랜드 (로우랜드)',
+    price: '8-10만원',
+    cask: '버번 & 셰리 캐스크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+  'auchentoshan-18': {
+    id: 'auchentoshan-18',
+    name: '오켄토산 18년',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '43.0%',
+    region: '스코틀랜드 (로우랜드)',
+    price: '25-30만원',
+    cask: '버번 & 셰리 캐스크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+  'glenkinchie-12': {
+    id: 'glenkinchie-12',
+    name: '글렌킨치 12년',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '43.0%',
+    region: '스코틀랜드 (로우랜드)',
+    price: '8-10만원',
+    cask: 'ex-버번 캐스크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+
+  // 아이리시 위스키
+  'jameson-standard': {
+    id: 'jameson-standard',
+    name: '제임슨',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '40.0%',
+    region: '아일랜드',
+    price: '4-6만원',
+    cask: '버번 & 셰리 캐스크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+  'jameson-18': {
+    id: 'jameson-18',
+    name: '제임슨 18년',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '40.0%',
+    region: '아일랜드',
+    price: '35-45만원',
+    cask: '버번 & 셰리 캐스크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+  'tullamore-dew': {
+    id: 'tullamore-dew',
+    name: '털라모어 듀',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '40.0%',
+    region: '아일랜드',
+    price: '4-6만원',
+    cask: '3 캐스크 블렌드',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+  'redbreast-12': {
+    id: 'redbreast-12',
+    name: '레드브레스트 12년',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '40.0%',
+    region: '아일랜드',
+    price: '12-15만원',
+    cask: '버번 & 셰리 캐스크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+  'redbreast-15': {
+    id: 'redbreast-15',
+    name: '레드브레스트 15년',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '46.0%',
+    region: '아일랜드',
+    price: '25-30만원',
+    cask: '버번 & 셰리 캐스크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+  'green-spot': {
+    id: 'green-spot',
+    name: '그린 스팟',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '40.0%',
+    region: '아일랜드',
+    price: '10-12만원',
+    cask: '버번 & 셰리 캐스크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+  'yellow-spot-12': {
+    id: 'yellow-spot-12',
+    name: '옐로우 스팟 12년',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '46.0%',
+    region: '아일랜드',
+    price: '18-22만원',
+    cask: '버번, 셰리, 말라가 와인 캐스크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+  'writers-tears': {
+    id: 'writers-tears',
+    name: '라이터스 티어스',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '40.0%',
+    region: '아일랜드',
+    price: '8-10만원',
+    cask: '버번 캐스크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+
+  // 버번 위스키
+  'woodford-reserve': {
+    id: 'woodford-reserve',
+    name: '우드포드 리저브',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '45.2%',
+    region: '미국 (켄터키)',
+    price: '8-10만원',
+    cask: '뉴 아메리칸 오크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+  'four-roses': {
+    id: 'four-roses',
+    name: '포 로지스',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '40.0%',
+    region: '미국 (켄터키)',
+    price: '5-7만원',
+    cask: '뉴 아메리칸 오크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+  'four-roses-single': {
+    id: 'four-roses-single',
+    name: '포 로지스 싱글 배럴',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '50.0%',
+    region: '미국 (켄터키)',
+    price: '12-15만원',
+    cask: '뉴 아메리칸 오크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+  'knob-creek': {
+    id: 'knob-creek',
+    name: '놉 크릭',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '50.0%',
+    region: '미국 (켄터키)',
+    price: '8-10만원',
+    cask: '뉴 아메리칸 오크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+  'basil-haydens': {
+    id: 'basil-haydens',
+    name: '바질 헤이든스',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '40.0%',
+    region: '미국 (켄터키)',
+    price: '10-12만원',
+    cask: '뉴 아메리칸 오크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+  'bookers': {
+    id: 'bookers',
+    name: '부커스',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '62.5%',
+    region: '미국 (켄터키)',
+    price: '18-22만원',
+    cask: '뉴 아메리칸 오크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+  'eagle-rare': {
+    id: 'eagle-rare',
+    name: '이글 레어 10년',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '45.0%',
+    region: '미국 (켄터키)',
+    price: '12-15만원',
+    cask: '뉴 아메리칸 오크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+  'buffalo-trace-single': {
+    id: 'buffalo-trace-single',
+    name: '버팔로 트레이스 싱글 배럴',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '45.0%',
+    region: '미국 (켄터키)',
+    price: '15-18만원',
+    cask: '뉴 아메리칸 오크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+  'blanton-single': {
+    id: 'blanton-single',
+    name: '블랜튼 싱글 배럴',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '46.5%',
+    region: '미국 (켄터키)',
+    price: '25-30만원',
+    cask: '뉴 아메리칸 오크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+  'elijah-craig': {
+    id: 'elijah-craig',
+    name: '일라이저 크레이그',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '47.0%',
+    region: '미국 (켄터키)',
+    price: '8-10만원',
+    cask: '뉴 아메리칸 오크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+  'henry-mckenna': {
+    id: 'henry-mckenna',
+    name: '헨리 맥케나 10년',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '50.0%',
+    region: '미국 (켄터키)',
+    price: '15-18만원',
+    cask: '뉴 아메리칸 오크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+  'old-forester-1920': {
+    id: 'old-forester-1920',
+    name: '올드 포레스터 1920',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '57.5%',
+    region: '미국 (켄터키)',
+    price: '15-18만원',
+    cask: '뉴 아메리칸 오크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+  'angels-envy': {
+    id: 'angels-envy',
+    name: '엔젤스 엔비',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '43.3%',
+    region: '미국 (켄터키)',
+    price: '15-18만원',
+    cask: '포트 와인 캐스크 피니쉬',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+  'michters-us1': {
+    id: 'michters-us1',
+    name: '미치터스 US1',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '45.7%',
+    region: '미국 (켄터키)',
+    price: '12-15만원',
+    cask: '뉴 아메리칸 오크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+
+  // 라이 위스키
+  'rittenhouse-rye': {
+    id: 'rittenhouse-rye',
+    name: '리튼하우스 라이',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '50.0%',
+    region: '미국 (켄터키)',
+    price: '8-10만원',
+    cask: '뉴 아메리칸 오크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+  'sazerac-rye': {
+    id: 'sazerac-rye',
+    name: '사제라크 라이',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '45.0%',
+    region: '미국 (켄터키)',
+    price: '10-12만원',
+    cask: '뉴 아메리칸 오크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+  'high-west-double': {
+    id: 'high-west-double',
+    name: '하이 웨스트 더블 라이',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '46.0%',
+    region: '미국 (유타)',
+    price: '12-15만원',
+    cask: '뉴 아메리칸 오크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+  'pikesville-rye': {
+    id: 'pikesville-rye',
+    name: '파이크스빌 라이',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '55.0%',
+    region: '미국 (켄터키)',
+    price: '15-18만원',
+    cask: '뉴 아메리칸 오크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+
+  // 테네시 위스키
+  'jack-daniels': {
+    id: 'jack-daniels',
+    name: '잭 다니엘스 올드 No.7',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '40.0%',
+    region: '미국 (테네시)',
+    price: '5-7만원',
+    cask: '뉴 아메리칸 오크 + 차콜 필터링',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+  'jack-daniels-single': {
+    id: 'jack-daniels-single',
+    name: '잭 다니엘스 싱글 배럴',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '47.0%',
+    region: '미국 (테네시)',
+    price: '12-15만원',
+    cask: '뉴 아메리칸 오크 + 차콜 필터링',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+  'george-dickel': {
+    id: 'george-dickel',
+    name: '조지 디켈 No.12',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '45.0%',
+    region: '미국 (테네시)',
+    price: '8-10만원',
+    cask: '뉴 아메리칸 오크 + 차콜 필터링',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+
+  // 캐나디안 위스키
+  'crown-royal': {
+    id: 'crown-royal',
+    name: '크라운 로얄',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '40.0%',
+    region: '캐나다',
+    price: '6-8만원',
+    cask: '오크 캐스크 블렌드',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+  'crown-royal-northern': {
+    id: 'crown-royal-northern',
+    name: '크라운 로얄 노던 하베스트',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '45.0%',
+    region: '캐나다',
+    price: '8-10만원',
+    cask: '라이 곡물 블렌드',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+  'canadian-club': {
+    id: 'canadian-club',
+    name: '캐나디안 클럽',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '40.0%',
+    region: '캐나다',
+    price: '4-6만원',
+    cask: '오크 캐스크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+  'forty-creek': {
+    id: 'forty-creek',
+    name: '포티 크릭',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '40.0%',
+    region: '캐나다',
+    price: '8-10만원',
+    cask: '버번 & 셰리 캐스크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+
+  // 일본 위스키 추가
+  'nikka-from-barrel': {
+    id: 'nikka-from-barrel',
+    name: '니카 프롬 더 배럴',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '51.4%',
+    region: '일본',
+    price: '12-15만원',
+    cask: '다양한 캐스크 블렌드',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+  'nikka-coffey-grain': {
+    id: 'nikka-coffey-grain',
+    name: '니카 커피 그레인',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '45.0%',
+    region: '일본',
+    price: '15-18만원',
+    cask: '커피 스틸 증류',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+  'nikka-coffey-malt': {
+    id: 'nikka-coffey-malt',
+    name: '니카 커피 몰트',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '45.0%',
+    region: '일본',
+    price: '18-22만원',
+    cask: '커피 스틸 증류',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+  'yoichi-15': {
+    id: 'yoichi-15',
+    name: '요이치 15년',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '45.0%',
+    region: '일본',
+    price: '80-100만원',
+    cask: '셰리 & 버번 캐스크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+  'miyagikyo-15': {
+    id: 'miyagikyo-15',
+    name: '미야기쿄 15년',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '45.0%',
+    region: '일본',
+    price: '80-100만원',
+    cask: '셰리 캐스크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+  'mars-iwai': {
+    id: 'mars-iwai',
+    name: '마르스 이와이',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '40.0%',
+    region: '일본',
+    price: '8-10만원',
+    cask: '버번 & 셰리 캐스크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+  'mars-komagatake': {
+    id: 'mars-komagatake',
+    name: '마르스 코마가타케',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '43.0%',
+    region: '일본',
+    price: '15-18만원',
+    cask: '아메리칸 오크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+  'white-oak-akashi': {
+    id: 'white-oak-akashi',
+    name: '화이트 오크 아카시',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '40.0%',
+    region: '일본',
+    price: '10-12만원',
+    cask: '버번 & 셰리 캐스크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+  'chichibu-malt': {
+    id: 'chichibu-malt',
+    name: '치치부 더 피티드',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '50.5%',
+    region: '일본',
+    price: '35-45만원',
+    cask: '버번 & 셰리 캐스크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+
+  // 대만 위스키 확장
+  'kavalan-ex-bourbon': {
+    id: 'kavalan-ex-bourbon',
+    name: '카발란 ex-버번 오크',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '46.0%',
+    region: '대만',
+    price: '15-18만원',
+    cask: 'ex-버번 캐스크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+  'kavalan-concertmaster': {
+    id: 'kavalan-concertmaster',
+    name: '카발란 콘서트마스터',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '40.0%',
+    region: '대만',
+    price: '12-15만원',
+    cask: '포트 와인 캐스크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+  'kavalan-distillers': {
+    id: 'kavalan-distillers',
+    name: '카발란 디스틸러스 리저브',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '40.0%',
+    region: '대만',
+    price: '10-12만원',
+    cask: '아메리칸 오크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+  'kavalan-podium': {
+    id: 'kavalan-podium',
+    name: '카발란 포디움',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '46.0%',
+    region: '대만',
+    price: '35-45만원',
+    cask: '셰리 & 포트 캐스크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+
+  // 인도 위스키
+  'amrut-fusion': {
+    id: 'amrut-fusion',
+    name: '암룻 퓨전',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '50.0%',
+    region: '인도',
+    price: '12-15만원',
+    cask: 'ex-버번 캐스크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+  'amrut-peated': {
+    id: 'amrut-peated',
+    name: '암룻 피티드',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '46.0%',
+    region: '인도',
+    price: '15-18만원',
+    cask: 'ex-버번 캐스크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+  'paul-john-classic': {
+    id: 'paul-john-classic',
+    name: '폴 존 클래식',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '55.2%',
+    region: '인도',
+    price: '10-12만원',
+    cask: 'ex-버번 캐스크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+  'paul-john-edited': {
+    id: 'paul-john-edited',
+    name: '폴 존 에디티드',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '46.0%',
+    region: '인도',
+    price: '12-15만원',
+    cask: 'ex-버번 캐스크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+
+  // 호주 위스키
+  'sullivan-cove': {
+    id: 'sullivan-cove',
+    name: '설리반 코브',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '47.5%',
+    region: '호주',
+    price: '45-55만원',
+    cask: '프렌치 오크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+  'starward-nova': {
+    id: 'starward-nova',
+    name: '스타워드 노바',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '41.0%',
+    region: '호주',
+    price: '15-18만원',
+    cask: '레드 와인 캐스크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+  'lark-cask-strength': {
+    id: 'lark-cask-strength',
+    name: '라크 캐스크 스트렝스',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '58.0%',
+    region: '호주',
+    price: '35-45만원',
+    cask: '아메리칸 오크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+
+  // 프랑스 위스키
+  'armorik-classic': {
+    id: 'armorik-classic',
+    name: '아르모릭 클래식',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '46.0%',
+    region: '프랑스',
+    price: '12-15만원',
+    cask: '버번 & 셰리 캐스크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+  'kornog-peated': {
+    id: 'kornog-peated',
+    name: '코르녹 피티드',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '46.0%',
+    region: '프랑스',
+    price: '15-18만원',
+    cask: '버번 캐스크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+  'bastille-1789': {
+    id: 'bastille-1789',
+    name: '바스티유 1789',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '43.0%',
+    region: '프랑스',
+    price: '10-12만원',
+    cask: '프렌치 오크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+
+  // 스웨덴 위스키
+  'mackmyra-first-edition': {
+    id: 'mackmyra-first-edition',
+    name: '맥미라 퍼스트 에디션',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '46.1%',
+    region: '스웨덴',
+    price: '18-22만원',
+    cask: '아메리칸 & 스웨디시 오크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+  'mackmyra-skorsten': {
+    id: 'mackmyra-skorsten',
+    name: '맥미라 스코르스텐',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '46.1%',
+    region: '스웨덴',
+    price: '22-25만원',
+    cask: '스모키 스웨디시 오크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+
+  // 독일 위스키
+  'slyrs-bavarian': {
+    id: 'slyrs-bavarian',
+    name: '슬라이르스 바바리안',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '43.0%',
+    region: '독일',
+    price: '15-18만원',
+    cask: '아메리칸 오크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+  'finch-schwäbischer': {
+    id: 'finch-schwäbischer',
+    name: '핀치 슈베비셔',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '42.0%',
+    region: '독일',
+    price: '12-15만원',
+    cask: '체리 & 체스트넛 캐스크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+
+  // 네덜란드 위스키
+  'millstone-100-rye': {
+    id: 'millstone-100-rye',
+    name: '밀스톤 100 라이',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '50.0%',
+    region: '네덜란드',
+    price: '18-22만원',
+    cask: '아메리칸 오크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+  'millstone-peated': {
+    id: 'millstone-peated',
+    name: '밀스톤 피티드',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '46.0%',
+    region: '네덜란드',
+    price: '15-18만원',
+    cask: '버번 캐스크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+
+  // 벨기에 위스키
+  'the-owl-distillery': {
+    id: 'the-owl-distillery',
+    name: '디 아울 디스틸러리',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '46.0%',
+    region: '벨기에',
+    price: '25-30만원',
+    cask: '버번 & 셰리 캐스크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+
+  // 스위스 위스키
+  'santis-malt-edition': {
+    id: 'santis-malt-edition',
+    name: '산티스 몰트 에디션',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '43.0%',
+    region: '스위스',
+    price: '20-25만원',
+    cask: '셰리 & 버번 캐스크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+
+  // 이스라엘 위스키
+  'milk-honey-classic': {
+    id: 'milk-honey-classic',
+    name: '밀크 & 허니 클래식',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '46.0%',
+    region: '이스라엘',
+    price: '18-22만원',
+    cask: '버번, 레드 와인, STR 캐스크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+
+  // 뉴질랜드 위스키
+  'thomson-manuka': {
+    id: 'thomson-manuka',
+    name: '톰슨 마누카 스모크',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '46.0%',
+    region: '뉴질랜드',
+    price: '25-30만원',
+    cask: '버번 캐스크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+
+  // 남아프리카 위스키
+  'three-ships-10': {
+    id: 'three-ships-10',
+    name: '쓰리 쉽스 10년',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '43.0%',
+    region: '남아프리카',
+    price: '15-18만원',
+    cask: '아메리칸 오크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+
+  // 영국 잉글랜드 위스키
+  'cotswolds-signature': {
+    id: 'cotswolds-signature',
+    name: '코츠월드 시그니처',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '46.0%',
+    region: '영국 (잉글랜드)',
+    price: '18-22만원',
+    cask: 'ex-버번 & STR 캐스크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+  'english-whisky-smokey': {
+    id: 'english-whisky-smokey',
+    name: '잉글리시 위스키 스모키',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '46.0%',
+    region: '영국 (잉글랜드)',
+    price: '20-25만원',
+    cask: '버번 캐스크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+
+  // 웨일스 위스키
+  'penderyn-madeira': {
+    id: 'penderyn-madeira',
+    name: '펜더린 마데이라',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '46.0%',
+    region: '영국 (웨일스)',
+    price: '15-18만원',
+    cask: '마데이라 와인 캐스크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+  'penderyn-portwood': {
+    id: 'penderyn-portwood',
+    name: '펜더린 포트우드',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '46.0%',
+    region: '영국 (웨일스)',
+    price: '18-22만원',
+    cask: '포트 와인 캐스크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+
+  // 한국 위스키 추가
+  'three-societies': {
+    id: 'three-societies',
+    name: '쓰리 소사이어티스',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '43.0%',
+    region: '한국',
+    price: '25-30만원',
+    cask: '아메리칸 오크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  },
+  'ki-one-signature': {
+    id: 'ki-one-signature',
+    name: '기원 시그니처',
+    image: '/whiskies/no.pic whisky.png',
+    abv: '46.0%',
+    region: '한국',
+    price: '15-18만원',
+    cask: '아메리칸 오크',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
   }
 }
 
