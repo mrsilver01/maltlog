@@ -46,7 +46,7 @@ export default function HomePage() {
       setIsLoggedIn(loginStatus)
 
       setIsLoading(false)
-    }, 1500)
+    }, 3500)
     return () => clearTimeout(timer)
   }, [])
 

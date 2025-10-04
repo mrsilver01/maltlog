@@ -39,7 +39,11 @@ export default function ReviewsPage() {
 
       setWhiskyData(data)
       setReviews(reviewData)
-      setLoading(false)
+
+      // 애니메이션 완료를 위해 최소 3.5초 대기
+      setTimeout(() => {
+        setLoading(false)
+      }, 3500)
     }
   }, [params?.id])
 

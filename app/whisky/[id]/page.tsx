@@ -54,7 +54,10 @@ export default function WhiskyDetailPage() {
       // 사용자가 이미 평가했는지 확인
       checkUserRatingStatus(whiskyId, reviewData)
 
-      setLoading(false)
+      // 애니메이션 완료를 위해 최소 3.5초 대기
+      setTimeout(() => {
+        setLoading(false)
+      }, 3500)
     }
   }, [params?.id])
 
