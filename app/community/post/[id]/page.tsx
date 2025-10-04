@@ -405,9 +405,23 @@ export default function PostDetailPage() {
             </div>
 
             <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
-              <div className="flex items-center gap-4">
-                <span className="font-medium text-lg">{post.author}</span>
-                <span>{formatDate(post.createdAt)}</span>
+              <div className="flex items-center gap-3">
+                {/* 프로필 이미지 */}
+                {post.authorImage ? (
+                  <img
+                    src={post.authorImage}
+                    alt={post.author}
+                    className="w-10 h-10 rounded-full object-cover border border-gray-200"
+                  />
+                ) : (
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-rose-400 to-pink-500 flex items-center justify-center text-white text-sm font-bold">
+                    {post.author.charAt(0)}
+                  </div>
+                )}
+                <div className="flex flex-col">
+                  <span className="font-medium text-lg text-gray-700">{post.author}</span>
+                  <span className="text-xs">{formatDate(post.createdAt)}</span>
+                </div>
               </div>
               <div className="flex items-center gap-4">
                 <button
@@ -555,11 +569,27 @@ export default function PostDetailPage() {
             ) : (
               comments.map((comment) => (
                 <div key={comment.id} className="border-b border-gray-100 pb-4 last:border-b-0">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="font-medium text-gray-800">{comment.author}</span>
-                    <span className="text-sm text-gray-500">{formatDate(comment.createdAt)}</span>
+                  <div className="flex items-start gap-3 mb-2">
+                    {/* 댓글 프로필 이미지 */}
+                    {comment.authorImage ? (
+                      <img
+                        src={comment.authorImage}
+                        alt={comment.author}
+                        className="w-8 h-8 rounded-full object-cover border border-gray-200"
+                      />
+                    ) : (
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-rose-400 to-pink-500 flex items-center justify-center text-white text-xs font-bold">
+                        {comment.author.charAt(0)}
+                      </div>
+                    )}
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="font-medium text-gray-800">{comment.author}</span>
+                        <span className="text-sm text-gray-500">{formatDate(comment.createdAt)}</span>
+                      </div>
+                      <p className="text-gray-700 whitespace-pre-wrap">{comment.content}</p>
+                    </div>
                   </div>
-                  <p className="text-gray-700 whitespace-pre-wrap">{comment.content}</p>
                 </div>
               ))
             )}
