@@ -43,15 +43,31 @@ export default function ReviewsPage() {
     }
   }, [params?.id])
 
-  // 로그인 상태 확인
+  // 로그인 상태 확인 및 프로필 이미지 실시간 업데이트
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const loginStatus = localStorage.getItem('isLoggedIn') === 'true'
-      const nickname = localStorage.getItem('userNickname') || ''
-      const profileImage = localStorage.getItem('userProfileImage')
-      setIsLoggedIn(loginStatus)
-      setUserNickname(nickname)
-      setUserProfileImage(profileImage)
+    const updateUserData = () => {
+      if (typeof window !== 'undefined') {
+        const loginStatus = localStorage.getItem('isLoggedIn') === 'true'
+        const nickname = localStorage.getItem('userNickname') || ''
+        const profileImage = localStorage.getItem('userProfileImage')
+        setIsLoggedIn(loginStatus)
+        setUserNickname(nickname)
+        setUserProfileImage(profileImage)
+      }
+    }
+
+    // 초기 로딩
+    updateUserData()
+
+    // storage 이벤트 리스너 (다른 탭에서 변경 감지)
+    window.addEventListener('storage', updateUserData)
+
+    // 주기적으로 체크 (같은 탭에서 변경 감지)
+    const interval = setInterval(updateUserData, 1000)
+
+    return () => {
+      window.removeEventListener('storage', updateUserData)
+      clearInterval(interval)
     }
   }, [])
 
@@ -301,6 +317,30 @@ export default function ReviewsPage() {
     alert('리뷰가 작성되었습니다!')
   }
 
+  // 리뷰 삭제 함수 추가
+  const handleDeleteReview = (reviewId: string) => {
+    const userNickname = localStorage.getItem('userNickname')
+    if (!userNickname) {
+      alert('리뷰를 삭제하려면 로그인해주세요.')
+      return
+    }
+
+    if (confirm('정말로 이 리뷰를 삭제하시겠습니까?')) {
+      const updatedReviews = reviews.filter(review => review.id !== reviewId)
+      setReviews(updatedReviews)
+
+      // reviewsData에 저장하여 다른 페이지와 동기화
+      if (whiskyData) {
+        const reviewsData = JSON.parse(localStorage.getItem('reviewsData') || '{}')
+        reviewsData[whiskyData.id] = updatedReviews
+        localStorage.setItem('reviewsData', JSON.stringify(reviewsData))
+      }
+
+      alert('리뷰가 삭제되었습니다.')
+    }
+  }
+
+
   if (loading) {
     return <LoadingAnimation message="리뷰를 불러오는 중..." />
   }
@@ -488,6 +528,16 @@ export default function ReviewsPage() {
                       <span className="text-sm text-gray-500">
                         {new Date(review.createdAt).toLocaleDateString()}
                       </span>
+                      {/* 본인 리뷰인 경우 삭제 버튼 표시 */}
+                      {review.user === userNickname && (
+                        <button
+                          onClick={() => handleDeleteReview(review.id)}
+                          className="text-red-500 hover:text-red-700 text-sm px-2 py-1 hover:bg-red-50 rounded transition-colors"
+                          title="리뷰 삭제"
+                        >
+                          삭제
+                        </button>
+                      )}
                     </div>
                   </div>
 

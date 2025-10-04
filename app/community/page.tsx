@@ -35,6 +35,21 @@ export default function CommunityPage() {
       const loginStatus = localStorage.getItem('isLoggedIn') === 'true'
       setIsLoggedIn(loginStatus)
 
+      // 임시 커뮤니티 데이터 정리
+      const existingPosts = localStorage.getItem('communityPosts')
+      if (existingPosts) {
+        try {
+          const posts = JSON.parse(existingPosts)
+          const filteredPosts = posts.filter((post: Post) =>
+            post.author !== 'MaltExpert' && post.author !== 'WhiskyLover'
+          )
+          localStorage.setItem('communityPosts', JSON.stringify(filteredPosts))
+          console.log('Temporary community posts cleaned up')
+        } catch (e) {
+          console.log('Error cleaning community posts:', e)
+        }
+      }
+
       // 페이지 로드 시 자동 정리
       try {
         const usage = JSON.stringify(localStorage).length
@@ -61,30 +76,8 @@ export default function CommunityPage() {
     if (savedPosts) {
       setPosts(JSON.parse(savedPosts))
     } else {
-      // 초기 더미 데이터
-      const initialPosts: Post[] = [
-        {
-          id: '1',
-          title: '오늘 마신 맥켈란 18년 후기',
-          content: '정말 부드럽고 달콤한 맛이었습니다. 가격이 비싸긴 하지만 그만한 가치가 있네요!',
-          author: 'WhiskyLover',
-          createdAt: new Date().toISOString(),
-          likes: 5,
-          comments: 3,
-          image: '/whiskies/macallan-18.jpg'
-        },
-        {
-          id: '2',
-          title: '위스키 입문자를 위한 추천',
-          content: '위스키를 처음 접하는 분들께 추천하는 위스키 리스트입니다. 부드럽고 마시기 쉬운 것들로 골라봤어요.',
-          author: 'MaltExpert',
-          createdAt: new Date(Date.now() - 86400000).toISOString(),
-          likes: 12,
-          comments: 8
-        }
-      ]
-      setPosts(initialPosts)
-      localStorage.setItem('communityPosts', JSON.stringify(initialPosts))
+      // 빈 초기 상태
+      setPosts([])
     }
   }
 

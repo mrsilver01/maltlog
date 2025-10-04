@@ -58,18 +58,34 @@ export default function WhiskyDetailPage() {
     }
   }, [params?.id])
 
-  // 로그인 상태 확인
+  // 로그인 상태 확인 및 프로필 이미지 실시간 업데이트
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const loginStatus = localStorage.getItem('isLoggedIn') === 'true'
-      const profileImage = localStorage.getItem('userProfileImage')
-      setIsLoggedIn(loginStatus)
-      setUserProfileImage(profileImage)
+    const updateUserData = () => {
+      if (typeof window !== 'undefined') {
+        const loginStatus = localStorage.getItem('isLoggedIn') === 'true'
+        const profileImage = localStorage.getItem('userProfileImage')
+        setIsLoggedIn(loginStatus)
+        setUserProfileImage(profileImage)
 
-      // 로그인 상태 변경 시 리뷰 상태 재확인
-      if (params?.id && whiskyData) {
-        checkUserRatingStatus(params.id as string, reviews)
+        // 로그인 상태 변경 시 리뷰 상태 재확인
+        if (params?.id && whiskyData) {
+          checkUserRatingStatus(params.id as string, reviews)
+        }
       }
+    }
+
+    // 초기 로딩
+    updateUserData()
+
+    // storage 이벤트 리스너 (다른 탭에서 변경 감지)
+    window.addEventListener('storage', updateUserData)
+
+    // 주기적으로 체크 (같은 탭에서 변경 감지)
+    const interval = setInterval(updateUserData, 1000)
+
+    return () => {
+      window.removeEventListener('storage', updateUserData)
+      clearInterval(interval)
     }
   }, [])
 
