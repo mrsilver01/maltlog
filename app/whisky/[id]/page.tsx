@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { getWhiskyData, getReviews, addReview, addComment, addReply, WhiskyData, Review, Comment, updateAverageRating, loadWhiskyDataFromStorage, loadReviewsFromStorage, saveWhiskyDataToStorage } from '../../../lib/whiskyData'
 import { authHelpers } from '../../../lib/supabase'
+import { getUserWhiskyReview, saveWhiskyReview, deleteWhiskyReview, hasUserReviewedWhisky, getUserWhiskyRating } from '../../../lib/whiskyReviews'
 import LoadingAnimation from '../../../components/LoadingAnimation'
 import { WhiskyDetailSkeleton } from '../../../components/Skeleton'
 import { usePageTransition } from '../../../hooks/usePageTransition'
@@ -20,6 +21,8 @@ export default function WhiskyDetailPage() {
   const [loading, setLoading] = useState(true)
   const [hasUserRated, setHasUserRated] = useState(false)
   const [hasUserReviewed, setHasUserReviewed] = useState(false)
+  const [supabaseUserReview, setSupabaseUserReview] = useState<any>(null)
+  const [isLoadingReview, setIsLoadingReview] = useState(false)
   const [showCommentForm, setShowCommentForm] = useState<string | null>(null)
   const [commentText, setCommentText] = useState('')
   const [showReplyForm, setShowReplyForm] = useState<string | null>(null)
@@ -53,6 +56,11 @@ export default function WhiskyDetailPage() {
 
       // 사용자가 이미 평가했는지 확인
       checkUserRatingStatus(whiskyId, reviewData)
+
+      // Supabase에서 사용자 리뷰 로드
+      if (data) {
+        loadUserReviewFromSupabase(data.name)
+      }
 
       // 애니메이션 완료를 위해 1초 대기 (직접 URL 접근 시에만)
       setTimeout(() => {
@@ -106,10 +114,47 @@ export default function WhiskyDetailPage() {
   useEffect(() => {
     if (params?.id && whiskyData) {
       checkUserRatingStatus(params.id as string, reviews)
+      // 로그인 상태 변경 시 Supabase 리뷰도 다시 로드
+      if (isLoggedIn) {
+        loadUserReviewFromSupabase(whiskyData.name)
+      } else {
+        setSupabaseUserReview(null)
+      }
     }
   }, [isLoggedIn, params?.id, whiskyData, reviews])
 
-  // 사용자 평가 상태 확인
+  // Supabase에서 사용자 리뷰 로드
+  const loadUserReviewFromSupabase = async (whiskyName: string) => {
+    if (!isLoggedIn) {
+      setSupabaseUserReview(null)
+      return
+    }
+
+    setIsLoadingReview(true)
+    try {
+      const review = await getUserWhiskyReview(whiskyName)
+      setSupabaseUserReview(review)
+
+      // Supabase 리뷰 데이터로 상태 업데이트
+      if (review) {
+        setHasUserRated(true)
+        setHasUserReviewed(!!review.note && review.note.trim() !== '')
+        setUserRating(review.rating)
+        setUserNote(review.note || '')
+      } else {
+        setHasUserRated(false)
+        setHasUserReviewed(false)
+        setUserRating(0)
+        setUserNote('')
+      }
+    } catch (error) {
+      console.error('사용자 리뷰 로드 실패:', error)
+    } finally {
+      setIsLoadingReview(false)
+    }
+  }
+
+  // 사용자 평가 상태 확인 (기존 localStorage 로직과 병행)
   const checkUserRatingStatus = (whiskyId: string, reviewData: Review[]) => {
     if (typeof window !== 'undefined') {
       if (!isLoggedIn) {
@@ -121,100 +166,115 @@ export default function WhiskyDetailPage() {
 
       const userNickname = localStorage.getItem('userNickname') || '익명 사용자'
 
-      // 로그인된 사용자의 경우 localStorage에서 평가 여부 확인
+      // 로그인된 사용자의 경우 localStorage에서 평가 여부 확인 (기존 로직 유지)
       const userRatings = JSON.parse(localStorage.getItem('userRatings') || '{}')
       const hasRated = userRatings[whiskyId] || false
-      setHasUserRated(hasRated)
 
-      // 리뷰 작성 여부 확인 (실제 노트가 있는 경우만, 로그인된 사용자만)
-      const hasReviewed = reviewData.some(review =>
-        review.user === userNickname &&
-        review.comment &&
-        review.comment.trim() !== `별점 ${review.rating}점을 남겼습니다.`
-      )
-      setHasUserReviewed(hasReviewed)
+      // Supabase 데이터가 없는 경우에만 localStorage 데이터 사용
+      if (!supabaseUserReview) {
+        setHasUserRated(hasRated)
+
+        // 리뷰 작성 여부 확인 (실제 노트가 있는 경우만, 로그인된 사용자만)
+        const hasReviewed = reviewData.some(review =>
+          review.user === userNickname &&
+          review.comment &&
+          review.comment.trim() !== `별점 ${review.rating}점을 남겼습니다.`
+        )
+        setHasUserReviewed(hasReviewed)
+      }
     }
   }
 
-  const handleSubmitNote = () => {
+  const handleSubmitNote = async () => {
     // 로그인 확인
     if (!isLoggedIn) {
       alert('리뷰를 작성하려면 로그인해주세요.')
       return
     }
 
-    if (hasUserReviewed) {
-      alert('이미 이 위스키에 대한 리뷰를 작성하셨습니다.')
+    if (!whiskyData || !userNote.trim()) {
+      alert('노트를 입력해주세요.')
       return
     }
 
-    if (!whiskyData || !userNote.trim()) return
-
-    const userNickname = localStorage.getItem('userNickname') || '익명 사용자'
-
-    // 노트 작성 시 별점 처리 - 새로 입력한 별점이 우선, 없으면 기존 별점 사용
-    let finalRating = userRating
-    if (!finalRating) {
-      const existingReview = reviews.find(review => review.user === userNickname)
-      finalRating = existingReview ? existingReview.rating : 0
+    if (userRating === 0) {
+      alert('별점을 선택해주세요.')
+      return
     }
-    const newReview = addReview(whiskyData.id, {
-      user: userNickname,
-      rating: finalRating,
-      comment: userNote.trim()
-    })
 
-    // 기존 리뷰가 업데이트된 경우와 새 리뷰인 경우를 구분하여 처리
-    const updatedReviews = (() => {
-      const existingIndex = reviews.findIndex(r => r.user === userNickname)
-      if (existingIndex !== -1) {
-        // 기존 리뷰 업데이트
-        const updated = [...reviews]
-        updated[existingIndex] = newReview
-        return updated
+    try {
+      // Supabase에 리뷰 저장
+      const success = await saveWhiskyReview(whiskyData.name, userRating, userNote.trim())
+
+      if (success) {
+        // 성공 시 상태 업데이트
+        setHasUserRated(true)
+        setHasUserReviewed(true)
+        setShowNoteForm(false)
+
+        // Supabase에서 업데이트된 리뷰 다시 로드
+        await loadUserReviewFromSupabase(whiskyData.name)
+
+        alert('리뷰가 성공적으로 저장되었습니다!')
+
+        // 기존 localStorage 로직도 유지 (하위 호환성)
+        const userNickname = localStorage.getItem('userNickname') || '익명 사용자'
+        const newReview = addReview(whiskyData.id, {
+          user: userNickname,
+          rating: userRating,
+          comment: userNote.trim()
+        })
+
+        const updatedReviews = (() => {
+          const existingIndex = reviews.findIndex(r => r.user === userNickname)
+          if (existingIndex !== -1) {
+            const updated = [...reviews]
+            updated[existingIndex] = newReview
+            return updated
+          } else {
+            return [newReview, ...reviews]
+          }
+        })()
+        setReviews(updatedReviews)
+
+        // reviewsData에 저장
+        const reviewsData = JSON.parse(localStorage.getItem('reviewsData') || '{}')
+        reviewsData[whiskyData.id] = updatedReviews
+        localStorage.setItem('reviewsData', JSON.stringify(reviewsData))
+
+        // 사용자 프로필에 위스키 추가 (노트 작성 시)
+        if (typeof window !== 'undefined' && whiskyData) {
+          const userNickname = localStorage.getItem('userNickname')
+          if (userNickname) {
+            const userWhiskies = JSON.parse(localStorage.getItem('userWhiskies') || '{}')
+            if (!userWhiskies[userNickname]) {
+              userWhiskies[userNickname] = []
+            }
+
+            const existingWhisky = userWhiskies[userNickname].find((w: any) => w.id === whiskyData.id)
+            if (!existingWhisky) {
+              userWhiskies[userNickname].push({
+                id: whiskyData.id,
+                name: whiskyData.name,
+                image: whiskyData.image,
+                rating: userRating,
+                addedAt: new Date().toISOString()
+              })
+              localStorage.setItem('userWhiskies', JSON.stringify(userWhiskies))
+            }
+          }
+        }
       } else {
-        // 새 리뷰 추가
-        return [newReview, ...reviews]
+        alert('리뷰 저장에 실패했습니다. 다시 시도해주세요.')
       }
-    })()
-    setReviews(updatedReviews)
-
-    // reviewsData에 저장
-    const reviewsData = JSON.parse(localStorage.getItem('reviewsData') || '{}')
-    reviewsData[whiskyData.id] = updatedReviews
-    localStorage.setItem('reviewsData', JSON.stringify(reviewsData))
-    setHasUserReviewed(true)
-    setUserRating(0)
-    setUserNote('')
-    setShowNoteForm(false)
-
-    // 사용자 프로필에 위스키 추가 (노트 작성 시)
-    if (typeof window !== 'undefined' && whiskyData) {
-      const userNickname = localStorage.getItem('userNickname')
-      if (userNickname) {
-        const userWhiskies = JSON.parse(localStorage.getItem('userWhiskies') || '{}')
-        if (!userWhiskies[userNickname]) {
-          userWhiskies[userNickname] = []
-        }
-
-        // 이미 추가된 위스키가 아닌 경우에만 추가
-        const existingWhisky = userWhiskies[userNickname].find((w: any) => w.id === whiskyData.id)
-        if (!existingWhisky) {
-          userWhiskies[userNickname].push({
-            id: whiskyData.id,
-            name: whiskyData.name,
-            image: whiskyData.image,
-            rating: finalRating,
-            addedAt: new Date().toISOString()
-          })
-          localStorage.setItem('userWhiskies', JSON.stringify(userWhiskies))
-        }
-      }
+    } catch (error) {
+      console.error('리뷰 저장 오류:', error)
+      alert('리뷰 저장 중 오류가 발생했습니다.')
     }
   }
 
-  // 별점만 저장하는 함수 (로그인된 사용자용)
-  const handleRatingOnlySubmit = (rating: number) => {
+  // 별점만 저장하는 함수 (로그인된 사용자용) - Supabase 사용
+  const handleRatingOnlySubmit = async (rating: number) => {
     if (!whiskyData) return
 
     // 로그인 확인
@@ -223,80 +283,91 @@ export default function WhiskyDetailPage() {
       return
     }
 
-    if (hasUserRated) {
-      alert('이미 이 위스키에 평점을 남기셨습니다.')
-      return
-    }
+    try {
+      // Supabase에 평점만 저장 (노트 없이)
+      const success = await saveWhiskyReview(whiskyData.name, rating)
 
-    const userNickname = localStorage.getItem('userNickname') || '익명 사용자'
+      if (success) {
+        // 성공 시 상태 업데이트
+        setHasUserRated(true)
+        setUserRating(rating)
 
-    const newReview = addReview(whiskyData.id, {
-      user: userNickname,
-      rating: rating,
-      comment: `별점 ${rating}점을 남겼습니다.`
-    })
+        // Supabase에서 업데이트된 리뷰 다시 로드
+        await loadUserReviewFromSupabase(whiskyData.name)
 
-    // 기존 리뷰가 업데이트된 경우와 새 리뷰인 경우를 구분하여 처리
-    const updatedReviews = (() => {
-      const userIdentifier = userNickname
-      const existingIndex = reviews.findIndex(r => r.user === userIdentifier)
-      if (existingIndex !== -1) {
-        // 기존 리뷰 업데이트
-        const updated = [...reviews]
-        updated[existingIndex] = newReview
-        return updated
+        console.log(`${whiskyData.name}에 ${rating}점 평점을 남겼습니다.`)
+
+        // 기존 localStorage 로직도 유지 (하위 호환성)
+        const userNickname = localStorage.getItem('userNickname') || '익명 사용자'
+        const newReview = addReview(whiskyData.id, {
+          user: userNickname,
+          rating: rating,
+          comment: `별점 ${rating}점을 남겼습니다.`
+        })
+
+        const updatedReviews = (() => {
+          const userIdentifier = userNickname
+          const existingIndex = reviews.findIndex(r => r.user === userIdentifier)
+          if (existingIndex !== -1) {
+            const updated = [...reviews]
+            updated[existingIndex] = newReview
+            return updated
+          } else {
+            return [newReview, ...reviews]
+          }
+        })()
+        setReviews(updatedReviews)
+
+        // reviewsData에 저장
+        const reviewsData = JSON.parse(localStorage.getItem('reviewsData') || '{}')
+        reviewsData[whiskyData.id] = updatedReviews
+        localStorage.setItem('reviewsData', JSON.stringify(reviewsData))
+
+        // 로컬스토리지에 평가 기록 저장
+        if (typeof window !== 'undefined') {
+          const userRatings = JSON.parse(localStorage.getItem('userRatings') || '{}')
+          userRatings[whiskyData.id] = true
+          localStorage.setItem('userRatings', JSON.stringify(userRatings))
+        }
+
+        // 위스키 데이터 업데이트
+        setWhiskyData(prev => {
+          if (!prev) return prev
+          return {
+            ...prev,
+            avgRating: Math.round(((prev.avgRating * prev.totalReviews + rating) / (prev.totalReviews + 1)) * 10) / 10,
+            totalReviews: prev.totalReviews + 1
+          }
+        })
+
+        // 사용자 프로필에 위스키 추가
+        if (typeof window !== 'undefined' && whiskyData) {
+          const userNickname = localStorage.getItem('userNickname')
+          if (userNickname) {
+            const userWhiskies = JSON.parse(localStorage.getItem('userWhiskies') || '{}')
+            if (!userWhiskies[userNickname]) {
+              userWhiskies[userNickname] = []
+            }
+
+            const existingWhisky = userWhiskies[userNickname].find((w: any) => w.id === whiskyData.id)
+            if (!existingWhisky) {
+              userWhiskies[userNickname].push({
+                id: whiskyData.id,
+                name: whiskyData.name,
+                image: whiskyData.image,
+                rating: rating,
+                addedAt: new Date().toISOString()
+              })
+              localStorage.setItem('userWhiskies', JSON.stringify(userWhiskies))
+            }
+          }
+        }
       } else {
-        // 새 리뷰 추가
-        return [newReview, ...reviews]
+        alert('평점 저장에 실패했습니다. 다시 시도해주세요.')
       }
-    })()
-    setReviews(updatedReviews)
-
-    // reviewsData에 저장
-    const reviewsData = JSON.parse(localStorage.getItem('reviewsData') || '{}')
-    reviewsData[whiskyData.id] = updatedReviews
-    localStorage.setItem('reviewsData', JSON.stringify(reviewsData))
-    setHasUserRated(true)
-
-    // 로컬스토리지에 평가 기록 저장
-    if (typeof window !== 'undefined') {
-      const userRatings = JSON.parse(localStorage.getItem('userRatings') || '{}')
-      userRatings[whiskyData.id] = true
-      localStorage.setItem('userRatings', JSON.stringify(userRatings))
-    }
-
-    // 위스키 데이터 업데이트
-    setWhiskyData(prev => {
-      if (!prev) return prev
-      return {
-        ...prev,
-        avgRating: Math.round(((prev.avgRating * prev.totalReviews + rating) / (prev.totalReviews + 1)) * 10) / 10,
-        totalReviews: prev.totalReviews + 1
-      }
-    })
-
-    // 사용자 프로필에 위스키 추가
-    if (typeof window !== 'undefined' && whiskyData) {
-      const userNickname = localStorage.getItem('userNickname')
-      if (userNickname) {
-        const userWhiskies = JSON.parse(localStorage.getItem('userWhiskies') || '{}')
-        if (!userWhiskies[userNickname]) {
-          userWhiskies[userNickname] = []
-        }
-
-        // 이미 추가된 위스키가 아닌 경우에만 추가
-        const existingWhisky = userWhiskies[userNickname].find((w: any) => w.id === whiskyData.id)
-        if (!existingWhisky) {
-          userWhiskies[userNickname].push({
-            id: whiskyData.id,
-            name: whiskyData.name,
-            image: whiskyData.image,
-            rating: rating,
-            addedAt: new Date().toISOString()
-          })
-          localStorage.setItem('userWhiskies', JSON.stringify(userWhiskies))
-        }
-      }
+    } catch (error) {
+      console.error('평점 저장 오류:', error)
+      alert('평점 저장 중 오류가 발생했습니다.')
     }
   }
 
@@ -741,20 +812,33 @@ export default function WhiskyDetailPage() {
                 }
 
                 if (hasUserRated) {
-                  // 사용자의 기존 별점 찾기
-                  const userNickname = typeof window !== 'undefined' ? localStorage.getItem('userNickname') || '익명 사용자' : '익명 사용자'
-                  const userReview = reviews.find(review => review.user === userNickname)
-                  const userRating = userReview ? userReview.rating : 0
+                  // Supabase 데이터 우선, 없으면 localStorage 데이터 사용
+                  let userRatingValue = 0
+                  if (supabaseUserReview) {
+                    userRatingValue = supabaseUserReview.rating
+                  } else {
+                    // 하위 호환성을 위한 localStorage 백업
+                    const userNickname = typeof window !== 'undefined' ? localStorage.getItem('userNickname') || '익명 사용자' : '익명 사용자'
+                    const userReview = reviews.find(review => review.user === userNickname)
+                    userRatingValue = userReview ? userReview.rating : 0
+                  }
 
                   return (
-                    <RatingSystem
-                      whiskyId={whiskyData.id}
-                      currentRating={userRating}
-                      onRatingChange={() => {}} // 읽기 전용
-                      size="lg"
-                      showLabels={true}
-                      readOnly={true}
-                    />
+                    <div>
+                      <RatingSystem
+                        whiskyId={whiskyData.id}
+                        currentRating={userRatingValue}
+                        onRatingChange={() => {}} // 읽기 전용
+                        size="lg"
+                        showLabels={true}
+                        readOnly={true}
+                      />
+                      {supabaseUserReview && (
+                        <div className="mt-2 text-center text-sm text-green-600">
+                          Supabase에서 로드된 데이터
+                        </div>
+                      )}
+                    </div>
                   )
                 } else {
                   return (
@@ -775,11 +859,31 @@ export default function WhiskyDetailPage() {
           <div className="mb-8 text-center">
             {!hasUserReviewed && (
               <button
-                onClick={() => setShowNoteForm(true)}
+                onClick={() => {
+                  // 기존 Supabase 리뷰가 있다면 데이터 미리 채우기
+                  if (supabaseUserReview) {
+                    setUserRating(supabaseUserReview.rating)
+                    setUserNote(supabaseUserReview.note || '')
+                  }
+                  setShowNoteForm(true)
+                }}
                 className="bg-red-500 text-white px-10 py-3 rounded-xl font-bold hover:bg-red-600 transition-all duration-200 shadow-md hover:shadow-lg hover:scale-110 transform"
               >
-                내 노트 작성하기
+                {supabaseUserReview ? '내 노트 수정하기' : '내 노트 작성하기'}
               </button>
+            )}
+            {supabaseUserReview && supabaseUserReview.note && (
+              <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                <h4 className="font-medium text-gray-800 mb-2">내 리뷰</h4>
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-yellow-400">★</span>
+                  <span className="font-bold">{supabaseUserReview.rating}점</span>
+                </div>
+                <p className="text-gray-700 text-sm">{supabaseUserReview.note}</p>
+                <div className="mt-2 text-xs text-gray-500">
+                  {new Date(supabaseUserReview.created_at).toLocaleDateString('ko-KR')}
+                </div>
+              </div>
             )}
           </div>
 

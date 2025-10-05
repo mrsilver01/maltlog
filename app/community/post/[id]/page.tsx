@@ -3,52 +3,74 @@
 import React, { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { authHelpers } from '../../../../lib/supabase'
+import { getCommunityPost, CommunityPostWithProfile } from '../../../../lib/communityPosts'
+import { getPostComments, createComment, deleteComment, updatePostCommentsCount, CommunityCommentWithProfile } from '../../../../lib/communityComments'
 
-interface Post {
-  id: string
-  title: string
-  content: string
-  author: string
-  authorImage?: string
-  image?: string
-  createdAt: string
-  likes: number
-  comments: number
-}
+// Supabase 타입을 사용하되 기존 Post 인터페이스와 호환
+type Post = CommunityPostWithProfile
 
-interface Comment {
-  id: string
-  postId: string
-  content: string
-  author: string
-  authorImage?: string
-  createdAt: string
-}
+// Supabase 타입을 사용하되 기존 Comment 인터페이스와 호환
+type Comment = CommunityCommentWithProfile
 
 export default function PostDetailPage() {
   const router = useRouter()
   const params = useParams()
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [post, setPost] = useState<Post | null>(null)
+  const [isLoadingPost, setIsLoadingPost] = useState(false)
   const [comments, setComments] = useState<Comment[]>([])
+  const [isLoadingComments, setIsLoadingComments] = useState(false)
   const [loading, setLoading] = useState(true)
   const [newComment, setNewComment] = useState('')
   const [isLiked, setIsLiked] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
   const [editPost, setEditPost] = useState({ title: '', content: '', image: null as string | null })
   const [uploading, setUploading] = useState(false)
+  const [isSubmittingComment, setIsSubmittingComment] = useState(false)
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const loginStatus = localStorage.getItem('isLoggedIn') === 'true'
       setIsLoggedIn(loginStatus)
       loadPost()
+      loadSupabasePost()
       loadComments()
+      if (params.id && typeof params.id === 'string') {
+        loadSupabaseComments(params.id)
+      }
       setLoading(false)
     }
   }, [params.id])
 
-  const loadPost = () => {
+  // Supabase에서 게시글 상세 정보 로드
+  const loadSupabasePost = async () => {
+    if (!params.id || typeof params.id !== 'string') return
+
+    setIsLoadingPost(true)
+    try {
+      const supabasePost = await getCommunityPost(params.id)
+
+      if (supabasePost) {
+        console.log('Supabase에서 게시글 로드 성공:', supabasePost.title)
+        setPost(supabasePost)
+
+        // 좋아요 상태 확인
+        const likedPosts = JSON.parse(localStorage.getItem('likedPosts') || '[]')
+        setIsLiked(likedPosts.includes(params.id))
+      } else {
+        console.log('Supabase에 게시글 없음, localStorage 백업 사용')
+        loadLocalStoragePost()
+      }
+    } catch (error) {
+      console.error('Supabase 게시글 로드 실패:', error)
+      loadLocalStoragePost()
+    } finally {
+      setIsLoadingPost(false)
+    }
+  }
+
+  // localStorage에서 게시글 로드 (백업용)
+  const loadLocalStoragePost = () => {
     const savedPosts = localStorage.getItem('communityPosts')
     if (savedPosts) {
       const posts: Post[] = JSON.parse(savedPosts)
@@ -61,10 +83,37 @@ export default function PostDetailPage() {
     }
   }
 
+  // 기존 localStorage 로드 함수 (하위 호환성)
+  const loadPost = loadLocalStoragePost
+
   const currentUser = typeof window !== 'undefined' ? localStorage.getItem('userNickname') : ''
   const isAuthor = post?.author === currentUser
 
-  const loadComments = () => {
+  // Supabase에서 댓글 로드
+  const loadSupabaseComments = async (postId: string) => {
+    setIsLoadingComments(true)
+    try {
+      const supabaseComments = await getPostComments(postId)
+      console.log(`Supabase에서 댓글 ${supabaseComments.length}개 로드 완료`)
+
+      // Supabase 데이터가 있으면 우선 사용
+      if (supabaseComments.length > 0) {
+        setComments(supabaseComments)
+      } else {
+        // Supabase에 데이터가 없으면 localStorage 백업 사용
+        loadLocalStorageComments()
+      }
+    } catch (error) {
+      console.error('Supabase 댓글 로드 실패:', error)
+      // 오류 시 localStorage 백업 사용
+      loadLocalStorageComments()
+    } finally {
+      setIsLoadingComments(false)
+    }
+  }
+
+  // localStorage에서 댓글 로드 (백업용)
+  const loadLocalStorageComments = () => {
     const savedComments = localStorage.getItem('postComments')
     if (savedComments) {
       const allComments: Comment[] = JSON.parse(savedComments)
@@ -72,6 +121,9 @@ export default function PostDetailPage() {
       setComments(postComments)
     }
   }
+
+  // 기존 localStorage 로드 함수 (하위 호환성)
+  const loadComments = loadLocalStorageComments
 
   const handleLogout = async () => {
     try {
@@ -220,7 +272,8 @@ export default function PostDetailPage() {
     }
   }
 
-  const handleAddComment = () => {
+  // 댓글 작성 - Supabase 사용
+  const handleAddComment = async () => {
     if (!isLoggedIn) {
       alert('로그인이 필요합니다.')
       return
@@ -231,35 +284,72 @@ export default function PostDetailPage() {
       return
     }
 
-    const userNickname = localStorage.getItem('userNickname') || '익명'
-    const userProfileImage = localStorage.getItem('userProfileImage')
-
-    const comment: Comment = {
-      id: Date.now().toString(),
-      postId: params.id as string,
-      content: newComment.trim(),
-      author: userNickname,
-      authorImage: userProfileImage || undefined,
-      createdAt: new Date().toISOString()
+    if (!params.id || typeof params.id !== 'string') {
+      alert('잘못된 게시글입니다.')
+      return
     }
 
-    const savedComments = localStorage.getItem('postComments') || '[]'
-    const allComments: Comment[] = JSON.parse(savedComments)
-    const updatedComments = [...allComments, comment]
+    setIsSubmittingComment(true)
 
-    localStorage.setItem('postComments', JSON.stringify(updatedComments))
-    setComments(prev => [...prev, comment])
-    setNewComment('')
+    try {
+      // Supabase에 댓글 작성
+      const result = await createComment(params.id, newComment.trim())
 
-    // 게시글 댓글 수 업데이트
-    const savedPosts = localStorage.getItem('communityPosts')
-    if (savedPosts && post) {
-      const posts: Post[] = JSON.parse(savedPosts)
-      const updatedPosts = posts.map(p =>
-        p.id === params.id ? { ...p, comments: p.comments + 1 } : p
-      )
-      localStorage.setItem('communityPosts', JSON.stringify(updatedPosts))
-      setPost(prev => prev ? { ...prev, comments: prev.comments + 1 } : null)
+      if (result.success) {
+        // 성공 시 댓글 목록 새로고침
+        await loadSupabaseComments(params.id)
+
+        // 게시글의 댓글 수 업데이트
+        await updatePostCommentsCount(params.id)
+
+        // 폼 초기화
+        setNewComment('')
+
+        console.log('댓글 작성 성공!')
+
+        // 기존 localStorage 로직도 유지 (하위 호환성)
+        try {
+          const userNickname = localStorage.getItem('userNickname') || '익명'
+          const userProfileImage = localStorage.getItem('userProfileImage')
+
+          const comment: Comment = {
+            id: result.commentId || Date.now().toString(),
+            postId: params.id,
+            content: newComment.trim(),
+            author: userNickname,
+            authorImage: userProfileImage || undefined,
+            createdAt: new Date().toISOString(),
+            post_id: params.id,
+            user_id: 'localStorage',
+            created_at: new Date().toISOString()
+          }
+
+          const savedComments = localStorage.getItem('postComments') || '[]'
+          const allComments: Comment[] = JSON.parse(savedComments)
+          const updatedComments = [...allComments, comment]
+          localStorage.setItem('postComments', JSON.stringify(updatedComments))
+
+          // 게시글 댓글 수 업데이트 (localStorage)
+          const savedPosts = localStorage.getItem('communityPosts')
+          if (savedPosts && post) {
+            const posts: Post[] = JSON.parse(savedPosts)
+            const updatedPosts = posts.map(p =>
+              p.id === params.id ? { ...p, comments: p.comments + 1 } : p
+            )
+            localStorage.setItem('communityPosts', JSON.stringify(updatedPosts))
+            setPost(prev => prev ? { ...prev, comments: prev.comments + 1 } : null)
+          }
+        } catch (localError) {
+          console.log('localStorage 백업 저장 실패:', localError)
+        }
+      } else {
+        alert('댓글 작성에 실패했습니다. 다시 시도해주세요.')
+      }
+    } catch (error) {
+      console.error('댓글 작성 오류:', error)
+      alert('댓글 작성 중 오류가 발생했습니다.')
+    } finally {
+      setIsSubmittingComment(false)
     }
   }
 
@@ -541,10 +631,10 @@ export default function PostDetailPage() {
                 <div className="text-xs text-gray-500">{newComment.length}/500</div>
                 <button
                   onClick={handleAddComment}
-                  disabled={!newComment.trim()}
+                  disabled={!newComment.trim() || isSubmittingComment}
                   className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  댓글 작성
+                  {isSubmittingComment ? '작성 중...' : '댓글 작성'}
                 </button>
               </div>
             </div>

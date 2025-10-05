@@ -4,6 +4,7 @@ import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { authHelpers } from '../../lib/supabase'
 import { migrateTempLikesToUser } from '../../lib/whiskyData'
+import { migrateLocalStorageToSupabase } from '../../lib/autoMigration'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -41,8 +42,16 @@ export default function LoginPage() {
           const nickname = data.user.user_metadata?.nickname || formData.email.split('@')[0]
           localStorage.setItem('userNickname', nickname)
 
+          // 프로필 이미지가 있다면 저장
+          if (data.user.user_metadata?.avatar_url) {
+            localStorage.setItem('userProfileImage', data.user.user_metadata.avatar_url)
+          }
+
           // 로그인 전 임시 찜을 사용자 찜으로 이동
           migrateTempLikesToUser(data.user.id)
+
+          // 🔄 자동 데이터 마이그레이션 실행
+          await migrateLocalStorageToSupabase(data.user.id)
 
           alert('로그인 성공!')
           router.push('/')

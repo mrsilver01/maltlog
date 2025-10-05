@@ -4,23 +4,16 @@ import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { authHelpers } from '../../lib/supabase'
 import LoadingAnimation from '../../components/LoadingAnimation'
+import { getAllCommunityPosts, createCommunityPost, CommunityPostWithProfile } from '../../lib/communityPosts'
 
-interface Post {
-  id: string
-  title: string
-  content: string
-  author: string
-  authorImage?: string
-  image?: string
-  createdAt: string
-  likes: number
-  comments: number
-}
+// Supabase 타입을 사용하되 기존 Post 인터페이스와 호환
+type Post = CommunityPostWithProfile
 
 export default function CommunityPage() {
   const router = useRouter()
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [posts, setPosts] = useState<Post[]>([])
+  const [isLoadingPosts, setIsLoadingPosts] = useState(false)
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [loading, setLoading] = useState(true)
   const [newPost, setNewPost] = useState({
@@ -67,14 +60,38 @@ export default function CommunityPage() {
       }
 
       loadPosts()
+      loadSupabasePosts()
 
       // 즉시 로딩 완료
       setLoading(false)
     }
   }, [])
 
-  // 게시글 로드
-  const loadPosts = () => {
+  // Supabase에서 게시글 로드
+  const loadSupabasePosts = async () => {
+    setIsLoadingPosts(true)
+    try {
+      const supabasePosts = await getAllCommunityPosts()
+      console.log('Supabase에서 로드된 게시글:', supabasePosts.length + '개')
+
+      // Supabase 데이터가 있으면 우선 사용
+      if (supabasePosts.length > 0) {
+        setPosts(supabasePosts)
+      } else {
+        // Supabase에 데이터가 없으면 localStorage 백업 사용
+        loadLocalStoragePosts()
+      }
+    } catch (error) {
+      console.error('Supabase 게시글 로드 실패:', error)
+      // 오류 시 localStorage 백업 사용
+      loadLocalStoragePosts()
+    } finally {
+      setIsLoadingPosts(false)
+    }
+  }
+
+  // localStorage에서 게시글 로드 (백업용)
+  const loadLocalStoragePosts = () => {
     const savedPosts = localStorage.getItem('communityPosts')
     if (savedPosts) {
       const posts = JSON.parse(savedPosts)
@@ -100,6 +117,9 @@ export default function CommunityPage() {
       setPosts([])
     }
   }
+
+  // 기존 localStorage 로드 함수 (하위 호환성)
+  const loadPosts = loadLocalStoragePosts
 
   // 로그아웃 함수
   const handleLogout = async () => {
@@ -223,10 +243,15 @@ export default function CommunityPage() {
     }
   }
 
-  // 게시글 작성
-  const handleCreatePost = () => {
+  // 게시글 작성 - Supabase 사용
+  const handleCreatePost = async () => {
     if (!newPost.title.trim() || !newPost.content.trim()) {
       alert('제목과 내용을 모두 입력해주세요.')
+      return
+    }
+
+    if (!isLoggedIn) {
+      alert('게시글을 작성하려면 로그인해주세요.')
       return
     }
 
@@ -235,92 +260,59 @@ export default function CommunityPage() {
       return
     }
 
-    // 게시글 작성 전 강제로 저장공간 정리
-    try {
-      console.log('Cleaning up storage before post creation...')
-      cleanupStorage()
-    } catch (cleanupError) {
-      console.log('Pre-cleanup failed, continuing...', cleanupError)
-    }
+    setUploading(true)
 
     try {
-      const userNickname = localStorage.getItem('userNickname') || '익명'
-      const userProfileImage = localStorage.getItem('userProfileImage')
+      // Supabase에 게시글 작성
+      const result = await createCommunityPost(
+        newPost.title.trim(),
+        newPost.content.trim(),
+        newPost.image || undefined
+      )
 
-      // 이미지 없는 최소한의 게시글 생성
-      const post: Post = {
-        id: Date.now().toString(),
-        title: newPost.title.trim(),
-        content: newPost.content.trim(),
-        author: userNickname,
-        authorImage: userProfileImage || undefined, // 사용자 프로필 이미지
-        image: newPost.image || undefined, // 게시글 이미지가 있으면 포함
-        createdAt: new Date().toISOString(),
-        likes: 0,
-        comments: 0
-      }
+      if (result.success) {
+        // 성공 시 폼 초기화
+        setNewPost({ title: '', content: '', image: null })
+        setShowCreateForm(false)
 
-      // 기존 게시글을 최대 3개만 유지
-      const limitedPosts = posts.slice(0, 3)
-      const updatedPosts = [post, ...limitedPosts]
+        // 게시글 목록 새로고침
+        await loadSupabasePosts()
 
-      // localStorage 저장 시도
-      let saveSuccess = false
-      let attempts = 0
-      const maxAttempts = 3
+        alert('게시글이 성공적으로 작성되었습니다!')
 
-      while (!saveSuccess && attempts < maxAttempts) {
-        attempts++
+        // 기존 localStorage 로직도 유지 (하위 호환성)
         try {
-          const postsToSave = attempts === 1 ? updatedPosts :
-                             attempts === 2 ? updatedPosts.map(p => ({ ...p, image: undefined })) :
-                             [post] // 마지막 시도는 새 게시글만
+          const userNickname = localStorage.getItem('userNickname') || '익명'
+          const userProfileImage = localStorage.getItem('userProfileImage')
 
-          localStorage.setItem('communityPosts', JSON.stringify(postsToSave))
-          setPosts(postsToSave)
-          saveSuccess = true
-
-          if (attempts > 1) {
-            alert(`게시글이 작성되었습니다. (시도 ${attempts}회 후 성공)`)
+          const post: Post = {
+            id: result.postId || Date.now().toString(),
+            title: newPost.title.trim(),
+            content: newPost.content.trim(),
+            author: userNickname,
+            authorImage: userProfileImage || undefined,
+            image: newPost.image || undefined,
+            createdAt: new Date().toISOString(),
+            likes: 0,
+            comments: 0
           }
-        } catch (storageError) {
-          console.log(`Storage attempt ${attempts} failed:`, storageError)
 
-          if (attempts < maxAttempts) {
-            // 더 많은 데이터 정리
-            try {
-              if (attempts === 1) {
-                // 2번째 시도: 모든 이미지 제거
-                cleanupStorage()
-              } else if (attempts === 2) {
-                // 3번째 시도: localStorage 완전 초기화
-                localStorage.clear()
-                setPosts([])
-              }
-            } catch (e) {
-              console.log('Cleanup during retry failed:', e)
-            }
-          }
+          const savedPosts = localStorage.getItem('communityPosts')
+          const existingPosts = savedPosts ? JSON.parse(savedPosts) : []
+          const updatedPosts = [post, ...existingPosts.slice(0, 2)] // 최대 3개 유지
+
+          localStorage.setItem('communityPosts', JSON.stringify(updatedPosts))
+        } catch (localError) {
+          console.log('localStorage 백업 저장 실패:', localError)
         }
+      } else {
+        alert('게시글 작성에 실패했습니다. 다시 시도해주세요.')
       }
-
-      if (!saveSuccess) {
-        alert('저장에 실패했습니다. 브라우저의 저장 공간을 정리해주세요.')
-        return
-      }
-
-      // 폼 초기화
-      setNewPost({ title: '', content: '', image: null })
-      setShowCreateForm(false)
-
-      // 작성 완료 메시지 및 페이지 새로고침
-      alert('작성 완료되었습니다.')
-      setTimeout(() => {
-        window.location.reload()
-      }, 100)
     } catch (error) {
+      console.error('게시글 작성 오류:', error)
       alert('게시글 작성 중 오류가 발생했습니다.')
-      console.error('Post creation error:', error)
+    } finally {
+      setUploading(false)
     }
   }
 

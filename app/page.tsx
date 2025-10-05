@@ -6,8 +6,9 @@ import LoadingAnimation from '../components/LoadingAnimation'
 import { WhiskyCardSkeleton, HeaderSkeleton } from '../components/Skeleton'
 import { usePageTransition } from '../hooks/usePageTransition'
 import DrawerSidebar from '../components/DrawerSidebar'
-import { whiskeyDatabase, WhiskyData, toggleLike, isWhiskyLiked, migrateTempLikesToUser, clearUserLikes, loadWhiskyDataFromStorage } from '../lib/whiskyData'
+import { whiskeyDatabase, WhiskyData, migrateTempLikesToUser, clearUserLikes, loadWhiskyDataFromStorage } from '../lib/whiskyData'
 import { authHelpers } from '../lib/supabase'
+import { getUserWhiskyLikes, addWhiskyLike, removeWhiskyLike, isWhiskyLiked } from '../lib/whiskyLikes'
 
 export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState('')
@@ -476,6 +477,7 @@ function WhiskyCard({ whisky, navigateWithTransition }: { whisky: WhiskyData, ro
   const [isLikeHovered, setIsLikeHovered] = useState(false)
   const [isLiked, setIsLiked] = useState(false)
   const [currentUser, setCurrentUser] = useState<{ id: string } | null>(null)
+  const [isCheckingLikeStatus, setIsCheckingLikeStatus] = useState(false)
 
   // 현재 로그인한 사용자 정보 가져오기
   useEffect(() => {
@@ -490,17 +492,23 @@ function WhiskyCard({ whisky, navigateWithTransition }: { whisky: WhiskyData, ro
     checkUser()
   }, [])
 
-  // 찜 상태 초기화 및 업데이트
+  // 찜 상태 초기화 및 업데이트 (Supabase 사용)
   useEffect(() => {
-    const updateLikeStatus = () => {
+    const updateLikeStatus = async () => {
       const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true'
 
       if (isLoggedIn && currentUser) {
-        // 로그인된 사용자: 해당 사용자의 찜 상태 확인
-        setIsLiked(isWhiskyLiked(whisky.id, currentUser.id))
-      } else if (isLoggedIn) {
-        // 로그인은 되어있지만 사용자 정보 로딩 중
-        setIsLiked(isWhiskyLiked(whisky.id))
+        // 로그인된 사용자: Supabase에서 찜 상태 확인
+        setIsCheckingLikeStatus(true)
+        try {
+          const liked = await isWhiskyLiked(whisky.id)
+          setIsLiked(liked)
+        } catch (error) {
+          console.error('찜 상태 확인 실패:', error)
+          setIsLiked(false)
+        } finally {
+          setIsCheckingLikeStatus(false)
+        }
       } else {
         // 로그아웃 상태: 찜 상태 false
         setIsLiked(false)
@@ -537,7 +545,7 @@ function WhiskyCard({ whisky, navigateWithTransition }: { whisky: WhiskyData, ro
     navigateWithTransition(`/whisky/${whisky.id}`, `${whisky.name} 상세 정보를 불러오는 중...`)
   }
 
-  const handleLikeClick = (e: React.MouseEvent) => {
+  const handleLikeClick = async (e: React.MouseEvent) => {
     e.stopPropagation()
 
     // 로그인 상태 확인
@@ -548,21 +556,40 @@ function WhiskyCard({ whisky, navigateWithTransition }: { whisky: WhiskyData, ro
       return
     }
 
-    // 새로운 찜 시스템 사용 (중복 방지 및 동기화)
-    const result = toggleLike(whisky.id, currentUser?.id)
+    if (isCheckingLikeStatus) {
+      return // 이미 처리 중이면 무시
+    }
 
-    if (result.success) {
-      setIsLiked(result.isLiked)
-      setCurrentLikes(result.newLikeCount)
+    setIsCheckingLikeStatus(true)
 
-      // 피드백 메시지
-      if (result.isLiked) {
-        console.log(`${whisky.name}을(를) 찜 목록에 추가했습니다.`)
+    try {
+      let success = false
+      if (isLiked) {
+        // 찜 취소
+        success = await removeWhiskyLike(whisky.id)
+        if (success) {
+          setIsLiked(false)
+          setCurrentLikes(prev => Math.max(0, prev - 1))
+          console.log(`${whisky.name}을(를) 찜 목록에서 제거했습니다.`)
+        }
       } else {
-        console.log(`${whisky.name}을(를) 찜 목록에서 제거했습니다.`)
+        // 찜 추가
+        success = await addWhiskyLike(whisky.id)
+        if (success) {
+          setIsLiked(true)
+          setCurrentLikes(prev => prev + 1)
+          console.log(`${whisky.name}을(를) 찜 목록에 추가했습니다.`)
+        }
       }
-    } else {
+
+      if (!success) {
+        alert('찜 처리 중 오류가 발생했습니다.')
+      }
+    } catch (error) {
+      console.error('찜 처리 오류:', error)
       alert('찜 처리 중 오류가 발생했습니다.')
+    } finally {
+      setIsCheckingLikeStatus(false)
     }
   }
 

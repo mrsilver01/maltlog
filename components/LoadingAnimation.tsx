@@ -89,15 +89,15 @@ export default function LoadingAnimation({ message = "로딩 중..." }: LoadingA
         }
 
         .bottle-container {
-          animation: bottle-fall 4s ease-in-out forwards, impact-shake 4s ease-out forwards;
+          animation: bottle-fall 2.5s ease-in-out forwards, impact-shake 2.5s ease-out forwards;
         }
 
         .cork {
-          animation: cork-pop 4s ease-out forwards;
+          animation: cork-pop 2.5s ease-out forwards;
         }
 
         .impact-splash {
-          animation: splash-effect 4s ease-out forwards;
+          animation: splash-effect 2.5s ease-out forwards;
         }
 
         @keyframes splash-effect {

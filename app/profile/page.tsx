@@ -2,7 +2,12 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { loadWhiskyDataFromStorage, whiskeyDatabase, reviewsDatabase } from '../../lib/whiskyData'
+import { loadWhiskyDataFromStorage, whiskeyDatabase } from '../../lib/whiskyData'
+import { getCurrentUserProfile, updateNickname } from '../../lib/userProfiles'
+import { uploadAndSetAvatar } from '../../lib/avatarStorage'
+import { getUserWhiskyReviews } from '../../lib/whiskyReviews'
+import { getUserWhiskyLikes } from '../../lib/whiskyLikes'
+import { supabase } from '../../lib/supabase'
 import LoadingAnimation from '../../components/LoadingAnimation'
 
 interface Comment {
@@ -27,199 +32,171 @@ export default function ProfilePage() {
   const [notesData, setNotesData] = useState<any[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  // localStorage 키
-  const NOTES_STORAGE_KEY = 'userNotes'
-  const EXPANDED_COMMENTS_KEY = 'expandedComments'
+  // 더 이상 localStorage 키는 필요 없음 (Supabase 사용)
 
-  // 노트 데이터 저장
-  const saveNotesToStorage = (notes: any[]) => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(NOTES_STORAGE_KEY, JSON.stringify(notes))
-    }
-  }
-
-  // 노트 데이터 로드
-  const loadNotesFromStorage = () => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem(NOTES_STORAGE_KEY)
-      if (saved) {
-        try {
-          return JSON.parse(saved)
-        } catch (error) {
-          console.error('Failed to parse notes from localStorage:', error)
-        }
-      }
-    }
-    return null
-  }
-
-  // 로그인 상태 확인
+  // 로그인 상태 확인 및 프로필 로드
   useEffect(() => {
-    // 실제로는 인증 토큰이나 사용자 정보를 확인해야 함
-    const checkLoginStatus = () => {
-      // 임시로 localStorage에서 로그인 상태 확인
-      const isUserLoggedIn = localStorage.getItem('isLoggedIn') === 'true'
+    const checkLoginAndLoadProfile = async () => {
+      try {
+        // Supabase 인증 상태 확인
+        const { data: { user }, error: userError } = await supabase.auth.getUser()
 
-      if (!isUserLoggedIn) {
-        // 로그인되지 않은 경우 로그인 페이지로 리다이렉트
-        router.push('/login')
-        return
+        if (userError || !user) {
+          console.log('로그인되지 않음 - 로그인 페이지로 이동')
+          router.push('/login')
+          return
+        }
+
+        setIsLoggedIn(true)
+
+        // 위스키 데이터 로드
+        loadWhiskyDataFromStorage()
+
+        // Supabase에서 프로필 정보 로드
+        const profile = await getCurrentUserProfile()
+        if (profile) {
+          setNickname(profile.nickname)
+          if (profile.avatar_url) {
+            setProfileImage(profile.avatar_url)
+          }
+          console.log('✅ 프로필 로드 완료:', profile.nickname)
+        } else {
+          console.log('프로필이 없음 - 기본값 사용')
+        }
+
+        // 사용자의 위스키 리뷰들로부터 리뷰한 위스키 목록 생성
+        const userReviews = await getUserWhiskyReviews()
+        const reviewedWhiskyIds = [...new Set(userReviews.map(review => review.whisky_id))]
+        const reviewedWhiskyList = reviewedWhiskyIds.map(id => whiskeyDatabase[id]).filter(Boolean)
+        setReviewedWhiskies(reviewedWhiskyList.slice(0, 6))
+
+        setIsLoading(false)
+      } catch (error) {
+        console.error('프로필 로드 중 오류:', error)
+        setIsLoading(false)
       }
-
-      setIsLoggedIn(true)
-
-      // 위스키 데이터 로드 및 사용자가 리뷰한 위스키들 가져오기
-      loadWhiskyDataFromStorage()
-      const reviewedWhiskyList = getReviewedWhiskies()
-      setReviewedWhiskies(reviewedWhiskyList)
-
-      // 저장된 닉네임 로드
-      const savedNickname = localStorage.getItem('userNickname')
-      if (savedNickname) {
-        setNickname(savedNickname)
-      }
-
-      // 저장된 프로필 이미지 로드
-      const savedProfileImage = localStorage.getItem('userProfileImage')
-      console.log('Loaded profile image:', savedProfileImage ? 'Found' : 'Not found')
-      if (savedProfileImage) {
-        setProfileImage(savedProfileImage)
-      }
-
-      // 즉시 로딩 완료
-      setIsLoading(false)
     }
 
-    checkLoginStatus()
+    checkLoginAndLoadProfile()
   }, [router])
 
-  // 사용자 통계 계산
-  const getUserStats = () => {
-    if (typeof window === 'undefined') return { reviewCount: 0, noteCount: 0, wishlistCount: 0 }
+  // 사용자 통계 상태
+  const [userStats, setUserStats] = useState({ reviewCount: 0, noteCount: 0, wishlistCount: 0 })
 
-    const userNickname = localStorage.getItem('userNickname') || '익명 사용자'
+  // 사용자 통계 계산 (Supabase 기반)
+  const getUserStats = async () => {
+    try {
+      // 찜한 위스키 개수
+      const likedWhiskies = await getUserWhiskyLikes()
+      const wishlistCount = likedWhiskies.length
 
-    // 찜한 위스키 개수
-    const likedWhiskies = JSON.parse(localStorage.getItem('likedWhiskies') || '{}')
-    const wishlistCount = Object.keys(likedWhiskies).length
+      // 사용자 리뷰 개수
+      const userReviews = await getUserWhiskyReviews()
+      const reviewCount = userReviews.length
 
-    // reviewsData에서 사용자가 남긴 리뷰/별점 개수
-    const reviewsData = JSON.parse(localStorage.getItem('reviewsData') || '{}')
-    let reviewCount = 0
-    let noteCount = 0
+      // 실제 노트가 있는 리뷰 개수 (단순 별점이 아닌 경우)
+      const noteCount = userReviews.filter(review =>
+        review.notes && review.notes.trim() !== '' &&
+        !review.notes.includes('별점') &&
+        review.notes.trim() !== `별점 ${review.rating}점을 남겼습니다.`
+      ).length
 
-    Object.keys(reviewsData).forEach(whiskyId => {
-      const reviews = reviewsData[whiskyId] || []
-      reviews.forEach((review: any) => {
-        if (review.user === userNickname) {
-          reviewCount++
-          // 실제 노트가 있는 경우 (단순 별점이 아닌 경우)
-          if (review.comment && review.comment.trim() !== '' &&
-              !review.comment.includes('별점') &&
-              review.comment.trim() !== `별점 ${review.rating}점을 남겼습니다.`) {
-            noteCount++
-          }
-        }
-      })
-    })
-
-    return { reviewCount, noteCount, wishlistCount }
+      return { reviewCount, noteCount, wishlistCount }
+    } catch (error) {
+      console.error('통계 계산 중 오류:', error)
+      return { reviewCount: 0, noteCount: 0, wishlistCount: 0 }
+    }
   }
 
-  const userStats = getUserStats()
+  // 통계 로드
+  useEffect(() => {
+    const loadStats = async () => {
+      if (isLoggedIn) {
+        const stats = await getUserStats()
+        setUserStats(stats)
+      }
+    }
+    loadStats()
+  }, [isLoggedIn])
 
-  const myReviews: any[] = []
+  // myReviews는 notesData에서 별점만 필터링하여 사용
 
-  // 사용자의 실제 리뷰 데이터 로드
-  const loadUserReviews = () => {
-    if (typeof window === 'undefined') return []
-
-    const userNickname = localStorage.getItem('userNickname') || '익명 사용자'
-    const reviewsData = JSON.parse(localStorage.getItem('reviewsData') || '{}')
-    const userReviews: any[] = []
-
-    // 모든 위스키의 리뷰에서 사용자가 작성한 리뷰 찾기
-    Object.keys(reviewsData).forEach(whiskyId => {
-      const reviews = reviewsData[whiskyId] || []
-      reviews.forEach((review: any) => {
-        if (review.user === userNickname) {
-          // 위스키 이름 찾기
-          const whiskyData = whiskeyDatabase[whiskyId]
-          if (whiskyData) {
-            userReviews.push({
-              id: review.id,
-              user: review.user,
-              whisky: whiskyData.name,
-              rating: review.rating,
-              content: review.comment,
-              likes: review.likes || 0,
-              comments: review.comments || [],
-              date: review.createdAt ? new Date(review.createdAt).toLocaleDateString('ko-KR') : new Date().toLocaleDateString('ko-KR'),
-              whiskyImage: whiskyData.image,
-              whiskyId: whiskyId,
-              reviewId: review.id
-            })
-          }
+  // 사용자의 실제 리뷰 데이터 로드 (Supabase 기반)
+  const loadUserReviews = async () => {
+    try {
+      const userReviews = await getUserWhiskyReviews()
+      const transformedReviews = userReviews.map(review => {
+        const whiskyData = whiskeyDatabase[review.whisky_id]
+        return {
+          id: review.id,
+          user: nickname,
+          whisky: whiskyData?.name || '알 수 없는 위스키',
+          rating: review.rating,
+          content: review.notes,
+          likes: 0, // 리뷰 좋아요는 아직 구현되지 않음
+          comments: [], // 리뷰 댓글은 아직 구현되지 않음
+          date: new Date(review.created_at).toLocaleDateString('ko-KR'),
+          whiskyImage: whiskyData?.image || '/whiskies/no-pic.webp',
+          whiskyId: review.whisky_id,
+          reviewId: review.id
         }
       })
-    })
-
-    return userReviews.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      return transformedReviews.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    } catch (error) {
+      console.error('사용자 리뷰 로드 중 오류:', error)
+      return []
+    }
   }
 
   // 컴포넌트 마운트 시 노트 데이터 초기화
   useEffect(() => {
-    // localStorage에서 expandedComments 상태 제거 (혹시 저장되어 있을 수 있음)
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem(EXPANDED_COMMENTS_KEY)
+    const loadReviewsData = async () => {
+      if (isLoggedIn) {
+        // Supabase에서 사용자 리뷰 데이터 로드
+        const userReviews = await loadUserReviews()
+        setNotesData(userReviews)
+
+        // 답글창 상태 초기화
+        setExpandedComments({})
+      }
     }
 
-    // 실제 사용자 리뷰 데이터 로드
-    const userReviews = loadUserReviews()
-    setNotesData(userReviews)
-
-    // 모든 데이터 로드 후 expandedComments 상태 강제 초기화 (모든 답글창 접기)
-    setTimeout(() => {
-      setExpandedComments({})
-    }, 100)
-  }, [nickname])  // nickname 변경 시 리로드
+    loadReviewsData()
+  }, [isLoggedIn, nickname])
 
   const myNotes = showAllNotes ? notesData : notesData.slice(0, 3)
 
-  // 사용자가 리뷰한 위스키들 가져오기
-  const getReviewedWhiskies = () => {
-    const reviewedList: any[] = []
-
-    // 모든 위스키의 리뷰를 확인
-    Object.keys(reviewsDatabase).forEach(whiskyId => {
-      const reviews = reviewsDatabase[whiskyId]
-
-      // 익명 사용자의 리뷰가 있는지 확인 (실제로는 사용자 ID로 필터링해야 함)
-      if (reviews && reviews.length > 0) {
-        const whiskyData = whiskeyDatabase[whiskyId]
-        if (whiskyData) {
-          reviewedList.push(whiskyData)
-        }
-      }
-    })
-
-    return reviewedList.slice(0, 6) // 최대 6개까지만 표시
-  }
+  // 더 이상 필요 없음 - useEffect에서 Supabase 데이터로 처리
 
   // 로그아웃 함수
-  const handleLogout = () => {
-    localStorage.removeItem('isLoggedIn')
-    localStorage.removeItem('userEmail')
-    localStorage.removeItem('userNickname')
-    alert('로그아웃되었습니다.')
-    router.push('/')
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut()
+      alert('로그아웃되었습니다.')
+      router.push('/')
+    } catch (error) {
+      console.error('로그아웃 중 오류:', error)
+      alert('로그아웃 중 오류가 발생했습니다.')
+    }
   }
 
-  const handleEditProfile = () => {
+  const handleEditProfile = async () => {
     if (isEditing) {
-      // 닉네임 저장
-      localStorage.setItem('userNickname', nickname)
-      console.log('프로필 저장:', nickname)
+      try {
+        // Supabase에 닉네임 저장
+        const success = await updateNickname(nickname)
+        if (success) {
+          console.log('✅ 닉네임 저장 성공:', nickname)
+          alert('닉네임이 저장되었습니다.')
+        } else {
+          alert('닉네임 저장에 실패했습니다.')
+          return
+        }
+      } catch (error) {
+        console.error('닉네임 저장 중 오류:', error)
+        alert('닉네임 저장 중 오류가 발생했습니다.')
+        return
+      }
     }
     setIsEditing(!isEditing)
   }
@@ -228,19 +205,25 @@ export default function ProfilePage() {
     fileInputRef.current?.click()
   }
 
-  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (file) {
-      const reader = new FileReader()
-      reader.onload = (e) => {
-        const imageData = e.target?.result as string
-        console.log('Setting profile image (file upload):', imageData ? 'Image loaded' : 'Failed to load')
-        setProfileImage(imageData)
-        // localStorage에 프로필 이미지 저장
-        localStorage.setItem('userProfileImage', imageData)
-        console.log('Saved to localStorage (file upload)')
+      try {
+        console.log('이미지 업로드 시작...')
+        const result = await uploadAndSetAvatar(file)
+
+        if (result.success && result.url) {
+          setProfileImage(result.url)
+          console.log('✅ 프로필 이미지 업로드 성공:', result.url)
+          alert('프로필 이미지가 업데이트되었습니다.')
+        } else {
+          console.error('이미지 업로드 실패:', result.error)
+          alert(result.error || '이미지 업로드에 실패했습니다.')
+        }
+      } catch (error) {
+        console.error('이미지 업로드 중 오류:', error)
+        alert('이미지 업로드 중 오류가 발생했습니다.')
       }
-      reader.readAsDataURL(file)
     }
   }
 
@@ -254,22 +237,28 @@ export default function ProfilePage() {
     setIsDragging(false)
   }
 
-  const handleDrop = (e: React.DragEvent) => {
+  const handleDrop = async (e: React.DragEvent) => {
     e.preventDefault()
     setIsDragging(false)
 
     const file = e.dataTransfer.files[0]
     if (file && file.type.startsWith('image/')) {
-      const reader = new FileReader()
-      reader.onload = (e) => {
-        const imageData = e.target?.result as string
-        console.log('Setting profile image (drag & drop):', imageData ? 'Image loaded' : 'Failed to load')
-        setProfileImage(imageData)
-        // localStorage에 프로필 이미지 저장
-        localStorage.setItem('userProfileImage', imageData)
-        console.log('Saved to localStorage (drag & drop)')
+      try {
+        console.log('드래그 앤 드롭 이미지 업로드 시작...')
+        const result = await uploadAndSetAvatar(file)
+
+        if (result.success && result.url) {
+          setProfileImage(result.url)
+          console.log('✅ 프로필 이미지 업로드 성공 (드래그 앤 드롭):', result.url)
+          alert('프로필 이미지가 업데이트되었습니다.')
+        } else {
+          console.error('이미지 업로드 실패:', result.error)
+          alert(result.error || '이미지 업로드에 실패했습니다.')
+        }
+      } catch (error) {
+        console.error('이미지 업로드 중 오류:', error)
+        alert('이미지 업로드 중 오류가 발생했습니다.')
       }
-      reader.readAsDataURL(file)
     }
   }
 
@@ -280,90 +269,14 @@ export default function ProfilePage() {
     }))
   }
 
+  // 댓글 기능은 현재 비활성화 (위스키 리뷰에는 댓글이 없음)
   const handleAddReply = (noteId: number) => {
-    const text = replyText[noteId.toString()]
-    if (!text || !text.trim()) return
-
-    // 해당 노트 찾기
-    const note = notesData.find(n => n.id === noteId)
-    if (!note) return
-
-    const newComment = {
-      id: Date.now(),
-      user: nickname,
-      content: text.trim(),
-      createdAt: new Date().toISOString()
-    }
-
-    // reviewsData 업데이트
-    const reviewsData = JSON.parse(localStorage.getItem('reviewsData') || '{}')
-    if (reviewsData[note.whiskyId]) {
-      const reviews = reviewsData[note.whiskyId]
-      const reviewIndex = reviews.findIndex((r: any) => r.id === note.reviewId)
-      if (reviewIndex !== -1) {
-        if (!reviews[reviewIndex].comments) {
-          reviews[reviewIndex].comments = []
-        }
-        reviews[reviewIndex].comments.push(newComment)
-        localStorage.setItem('reviewsData', JSON.stringify(reviewsData))
-      }
-    }
-
-    // 상태 업데이트
-    setNotesData(prevNotes => {
-      return prevNotes.map(note => {
-        if (note.id === noteId) {
-          return {
-            ...note,
-            comments: [...note.comments, {
-              id: newComment.id,
-              user: newComment.user,
-              content: newComment.content,
-              date: new Date(newComment.createdAt).toLocaleDateString('ko-KR')
-            }]
-          }
-        }
-        return note
-      })
-    })
-
-    // 입력창 초기화
-    setReplyText(prev => ({
-      ...prev,
-      [noteId.toString()]: ''
-    }))
+    console.log('댓글 기능은 현재 비활성화되어 있습니다.')
   }
 
+  // 댓글 삭제 기능은 현재 비활성화 (위스키 리뷰에는 댓글이 없음)
   const handleDeleteReply = (noteId: number, commentId: number) => {
-    if (!confirm('정말로 이 댓글을 삭제하시겠습니까?')) return
-
-    // 해당 노트 찾기
-    const note = notesData.find(n => n.id === noteId)
-    if (!note) return
-
-    // reviewsData 업데이트
-    const reviewsData = JSON.parse(localStorage.getItem('reviewsData') || '{}')
-    if (reviewsData[note.whiskyId]) {
-      const reviews = reviewsData[note.whiskyId]
-      const reviewIndex = reviews.findIndex((r: any) => r.id === note.reviewId)
-      if (reviewIndex !== -1 && reviews[reviewIndex].comments) {
-        reviews[reviewIndex].comments = reviews[reviewIndex].comments.filter((c: any) => c.id !== commentId)
-        localStorage.setItem('reviewsData', JSON.stringify(reviewsData))
-      }
-    }
-
-    // 상태 업데이트
-    setNotesData(prevNotes => {
-      return prevNotes.map(note => {
-        if (note.id === noteId) {
-          return {
-            ...note,
-            comments: note.comments.filter((comment: any) => comment.id !== commentId)
-          }
-        }
-        return note
-      })
-    })
+    console.log('댓글 삭제 기능은 현재 비활성화되어 있습니다.')
   }
 
   const truncateText = (text: string, maxLength: number = 50) => {
@@ -371,25 +284,34 @@ export default function ProfilePage() {
     return text.substring(0, maxLength) + '...'
   }
 
-  // 리뷰 삭제 함수
-  const handleDeleteReview = (noteId: number) => {
+  // 리뷰 삭제 함수 (Supabase 기반)
+  const handleDeleteReview = async (noteId: number) => {
     if (!confirm('정말로 이 리뷰를 삭제하시겠습니까?')) return
 
-    // 해당 노트 찾기
-    const note = notesData.find(n => n.id === noteId)
-    if (!note) return
+    try {
+      // Supabase에서 리뷰 삭제는 whiskyReviews.ts의 deleteWhiskyReview 함수 사용
+      const { deleteWhiskyReview } = await import('../../lib/whiskyReviews')
 
-    // reviewsData에서 삭제
-    const reviewsData = JSON.parse(localStorage.getItem('reviewsData') || '{}')
-    if (reviewsData[note.whiskyId]) {
-      const reviews = reviewsData[note.whiskyId]
-      const updatedReviews = reviews.filter((r: any) => r.id !== note.reviewId)
-      reviewsData[note.whiskyId] = updatedReviews
-      localStorage.setItem('reviewsData', JSON.stringify(reviewsData))
+      // 해당 리뷰 찾기
+      const review = notesData.find(n => n.id === noteId)
+      if (!review) return
+
+      const success = await deleteWhiskyReview(review.whiskyId)
+      if (success) {
+        // 상태에서 삭제
+        setNotesData(prevNotes => prevNotes.filter(note => note.id !== noteId))
+        alert('리뷰가 삭제되었습니다.')
+
+        // 통계 다시 로드
+        const stats = await getUserStats()
+        setUserStats(stats)
+      } else {
+        alert('리뷰 삭제에 실패했습니다.')
+      }
+    } catch (error) {
+      console.error('리뷰 삭제 중 오류:', error)
+      alert('리뷰 삭제 중 오류가 발생했습니다.')
     }
-
-    // 상태에서 삭제
-    setNotesData(prevNotes => prevNotes.filter(note => note.id !== noteId))
   }
 
   // 개발자 도구용 함수들을 주석 처리
@@ -478,10 +400,10 @@ export default function ProfilePage() {
             {/* 프로필 사진 */}
             <div className="mb-6">
               <div
-                className={`w-32 h-32 border-2 rounded-full mx-auto mb-4 cursor-pointer transition-all duration-300 relative overflow-hidden group ${
+                className={`w-32 h-32 border-3 rounded-full mx-auto mb-4 cursor-pointer transition-all duration-300 relative overflow-hidden group ${
                   isDragging
-                    ? 'border-amber-500 bg-amber-50 scale-105'
-                    : 'border-gray-300 bg-white hover:border-amber-400 hover:scale-105 hover:shadow-lg'
+                    ? 'border-amber-600 bg-amber-100 scale-105 shadow-xl'
+                    : 'border-amber-700 bg-amber-800 hover:border-amber-600 hover:scale-105 hover:shadow-xl'
                 }`}
                 onClick={handleImageClick}
                 onDragOver={handleDragOver}
@@ -495,18 +417,18 @@ export default function ProfilePage() {
                     className="w-full h-full object-cover rounded-full"
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center rounded-full">
+                  <div className="w-full h-full flex items-center justify-center rounded-full bg-amber-800">
                     <div className="text-center">
-                      <div className="text-4xl text-gray-400 mb-2">📷</div>
-                      <div className="text-xs text-gray-500">클릭 또는 드래그</div>
+                      <div className="text-4xl text-amber-200 mb-1">📷</div>
+                      <div className="text-xs text-amber-300 font-medium">클릭하여 추가</div>
                     </div>
                   </div>
                 )}
 
                 {/* 호버 오버레이 */}
-                <div className="absolute inset-0 bg-amber-900 bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center rounded-full">
-                  <div className="text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-sm font-medium">
-                    {profileImage ? '변경' : '추가'}
+                <div className="absolute inset-0 bg-amber-900 bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300 flex items-center justify-center rounded-full">
+                  <div className="text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-sm font-bold shadow-lg">
+                    {profileImage ? '📸 변경' : '📷 추가'}
                   </div>
                 </div>
               </div>
@@ -569,7 +491,7 @@ export default function ProfilePage() {
             <div>
               <h3 className="text-lg font-bold text-gray-800 mb-4">남긴 별점</h3>
               <div className="space-y-3">
-                {myReviews.map((review) => (
+                {notesData.slice(0, 5).map((review) => (
                   <div key={review.id} className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <span className="text-yellow-400">★</span>
