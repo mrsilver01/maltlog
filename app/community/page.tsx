@@ -79,39 +79,49 @@ export default function CommunityPage() {
         setPosts(supabasePosts)
       } else {
         // Supabase에 데이터가 없으면 localStorage 백업 사용
-        loadLocalStoragePosts()
+        await loadLocalStoragePosts()
       }
     } catch (error) {
       console.error('Supabase 게시글 로드 실패:', error)
       // 오류 시 localStorage 백업 사용
-      loadLocalStoragePosts()
+      await loadLocalStoragePosts()
     } finally {
       setIsLoadingPosts(false)
     }
   }
 
   // localStorage에서 게시글 로드 (백업용)
-  const loadLocalStoragePosts = () => {
+  const loadLocalStoragePosts = async () => {
     const savedPosts = localStorage.getItem('communityPosts')
     if (savedPosts) {
       const posts = JSON.parse(savedPosts)
-      const currentUserNickname = localStorage.getItem('userNickname')
-      const currentUserProfileImage = localStorage.getItem('userProfileImage')
 
-      // 현재 사용자의 게시글에 프로필 이미지 업데이트
-      const updatedPosts = posts.map((post: any) => {
-        if (post.author === currentUserNickname && !post.authorImage && currentUserProfileImage) {
-          return { ...post, authorImage: currentUserProfileImage }
+      // Supabase에서 현재 사용자 프로필 가져오기
+      try {
+        const { getCurrentUserProfile } = await import('../../lib/userProfiles')
+        const currentProfile = await getCurrentUserProfile()
+
+        if (currentProfile) {
+          // 현재 사용자의 게시글에 Supabase 프로필 정보 업데이트
+          const updatedPosts = posts.map((post: any) => {
+            if (post.author === currentProfile.nickname) {
+              return {
+                ...post,
+                author: currentProfile.nickname,
+                authorImage: currentProfile.avatar_url || undefined
+              }
+            }
+            return post
+          })
+
+          setPosts(updatedPosts)
+        } else {
+          setPosts(posts)
         }
-        return post
-      })
-
-      // 업데이트된 게시글을 다시 저장
-      if (JSON.stringify(posts) !== JSON.stringify(updatedPosts)) {
-        localStorage.setItem('communityPosts', JSON.stringify(updatedPosts))
+      } catch (error) {
+        console.error('프로필 정보 로드 실패:', error)
+        setPosts(posts)
       }
-
-      setPosts(updatedPosts)
     } else {
       // 빈 초기 상태
       setPosts([])

@@ -38,10 +38,12 @@ export async function uploadAvatarImage(file: File): Promise<{ success: boolean;
       return { success: false, error: validation.error }
     }
 
-    // 파일명 생성 (사용자 ID + 타임스탬프)
+    // 파일명 생성 (사용자 ID + 타임스탬프 + 랜덤값)
     const fileExt = file.name.split('.').pop()
-    const fileName = `${user.id}_${Date.now()}.${fileExt}`
-    const filePath = `${fileName}` // avatars/ 접두사 제거
+    const timestamp = Date.now()
+    const randomId = Math.random().toString(36).substring(2, 15)
+    const fileName = `${user.id}_${timestamp}_${randomId}.${fileExt}`
+    const filePath = fileName
 
     console.log('아바타 이미지 업로드 시작:', fileName)
 
@@ -205,6 +207,11 @@ export function compressImage(file: File, maxWidth: number = 400, quality: numbe
 // 아바타 이미지 업로드 및 프로필 업데이트 통합 함수
 export async function uploadAndSetAvatar(file: File): Promise<{ success: boolean; url?: string; error?: string }> {
   try {
+    // 0. 기존 프로필 이미지 URL 가져오기
+    const { getCurrentUserProfile } = await import('./userProfiles')
+    const currentProfile = await getCurrentUserProfile()
+    const oldAvatarUrl = currentProfile?.avatar_url
+
     // 1. 이미지 압축
     console.log('이미지 압축 중...')
     const compressedFile = await compressImage(file, 400, 0.8)
@@ -223,9 +230,15 @@ export async function uploadAndSetAvatar(file: File): Promise<{ success: boolean
     const updateSuccess = await updateAvatarUrl(uploadResult.url!)
 
     if (!updateSuccess) {
-      // 업로드는 성공했지만 프로필 업데이트 실패 시 파일 삭제
+      // 업로드는 성공했지만 프로필 업데이트 실패 시 새 파일 삭제
       await deleteAvatarImage(uploadResult.url!)
       return { success: false, error: '프로필 업데이트에 실패했습니다.' }
+    }
+
+    // 4. 기존 아바타 이미지 삭제 (업데이트 성공 후)
+    if (oldAvatarUrl && oldAvatarUrl !== uploadResult.url) {
+      console.log('기존 아바타 이미지 삭제 중...')
+      await deleteAvatarImage(oldAvatarUrl)
     }
 
     console.log('✅ 아바타 설정 완료:', uploadResult.url)

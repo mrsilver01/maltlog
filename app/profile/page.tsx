@@ -406,8 +406,10 @@ export default function ProfilePage() {
               <div
                 className={`w-32 h-32 border-3 rounded-full mx-auto mb-4 cursor-pointer transition-all duration-300 relative overflow-hidden group ${
                   isDragging
-                    ? 'border-amber-600 bg-amber-100 scale-105 shadow-xl'
-                    : 'border-amber-700 bg-amber-800 hover:border-amber-600 hover:scale-105 hover:shadow-xl'
+                    ? 'border-amber-600 scale-105 shadow-xl'
+                    : profileImage
+                      ? 'border-amber-700 hover:border-amber-600 hover:scale-105 hover:shadow-xl'
+                      : 'border-amber-700 bg-amber-800 hover:border-amber-600 hover:scale-105 hover:shadow-xl'
                 }`}
                 onClick={handleImageClick}
                 onDragOver={handleDragOver}
