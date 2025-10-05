@@ -117,6 +117,35 @@ export async function saveWhiskyReview(
   }
 }
 
+// 사용자의 모든 위스키 리뷰 가져오기
+export async function getUserWhiskyReviews(): Promise<WhiskyReview[]> {
+  try {
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
+
+    if (userError || !user) {
+      console.log('로그인이 필요합니다')
+      return []
+    }
+
+    const { data: reviews, error } = await supabase
+      .from('reviews')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      console.error('사용자 리뷰 목록 가져오기 실패:', error)
+      return []
+    }
+
+    console.log(`✅ 사용자 리뷰 ${reviews?.length || 0}개 로드 완료`)
+    return reviews || []
+  } catch (error) {
+    console.error('사용자 리뷰 목록 가져오기 중 오류:', error)
+    return []
+  }
+}
+
 // 위스키 리뷰 삭제
 export async function deleteWhiskyReview(whiskyName: string): Promise<boolean> {
   try {
