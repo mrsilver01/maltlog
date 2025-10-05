@@ -22,49 +22,35 @@ export default function CommunityPage() {
     image: null as string | null
   })
   const [uploading, setUploading] = useState(false)
+  const [userNickname, setUserNickname] = useState('')
 
-  // 로그인 상태 확인
+  // 인증 상태 확인 및 게시글 로드
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const loginStatus = localStorage.getItem('isLoggedIn') === 'true'
-      setIsLoggedIn(loginStatus)
-
-      // 임시 커뮤니티 데이터 정리
-      const existingPosts = localStorage.getItem('communityPosts')
-      if (existingPosts) {
-        try {
-          const posts = JSON.parse(existingPosts)
-          const filteredPosts = posts.filter((post: Post) =>
-            post.author !== 'MaltExpert' && post.author !== 'WhiskyLover'
-          )
-          localStorage.setItem('communityPosts', JSON.stringify(filteredPosts))
-          console.log('Temporary community posts cleaned up')
-        } catch (e) {
-          console.log('Error cleaning community posts:', e)
-        }
-      }
-
-      // 페이지 로드 시 자동 정리
+    const initializeApp = async () => {
+      // Supabase 인증 상태 확인
       try {
-        const usage = JSON.stringify(localStorage).length
-        console.log('Current localStorage usage:', usage, 'bytes')
+        const { data: { user }, error } = await supabase.auth.getUser()
+        setIsLoggedIn(!!user && !error)
 
-        // 5MB 이상이면 정리
-        if (usage > 5 * 1024 * 1024) {
-          console.log('Storage too large, cleaning up...')
-          cleanupStorage()
+        // 로그인된 경우 사용자 프로필 로드
+        if (user && !error) {
+          const { getCurrentUserProfile } = await import('../../lib/userProfiles')
+          const profile = await getCurrentUserProfile()
+          if (profile) {
+            setUserNickname(profile.nickname)
+          }
         }
-      } catch (e) {
-        console.log('Storage check failed, cleaning up anyway...')
-        cleanupStorage()
+      } catch (error) {
+        console.error('인증 상태 확인 중 오류:', error)
+        setIsLoggedIn(false)
       }
 
-      loadPosts()
-      loadSupabasePosts()
-
-      // 즉시 로딩 완료
+      // Supabase에서 게시글 로드
+      await loadSupabasePosts()
       setLoading(false)
     }
+
+    initializeApp()
   }, [])
 
   // Supabase에서 게시글 로드
@@ -74,67 +60,21 @@ export default function CommunityPage() {
       const supabasePosts = await getAllCommunityPosts()
       console.log('Supabase에서 로드된 게시글:', supabasePosts.length + '개')
 
-      // Supabase 데이터가 있으면 우선 사용
-      if (supabasePosts.length > 0) {
-        setPosts(supabasePosts)
-      } else {
-        // Supabase에 데이터가 없으면 localStorage 백업 사용
-        await loadLocalStoragePosts()
-      }
+      // Supabase 데이터 사용
+      setPosts(supabasePosts)
     } catch (error) {
       console.error('Supabase 게시글 로드 실패:', error)
-      // 오류 시 localStorage 백업 사용
-      await loadLocalStoragePosts()
+      setPosts([])
     } finally {
       setIsLoadingPosts(false)
     }
   }
 
-  // localStorage에서 게시글 로드 (백업용)
-  const loadLocalStoragePosts = async () => {
-    const savedPosts = localStorage.getItem('communityPosts')
-    if (savedPosts) {
-      const posts = JSON.parse(savedPosts)
-
-      // Supabase에서 현재 사용자 프로필 가져오기
-      try {
-        const { getCurrentUserProfile } = await import('../../lib/userProfiles')
-        const currentProfile = await getCurrentUserProfile()
-
-        if (currentProfile) {
-          // 현재 사용자의 게시글에 Supabase 프로필 정보 업데이트
-          const updatedPosts = posts.map((post: any) => {
-            if (post.author === currentProfile.nickname) {
-              return {
-                ...post,
-                author: currentProfile.nickname,
-                authorImage: currentProfile.avatar_url || undefined
-              }
-            }
-            return post
-          })
-
-          setPosts(updatedPosts)
-        } else {
-          setPosts(posts)
-        }
-      } catch (error) {
-        console.error('프로필 정보 로드 실패:', error)
-        setPosts(posts)
-      }
-    } else {
-      // 빈 초기 상태
-      setPosts([])
-    }
-  }
-
-  // 기존 localStorage 로드 함수 (하위 호환성)
-  const loadPosts = loadLocalStoragePosts
 
   // 로그아웃 함수
   const handleLogout = async () => {
     try {
-      await authHelpers.signOut()
+      await supabase.auth.signOut()
       setIsLoggedIn(false)
       alert('로그아웃되었습니다.')
       router.push('/')
@@ -289,32 +229,6 @@ export default function CommunityPage() {
         await loadSupabasePosts()
 
         alert('게시글이 성공적으로 작성되었습니다!')
-
-        // 기존 localStorage 로직도 유지 (하위 호환성)
-        try {
-          const userNickname = localStorage.getItem('userNickname') || '익명'
-          const userProfileImage = localStorage.getItem('userProfileImage')
-
-          const post: Post = {
-            id: result.postId || Date.now().toString(),
-            title: newPost.title.trim(),
-            content: newPost.content.trim(),
-            author: userNickname,
-            authorImage: userProfileImage || undefined,
-            image: newPost.image || undefined,
-            createdAt: new Date().toISOString(),
-            likes: 0,
-            comments: 0
-          }
-
-          const savedPosts = localStorage.getItem('communityPosts')
-          const existingPosts = savedPosts ? JSON.parse(savedPosts) : []
-          const updatedPosts = [post, ...existingPosts.slice(0, 2)] // 최대 3개 유지
-
-          localStorage.setItem('communityPosts', JSON.stringify(updatedPosts))
-        } catch (localError) {
-          console.log('localStorage 백업 저장 실패:', localError)
-        }
       } else {
         alert('게시글 작성에 실패했습니다. 다시 시도해주세요.')
       }
@@ -326,92 +240,6 @@ export default function CommunityPage() {
     }
   }
 
-  // 강력한 localStorage 공간 정리 함수
-  const cleanupStorage = () => {
-    try {
-      // 1. 모든 이미지 제거하고 최근 게시글만 유지
-      const savedPosts = localStorage.getItem('communityPosts')
-      if (savedPosts) {
-        const posts: Post[] = JSON.parse(savedPosts)
-        // 최근 5개 게시글만 유지하고 모든 이미지 제거
-        const cleanedPosts = posts.slice(0, 5).map(post => ({
-          ...post,
-          image: undefined // 모든 이미지 제거
-        }))
-        localStorage.setItem('communityPosts', JSON.stringify(cleanedPosts))
-        setPosts(cleanedPosts)
-      }
-
-      // 2. 다른 불필요한 데이터 완전 삭제
-      const keysToRemove = [
-        'reviewsData',
-        'userNotes',
-        'expandedComments',
-        'postComments',
-        'likedPosts',
-        'likedWhiskies',
-        'userProfileImage'
-      ]
-
-      keysToRemove.forEach(key => {
-        try {
-          localStorage.removeItem(key)
-        } catch (e) {
-          console.log(`Failed to remove ${key}`)
-        }
-      })
-
-      return true
-    } catch (error) {
-      console.error('Storage cleanup error:', error)
-      // 완전 초기화 시도
-      try {
-        localStorage.clear()
-        setPosts([])
-        return true
-      } catch (clearError) {
-        console.error('Failed to clear storage:', clearError)
-        return false
-      }
-    }
-  }
-
-  // 강제 저장공간 정리 함수
-  const forceCleanupStorage = () => {
-    if (confirm('저장 공간을 정리하시겠습니까? 오래된 게시글의 이미지가 삭제됩니다.')) {
-      try {
-        // 커뮤니티 게시글 정리
-        const savedPosts = localStorage.getItem('communityPosts')
-        if (savedPosts) {
-          const posts: Post[] = JSON.parse(savedPosts)
-          // 최근 5개만 이미지 유지하고 나머지는 이미지 제거
-          const cleanedPosts = posts.map((post, index) => {
-            if (index >= 5 && post.image) {
-              return { ...post, image: undefined }
-            }
-            return post
-          })
-          localStorage.setItem('communityPosts', JSON.stringify(cleanedPosts))
-          setPosts(cleanedPosts)
-        }
-
-        // 기타 불필요한 데이터 정리
-        const keysToClean = ['userNotes', 'expandedComments', 'likedPosts', 'postComments']
-        keysToClean.forEach(key => {
-          const data = localStorage.getItem(key)
-          if (data && data.length > 10000) { // 10KB 이상인 경우만 정리
-            localStorage.removeItem(key)
-          }
-        })
-
-        alert('저장 공간이 정리되었습니다.')
-        window.location.reload()
-      } catch (error) {
-        alert('정리 중 오류가 발생했습니다.')
-        console.error('Force cleanup error:', error)
-      }
-    }
-  }
 
   // 폼 초기화
   const resetForm = () => {
@@ -452,7 +280,7 @@ export default function CommunityPage() {
           {isLoggedIn ? (
             <div className="flex items-center gap-4">
               <span className="text-sm text-gray-600">
-                {typeof window !== 'undefined' ? localStorage.getItem('userNickname') : ''}님
+                {userNickname}님
               </span>
               <button
                 onClick={handleLogout}
