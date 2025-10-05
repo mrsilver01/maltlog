@@ -21,6 +21,7 @@ export default function ProfilePage() {
   const router = useRouter()
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
+  const [authChecked, setAuthChecked] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
   const [nickname, setNickname] = useState('MrSilverr')
   const [profileImage, setProfileImage] = useState<string | null>(null)
@@ -43,11 +44,14 @@ export default function ProfilePage() {
 
         if (userError || !user) {
           console.log('로그인되지 않음 - 로그인 페이지로 이동')
+          setAuthChecked(true)
+          setIsLoading(false)
           router.push('/login')
           return
         }
 
         setIsLoggedIn(true)
+        setAuthChecked(true)
 
         // 위스키 데이터 로드
         loadWhiskyDataFromStorage()
@@ -329,8 +333,8 @@ export default function ProfilePage() {
   //   setExpandedComments({})
   // }
 
-  // 로딩 중일 때 로딩 애니메이션 표시
-  if (isLoading) {
+  // 로딩 중일 때 로딩 애니메이션 표시 (인증 확인 전에만)
+  if (!authChecked) {
     return <LoadingAnimation message="프로필을 불러오는 중..." />
   }
 

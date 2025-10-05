@@ -7,7 +7,7 @@ import { WhiskyCardSkeleton, HeaderSkeleton } from '../components/Skeleton'
 import { usePageTransition } from '../hooks/usePageTransition'
 import DrawerSidebar from '../components/DrawerSidebar'
 import { whiskeyDatabase, WhiskyData, migrateTempLikesToUser, clearUserLikes, loadWhiskyDataFromStorage } from '../lib/whiskyData'
-import { authHelpers } from '../lib/supabase'
+import { supabase } from '../lib/supabase'
 import { getUserWhiskyLikes, addWhiskyLike, removeWhiskyLike, isWhiskyLiked } from '../lib/whiskyLikes'
 
 export default function HomePage() {
@@ -38,16 +38,26 @@ export default function HomePage() {
 
   // 초기 로딩 및 위스키 데이터 로드
   useEffect(() => {
-    // localStorage에서 데이터 로드 (즉시 실행)
-    loadWhiskyDataFromStorage()
-    const whiskyArray = Object.values(whiskeyDatabase)
-    setWhiskies(whiskyArray)
+    const initializeApp = async () => {
+      // localStorage에서 데이터 로드 (즉시 실행)
+      loadWhiskyDataFromStorage()
+      const whiskyArray = Object.values(whiskeyDatabase)
+      setWhiskies(whiskyArray)
 
-    // 로그인 상태 확인
-    const loginStatus = localStorage.getItem('isLoggedIn') === 'true'
-    setIsLoggedIn(loginStatus)
+      // Supabase 인증 상태 확인
+      try {
+        const { data: { user }, error } = await supabase.auth.getUser()
+        setIsLoggedIn(!!user && !error)
+        console.log('홈페이지 로그인 상태:', !!user && !error)
+      } catch (error) {
+        console.error('인증 상태 확인 중 오류:', error)
+        setIsLoggedIn(false)
+      }
 
-    setIsLoading(false)
+      setIsLoading(false)
+    }
+
+    initializeApp()
   }, [])
 
   // 모바일 메뉴 외부 클릭 시 닫기
@@ -68,13 +78,12 @@ export default function HomePage() {
   // 로그아웃 함수
   const handleLogout = async () => {
     try {
-      await authHelpers.signOut()
+      await supabase.auth.signOut()
 
       // 찜 데이터 정리 (임시 찜으로 전환하지 않고 완전 삭제)
       clearUserLikes()
 
       setIsLoggedIn(false)
-      localStorage.removeItem('isLoggedIn')
 
       alert('로그아웃되었습니다.')
       // 페이지 새로고침으로 모든 상태 초기화

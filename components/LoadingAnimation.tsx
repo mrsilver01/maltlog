@@ -35,11 +35,7 @@ export default function LoadingAnimation({ message = "로딩 중..." }: LoadingA
             transform: translate(25px, 200px) rotate(80deg);
             opacity: 1;
           }
-          95% {
-            transform: translate(30px, 230px) rotate(90deg);
-            opacity: 1;
-          }
-          100% {
+          95%, 100% {
             transform: translate(30px, 240px) rotate(90deg);
             opacity: 1;
           }
@@ -58,20 +54,8 @@ export default function LoadingAnimation({ message = "로딩 중..." }: LoadingA
             transform: translate(-15px, -20px) rotate(-30deg);
             opacity: 1;
           }
-          90% {
-            transform: translate(-35px, -45px) rotate(-75deg);
-            opacity: 0.9;
-          }
-          94% {
-            transform: translate(-65px, -80px) rotate(-150deg);
-            opacity: 0.7;
-          }
-          97% {
+          90%, 100% {
             transform: translate(-100px, -120px) rotate(-240deg);
-            opacity: 0.4;
-          }
-          100% {
-            transform: translate(-140px, -160px) rotate(-360deg);
             opacity: 0;
           }
         }
@@ -89,15 +73,15 @@ export default function LoadingAnimation({ message = "로딩 중..." }: LoadingA
         }
 
         .bottle-container {
-          animation: bottle-fall 2.5s ease-in-out forwards, impact-shake 2.5s ease-out forwards;
+          animation: bottle-fall 2s ease-in-out forwards, impact-shake 2s ease-out forwards;
         }
 
         .cork {
-          animation: cork-pop 2.5s ease-out forwards;
+          animation: cork-pop 2s ease-out forwards;
         }
 
         .impact-splash {
-          animation: splash-effect 2.5s ease-out forwards;
+          animation: splash-effect 2s ease-out forwards;
         }
 
         @keyframes splash-effect {

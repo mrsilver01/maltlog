@@ -41,7 +41,7 @@ export async function uploadAvatarImage(file: File): Promise<{ success: boolean;
     // 파일명 생성 (사용자 ID + 타임스탬프)
     const fileExt = file.name.split('.').pop()
     const fileName = `${user.id}_${Date.now()}.${fileExt}`
-    const filePath = `avatars/${fileName}`
+    const filePath = `${fileName}` // avatars/ 접두사 제거
 
     console.log('아바타 이미지 업로드 시작:', fileName)
 
@@ -50,12 +50,12 @@ export async function uploadAvatarImage(file: File): Promise<{ success: boolean;
       .from(AVATAR_BUCKET)
       .upload(filePath, file, {
         cacheControl: '3600',
-        upsert: false // 같은 파일명이 있으면 오류 발생
+        upsert: true // 같은 파일명이 있으면 덮어쓰기
       })
 
     if (uploadError) {
       console.error('파일 업로드 실패:', uploadError)
-      return { success: false, error: '파일 업로드에 실패했습니다.' }
+      return { success: false, error: `파일 업로드에 실패했습니다: ${uploadError.message}` }
     }
 
     // 업로드된 파일의 공개 URL 가져오기
@@ -90,7 +90,7 @@ export async function deleteAvatarImage(avatarUrl: string): Promise<boolean> {
     // URL에서 파일 경로 추출
     const urlParts = avatarUrl.split('/')
     const fileName = urlParts[urlParts.length - 1]
-    const filePath = `avatars/${fileName}`
+    const filePath = fileName // avatars/ 접두사 제거
 
     // 파일이 현재 사용자의 것인지 확인 (파일명에 사용자 ID 포함)
     if (!fileName.startsWith(user.id)) {
@@ -126,7 +126,7 @@ export async function getUserAvatarImages(): Promise<string[]> {
 
     const { data: files, error } = await supabase.storage
       .from(AVATAR_BUCKET)
-      .list('avatars', {
+      .list('', {
         limit: 100,
         offset: 0
       })
@@ -145,7 +145,7 @@ export async function getUserAvatarImages(): Promise<string[]> {
     const urls = userFiles.map(file => {
       const { data } = supabase.storage
         .from(AVATAR_BUCKET)
-        .getPublicUrl(`avatars/${file.name}`)
+        .getPublicUrl(file.name)
       return data.publicUrl
     }).filter(Boolean)
 
