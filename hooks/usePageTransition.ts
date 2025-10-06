@@ -1,26 +1,31 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 
 export function usePageTransition() {
   const [isTransitioning, setIsTransitioning] = useState(false)
   const [transitionMessage, setTransitionMessage] = useState("")
   const router = useRouter()
+  const pathname = usePathname()
 
   const navigateWithTransition = (path: string, message: string = "페이지를 불러오는 중...") => {
     setTransitionMessage(message)
     setIsTransitioning(true)
 
-    // 애니메이션 시간 후 실제 네비게이션 (4.2초 완전한 애니메이션)
-    setTimeout(() => {
-      router.push(path)
-      // 페이지 로드 후 애니메이션 종료
-      setTimeout(() => {
-        setIsTransitioning(false)
-      }, 100)
-    }, 4200)
+    // 즉시 네비게이션 실행
+    router.push(path)
   }
+
+  // URL이 변경되면 애니메이션 종료
+  useEffect(() => {
+    if (isTransitioning) {
+      const timer = setTimeout(() => {
+        setIsTransitioning(false)
+      }, 2000)
+      return () => clearTimeout(timer)
+    }
+  }, [pathname, isTransitioning])
 
   return {
     isTransitioning,

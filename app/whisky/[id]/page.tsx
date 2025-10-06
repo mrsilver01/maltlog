@@ -25,9 +25,9 @@ interface Review {
   id: string;
   user_id: string;
   rating: number;
-  note: string | null;
+  notes: string | null;
   created_at: string;
-  profiles: { 
+  profiles: {
     nickname: string;
     avatar_url: string | null;
   }
@@ -66,7 +66,7 @@ export default function WhiskyDetailPage() {
     setWhisky(whiskyData as Whisky)
 
     const { data: reviewsData, error: reviewsError } = await supabase
-      .from('reviews')
+      .from('whisky_reviews')
       .select(`*, profiles (nickname, avatar_url)`)
       .eq('whisky_id', whiskyId)
 
@@ -81,7 +81,7 @@ export default function WhiskyDetailPage() {
         if (myReviewData) {
           setMyReview(myReviewData)
           setCurrentRating(myReviewData.rating)
-          setCurrentNote(myReviewData.note || '')
+          setCurrentNote(myReviewData.notes || '')
         } else {
           setMyReview(null)
           setCurrentRating(0)
@@ -109,12 +109,12 @@ export default function WhiskyDetailPage() {
       return
     }
 
-    const { error } = await supabase.from('reviews').upsert({
+    const { error } = await supabase.from('whisky_reviews').upsert({
       id: myReview?.id,
       whisky_id: whisky.id,
       user_id: user.id,
       rating: currentRating,
-      note: currentNote,
+      notes: currentNote,
     })
 
     if (error) {
@@ -213,7 +213,7 @@ export default function WhiskyDetailPage() {
                     size="sm" 
                   />
                 </div>
-                {review.note && <p className="text-gray-700">{review.note}</p>}
+                {review.notes && <p className="text-gray-700">{review.notes}</p>}
               </div>
             ))
           ) : (
