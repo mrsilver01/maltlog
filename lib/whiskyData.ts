@@ -2477,150 +2477,18 @@ export function addReply(whiskyId: string, reviewId: string, commentId: string, 
   return newReply
 }
 
-// 로컬 스토리지에서 데이터 로드
-export function loadWhiskyDataFromStorage(): void {
-  if (typeof window !== 'undefined') {
-    const savedData = localStorage.getItem('whiskyData')
-    if (savedData) {
-      const parsedData = JSON.parse(savedData)
-      Object.keys(parsedData).forEach(key => {
-        if (whiskeyDatabase[key]) {
-          // 가격 정보는 코드의 최신 데이터를 유지하고, 사용자 활동 데이터만 로드
-          const { price: _, ...userActivityData } = parsedData[key]
-          whiskeyDatabase[key] = { ...whiskeyDatabase[key], ...userActivityData }
-        }
-      })
-    }
-  }
-}
+// This localStorage function is no longer needed as we use Supabase
 
-// 로컬 스토리지에 데이터 저장
-export function saveWhiskyDataToStorage(): void {
-  if (typeof window !== 'undefined') {
-    localStorage.setItem('whiskyData', JSON.stringify(whiskeyDatabase))
-    localStorage.setItem('reviewsData', JSON.stringify(reviewsDatabase))
-  }
-}
+// This localStorage function is no longer needed as we use Supabase
 
-// 로컬 스토리지에서 리뷰 데이터 로드
-export function loadReviewsFromStorage(): void {
-  if (typeof window !== 'undefined') {
-    const savedReviews = localStorage.getItem('reviewsData')
-    if (savedReviews) {
-      const parsedReviews = JSON.parse(savedReviews)
-      Object.keys(parsedReviews).forEach(key => {
-        if (reviewsDatabase[key]) {
-          reviewsDatabase[key] = parsedReviews[key]
-        }
-      })
-    }
-  }
-}
+// This localStorage function is no longer needed as we use Supabase
 
 // ============= 찜 관리 시스템 =============
+// These localStorage-based like functions are no longer needed as we use Supabase
 
-// 사용자별 찜 데이터 저장 키 생성
-function getLikedWhiskiesKey(userId?: string): string {
-  if (!userId) {
-    // 로그인하지 않은 사용자는 임시 찜 저장
-    return 'tempLikedWhiskies'
-  }
-  return `likedWhiskies_${userId}`
-}
+// These migration functions are no longer needed as we use Supabase
 
-// 사용자의 찜 목록 가져오기
-export function getUserLikedWhiskies(userId?: string): Set<string> {
-  if (typeof window === 'undefined') return new Set()
-
-  const key = getLikedWhiskiesKey(userId)
-  const stored = localStorage.getItem(key)
-  return new Set(stored ? JSON.parse(stored) : [])
-}
-
-// 찜 상태 확인
-export function isWhiskyLiked(whiskyId: string, userId?: string): boolean {
-  const likedWhiskies = getUserLikedWhiskies(userId)
-  return likedWhiskies.has(whiskyId)
-}
-
-// 찜 추가/제거 (중복 방지 및 동기화)
-export function toggleLike(whiskyId: string, userId?: string): { success: boolean, isLiked: boolean, newLikeCount: number } {
-  if (!whiskeyDatabase[whiskyId]) {
-    return { success: false, isLiked: false, newLikeCount: 0 }
-  }
-
-  const key = getLikedWhiskiesKey(userId)
-  const likedWhiskies = getUserLikedWhiskies(userId)
-
-  if (likedWhiskies.has(whiskyId)) {
-    // 찜 제거
-    likedWhiskies.delete(whiskyId)
-    if (whiskeyDatabase[whiskyId].likes > 0) {
-      whiskeyDatabase[whiskyId].likes -= 1
-    }
-  } else {
-    // 찜 추가
-    likedWhiskies.add(whiskyId)
-    whiskeyDatabase[whiskyId].likes += 1
-  }
-
-  // localStorage 업데이트
-  if (typeof window !== 'undefined') {
-    localStorage.setItem(key, JSON.stringify([...likedWhiskies]))
-  }
-
-  // 전역 데이터 저장
-  saveWhiskyDataToStorage()
-
-  return {
-    success: true,
-    isLiked: likedWhiskies.has(whiskyId),
-    newLikeCount: whiskeyDatabase[whiskyId].likes
-  }
-}
-
-// 사용자 로그아웃 시 찜 데이터 정리
-export function clearUserLikes(userId?: string): void {
-  if (typeof window === 'undefined') return
-
-  if (userId) {
-    // 특정 사용자 찜 데이터 삭제
-    const key = getLikedWhiskiesKey(userId)
-    localStorage.removeItem(key)
-  } else {
-    // 임시 찜 데이터 삭제
-    localStorage.removeItem('tempLikedWhiskies')
-  }
-}
-
-// 로그인 시 임시 찜을 사용자 찜으로 이동
-export function migrateTempLikesToUser(userId: string): void {
-  if (typeof window === 'undefined') return
-
-  const tempLikes = getUserLikedWhiskies()
-  const userLikes = getUserLikedWhiskies(userId)
-
-  // 임시 찜과 사용자 찜 합치기
-  const mergedLikes = new Set([...tempLikes, ...userLikes])
-
-  // 사용자 찜으로 저장
-  const userKey = getLikedWhiskiesKey(userId)
-  localStorage.setItem(userKey, JSON.stringify([...mergedLikes]))
-
-  // 임시 찜 삭제
-  localStorage.removeItem('tempLikedWhiskies')
-}
-
-// 레거시 함수들 (기존 코드 호환성을 위해 유지)
-export function addLike(whiskyId: string): void {
-  const result = toggleLike(whiskyId)
-  // 이미 찜한 상태라면 아무것도 하지 않음
-}
-
-export function removeLike(whiskyId: string): void {
-  const result = toggleLike(whiskyId)
-  // 이미 찜하지 않은 상태라면 아무것도 하지 않음
-}
+// These legacy like functions are no longer needed as we use Supabase
 
 // 평균 별점 업데이트하기
 export function updateAverageRating(whiskyId: string): void {

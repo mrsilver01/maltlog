@@ -45,7 +45,7 @@ export async function getAllCommunityPosts(): Promise<CommunityPostWithProfile[]
       return []
     }
 
-    // 데이터 변환: 기존 localStorage 형식과 호환되도록
+    // 데이터 변환
     const transformedPosts = posts?.map(post => ({
       id: post.id,
       user_id: post.user_id,
@@ -56,7 +56,7 @@ export async function getAllCommunityPosts(): Promise<CommunityPostWithProfile[]
       comments_count: post.comments_count || 0,
       created_at: post.created_at,
       updated_at: post.updated_at,
-      // localStorage 호환을 위한 추가 필드
+      // 추가 필드
       author: post.profiles?.nickname || '익명 사용자',
       authorImage: post.profiles?.avatar_url || null,
       likes: post.likes_count || 0,

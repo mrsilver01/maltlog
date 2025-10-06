@@ -21,8 +21,8 @@ export interface CommunityComment {
 export interface CommunityCommentWithProfile extends CommunityComment {
   author: string  // 닉네임
   authorImage?: string  // 프로필 이미지
-  postId: string  // localStorage 호환용
-  createdAt: string  // localStorage 호환용
+  postId: string
+  createdAt: string
 }
 
 // 특정 게시글의 모든 댓글 가져오기 (프로필 정보 포함)
@@ -45,7 +45,7 @@ export async function getPostComments(postId: string): Promise<CommunityCommentW
       return []
     }
 
-    // 데이터 변환: 기존 localStorage 형식과 호환되도록
+    // 데이터 변환
     const transformedComments = comments?.map(comment => ({
       id: comment.id,
       post_id: comment.post_id,
@@ -53,11 +53,11 @@ export async function getPostComments(postId: string): Promise<CommunityCommentW
       content: comment.content,
       created_at: comment.created_at,
       updated_at: comment.updated_at,
-      // localStorage 호환을 위한 추가 필드
+      // 추가 필드
       author: comment.profiles?.nickname || '익명 사용자',
       authorImage: comment.profiles?.avatar_url || undefined,
-      postId: comment.post_id, // localStorage 호환용
-      createdAt: comment.created_at // localStorage 호환용
+      postId: comment.post_id,
+      createdAt: comment.created_at
     })) || []
 
     console.log(`✅ 게시글 ${postId}의 댓글 ${transformedComments.length}개 로드 완료`)

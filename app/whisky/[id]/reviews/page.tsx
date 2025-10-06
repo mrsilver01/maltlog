@@ -2,7 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
-import { getWhiskyData, getReviews, loadWhiskyDataFromStorage, loadReviewsFromStorage, updateAverageRating, saveWhiskyDataToStorage, WhiskyData, Review } from '../../../../lib/whiskyData'
+import { getWhiskyData, getReviews, updateAverageRating, WhiskyData, Review } from '../../../../lib/whiskyData'
+import { supabase } from '../../../../lib/supabase'
+import { getCurrentUserProfile } from '../../../../lib/userProfiles'
 import LoadingAnimation from '../../../../components/LoadingAnimation'
 import { usePageTransition } from '../../../../hooks/usePageTransition'
 
@@ -28,8 +30,7 @@ export default function ReviewsPage() {
   useEffect(() => {
     const whiskyId = params?.id as string
     if (whiskyId) {
-      loadWhiskyDataFromStorage()
-      loadReviewsFromStorage()
+      // 데이터는 이미 메모리에 로드되어 있음
 
       const data = getWhiskyData(whiskyId)
 
@@ -47,32 +48,47 @@ export default function ReviewsPage() {
     }
   }, [params?.id])
 
-  // 로그인 상태 확인 및 프로필 이미지 실시간 업데이트
+  // 로그인 상태 확인 및 프로필 이미지 실시간 업데이트 (Supabase 기반)
   useEffect(() => {
-    const updateUserData = () => {
-      if (typeof window !== 'undefined') {
-        const loginStatus = localStorage.getItem('isLoggedIn') === 'true'
-        const nickname = localStorage.getItem('userNickname') || ''
-        const profileImage = localStorage.getItem('userProfileImage')
-        setIsLoggedIn(loginStatus)
-        setUserNickname(nickname)
-        setUserProfileImage(profileImage)
+    const updateUserData = async () => {
+      try {
+        // Supabase 세션 확인
+        const { data: { session } } = await supabase.auth.getSession()
+
+        if (session) {
+          setIsLoggedIn(true)
+
+          // 프로필 정보 가져오기
+          const profile = await getCurrentUserProfile()
+          if (profile) {
+            setUserNickname(profile.nickname)
+            setUserProfileImage(profile.avatar_url)
+          } else {
+            setUserNickname(session.user.email || 'Anonymous')
+            setUserProfileImage(null)
+          }
+        } else {
+          setIsLoggedIn(false)
+          setUserNickname('')
+          setUserProfileImage(null)
+        }
+      } catch (error) {
+        console.error('사용자 데이터 업데이트 중 오류:', error)
+        setIsLoggedIn(false)
       }
     }
 
     // 초기 로딩
     updateUserData()
 
-    // storage 이벤트 리스너 (다른 탭에서 변경 감지)
-    window.addEventListener('storage', updateUserData)
+    // 인증 상태 변경 감지
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        updateUserData()
+      }
+    )
 
-    // 주기적으로 체크 (같은 탭에서 변경 감지)
-    const interval = setInterval(updateUserData, 1000)
-
-    return () => {
-      window.removeEventListener('storage', updateUserData)
-      clearInterval(interval)
-    }
+    return () => subscription.unsubscribe()
   }, [])
 
   // 외부 클릭 시 드롭다운 닫기
@@ -93,11 +109,9 @@ export default function ReviewsPage() {
     }
   }, [showDropdown])
 
-  // 사용자가 특정 리뷰에 좋아요를 눌렀는지 확인
+  // 사용자가 특정 리뷰에 좋아요를 눌렀는지 확인 (임시로 localStorage 유지)
   const hasUserLikedReview = (reviewId: string) => {
-    if (!isLoggedIn) return false
-    const userNickname = localStorage.getItem('userNickname')
-    if (!userNickname) return false
+    if (!isLoggedIn || !userNickname) return false
 
     const reviewLikes = JSON.parse(localStorage.getItem('reviewLikes') || '{}')
     const userLikes = reviewLikes[userNickname] || []
@@ -303,7 +317,7 @@ export default function ReviewsPage() {
 
     // 평균 별점 업데이트
     updateAverageRating(whiskyId)
-    saveWhiskyDataToStorage()
+    // Supabase에서 자동 저장됨
 
     // 위스키 데이터 업데이트
     const totalReviews = updatedReviews.length
@@ -323,7 +337,6 @@ export default function ReviewsPage() {
 
   // 리뷰 삭제 함수 추가
   const handleDeleteReview = (reviewId: string) => {
-    const userNickname = localStorage.getItem('userNickname')
     if (!userNickname) {
       alert('리뷰를 삭제하려면 로그인해주세요.')
       return

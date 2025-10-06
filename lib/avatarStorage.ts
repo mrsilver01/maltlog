@@ -8,6 +8,45 @@ const AVATAR_BUCKET = 'avatars'
 const MAX_FILE_SIZE = 2 * 1024 * 1024 // 2MB
 const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
 
+// 버킷이 존재하지 않으면 생성
+async function ensureBucketExists(): Promise<boolean> {
+  try {
+    // 버킷 목록 확인
+    const { data: buckets, error: listError } = await supabase.storage.listBuckets()
+
+    if (listError) {
+      console.error('버킷 목록 확인 실패:', listError)
+      return false
+    }
+
+    // avatars 버킷이 존재하는지 확인
+    const avatarBucket = buckets?.find(bucket => bucket.name === AVATAR_BUCKET)
+
+    if (!avatarBucket) {
+      console.log('avatars 버킷이 없습니다. 생성 중...')
+
+      // 버킷 생성
+      const { error: createError } = await supabase.storage.createBucket(AVATAR_BUCKET, {
+        public: true,
+        allowedMimeTypes: ALLOWED_TYPES,
+        fileSizeLimit: MAX_FILE_SIZE
+      })
+
+      if (createError) {
+        console.error('버킷 생성 실패:', createError)
+        return false
+      }
+
+      console.log('✅ avatars 버킷 생성 완료')
+    }
+
+    return true
+  } catch (error) {
+    console.error('버킷 확인/생성 중 오류:', error)
+    return false
+  }
+}
+
 // 이미지 파일 검증
 function validateImageFile(file: File): { valid: boolean; error?: string } {
   // 파일 크기 검증
@@ -46,6 +85,12 @@ export async function uploadAvatarImage(file: File): Promise<{ success: boolean;
     const filePath = fileName
 
     console.log('아바타 이미지 업로드 시작:', fileName)
+
+    // 버킷 존재 확인 및 생성
+    const bucketReady = await ensureBucketExists()
+    if (!bucketReady) {
+      return { success: false, error: '아바타 저장소 준비에 실패했습니다.' }
+    }
 
     // Supabase Storage에 파일 업로드
     const { data: uploadData, error: uploadError } = await supabase.storage

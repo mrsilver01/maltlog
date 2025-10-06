@@ -1,13 +1,12 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { authHelpers } from '../../lib/supabase'
-import { migrateTempLikesToUser } from '../../lib/whiskyData'
-import { migrateLocalStorageToSupabase } from '../../lib/autoMigration'
+import { useAuth } from '../context/AuthContext'
 
 export default function LoginPage() {
   const router = useRouter()
+  const { user, signIn, signUp, signInWithKakao, loading: authLoading } = useAuth()
   const [isLogin, setIsLogin] = useState(true)
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
@@ -16,6 +15,13 @@ export default function LoginPage() {
     confirmPassword: '',
     nickname: ''
   })
+
+  // 이미 로그인된 사용자는 홈으로 리다이렉트
+  useEffect(() => {
+    if (user && !authLoading) {
+      router.push('/')
+    }
+  }, [user, authLoading, router])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -31,31 +37,13 @@ export default function LoginPage() {
     try {
       if (isLogin) {
         // 로그인
-        const { data, error } = await authHelpers.signIn(formData.email, formData.password)
-        if (error) {
-          console.error('Login error:', error)
-          throw new Error(error.message || '로그인에 실패했습니다.')
+        const result = await signIn(formData.email, formData.password)
+        if (!result.success) {
+          throw new Error(result.error || '로그인에 실패했습니다.')
         }
 
-        if (data.user) {
-          // 사용자 정보에서 닉네임 설정
-          const nickname = data.user.user_metadata?.nickname || formData.email.split('@')[0]
-          localStorage.setItem('userNickname', nickname)
-
-          // 프로필 이미지가 있다면 저장
-          if (data.user.user_metadata?.avatar_url) {
-            localStorage.setItem('userProfileImage', data.user.user_metadata.avatar_url)
-          }
-
-          // 로그인 전 임시 찜을 사용자 찜으로 이동
-          migrateTempLikesToUser(data.user.id)
-
-          // 🔄 자동 데이터 마이그레이션 실행
-          await migrateLocalStorageToSupabase(data.user.id)
-
-          alert('로그인 성공!')
-          router.push('/')
-        }
+        alert('로그인 성공!')
+        router.push('/')
       } else {
         // 회원가입
         if (formData.password !== formData.confirmPassword) {
@@ -63,10 +51,9 @@ export default function LoginPage() {
           return
         }
 
-        const { data, error } = await authHelpers.signUp(formData.email, formData.password, formData.nickname)
-        if (error) {
-          console.error('Signup error:', error)
-          throw new Error(error.message || '회원가입에 실패했습니다.')
+        const result = await signUp(formData.email, formData.password, formData.nickname)
+        if (!result.success) {
+          throw new Error(result.error || '회원가입에 실패했습니다.')
         }
 
         alert('회원가입이 완료되었습니다. 이메일을 확인해주세요.')
@@ -83,16 +70,26 @@ export default function LoginPage() {
   const handleKakaoLogin = async () => {
     setLoading(true)
     try {
-      const { data, error } = await authHelpers.signInWithKakao()
-      if (error) {
-        console.error('Kakao login error:', error)
-        throw new Error(error.message || 'Kakao 로그인에 실패했습니다.')
+      const result = await signInWithKakao()
+      if (!result.success) {
+        throw new Error(result.error || 'Kakao 로그인에 실패했습니다.')
       }
       // OAuth 리다이렉트 처리는 callback 페이지에서 진행
     } catch (error: unknown) {
       alert('오류: ' + (error instanceof Error ? error.message : 'Unknown error'))
       setLoading(false)
     }
+  }
+
+  // 인증 로딩 중이면 로딩 표시
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-rose-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-2xl text-gray-600 mb-4">로딩 중...</div>
+        </div>
+      </div>
+    )
   }
 
   return (

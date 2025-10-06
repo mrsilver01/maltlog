@@ -6,15 +6,16 @@ import LoadingAnimation from '../components/LoadingAnimation'
 import { WhiskyCardSkeleton, HeaderSkeleton } from '../components/Skeleton'
 import { usePageTransition } from '../hooks/usePageTransition'
 import DrawerSidebar from '../components/DrawerSidebar'
-import { whiskeyDatabase, WhiskyData, migrateTempLikesToUser, clearUserLikes, loadWhiskyDataFromStorage } from '../lib/whiskyData'
-import { supabase } from '../lib/supabase'
+import { whiskeyDatabase, WhiskyData } from '../lib/whiskyData'
 import { getUserWhiskyLikes, addWhiskyLike, removeWhiskyLike, isWhiskyLiked } from '../lib/whiskyLikes'
+import { useWhiskyImage } from '../lib/updateWhiskyImages'
+import { useAuth } from './context/AuthContext'
 
 export default function HomePage() {
+  const { user, profile, signOut, loading: authLoading } = useAuth()
   const [searchQuery, setSearchQuery] = useState('')
   const [isLoading, setIsLoading] = useState(true)
   const [whiskies, setWhiskies] = useState<WhiskyData[]>([])
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [showAllWhiskies, setShowAllWhiskies] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
@@ -39,21 +40,9 @@ export default function HomePage() {
   // 초기 로딩 및 위스키 데이터 로드
   useEffect(() => {
     const initializeApp = async () => {
-      // localStorage에서 데이터 로드 (즉시 실행)
-      loadWhiskyDataFromStorage()
+      // 위스키 데이터 로드
       const whiskyArray = Object.values(whiskeyDatabase)
       setWhiskies(whiskyArray)
-
-      // Supabase 인증 상태 확인
-      try {
-        const { data: { user }, error } = await supabase.auth.getUser()
-        setIsLoggedIn(!!user && !error)
-        console.log('홈페이지 로그인 상태:', !!user && !error)
-      } catch (error) {
-        console.error('인증 상태 확인 중 오류:', error)
-        setIsLoggedIn(false)
-      }
-
       setIsLoading(false)
     }
 
@@ -78,16 +67,8 @@ export default function HomePage() {
   // 로그아웃 함수
   const handleLogout = async () => {
     try {
-      await supabase.auth.signOut()
-
-      // 찜 데이터 정리 (임시 찜으로 전환하지 않고 완전 삭제)
-      clearUserLikes()
-
-      setIsLoggedIn(false)
-
+      await signOut()
       alert('로그아웃되었습니다.')
-      // 페이지 새로고침으로 모든 상태 초기화
-      window.location.reload()
     } catch (error: unknown) {
       alert('로그아웃 오류: ' + (error instanceof Error ? error.message : 'Unknown error'))
     }
@@ -160,10 +141,10 @@ export default function HomePage() {
                 <div className="text-sm sm:text-lg font-bold text-gray-800 font-[family-name:var(--font-jolly-lodger)] hover:text-red-500 transition-colors">PROFILE/</div>
                 <div className="text-xs text-gray-600 hidden sm:block">내 노트 보러가기</div>
               </button>
-              {isLoggedIn ? (
+              {user ? (
                 <div className="flex items-center gap-2 sm:gap-4">
                   <span className="text-xs sm:text-sm text-gray-600 hidden sm:block">
-                    {typeof window !== 'undefined' ? localStorage.getItem('userNickname') : ''}님
+                    {profile?.nickname || user.email}님
                   </span>
                   <button
                     onClick={handleLogout}
@@ -482,31 +463,16 @@ export default function HomePage() {
 }
 
 function WhiskyCard({ whisky, navigateWithTransition }: { whisky: WhiskyData, router: unknown, navigateWithTransition: (path: string, message: string) => void }) {
+  const { user } = useAuth()
   const [currentLikes, setCurrentLikes] = useState(whisky.likes)
   const [isLikeHovered, setIsLikeHovered] = useState(false)
   const [isLiked, setIsLiked] = useState(false)
-  const [currentUser, setCurrentUser] = useState<{ id: string } | null>(null)
   const [isCheckingLikeStatus, setIsCheckingLikeStatus] = useState(false)
-
-  // 현재 로그인한 사용자 정보 가져오기
-  useEffect(() => {
-    const checkUser = async () => {
-      try {
-        const user = await authHelpers.getCurrentUser()
-        setCurrentUser(user)
-      } catch {
-        setCurrentUser(null)
-      }
-    }
-    checkUser()
-  }, [])
 
   // 찜 상태 초기화 및 업데이트 (Supabase 사용)
   useEffect(() => {
     const updateLikeStatus = async () => {
-      const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true'
-
-      if (isLoggedIn && currentUser) {
+      if (user) {
         // 로그인된 사용자: Supabase에서 찜 상태 확인
         setIsCheckingLikeStatus(true)
         try {
@@ -528,27 +494,7 @@ function WhiskyCard({ whisky, navigateWithTransition }: { whisky: WhiskyData, ro
     }
 
     updateLikeStatus()
-  }, [whisky.id, whisky.likes, currentUser])
-
-  // 로그인 상태 변경 감지
-  useEffect(() => {
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'isLoggedIn' || e.key?.startsWith('likedWhiskies_')) {
-        // 로그인 상태 또는 찜 데이터 변경 시 상태 업데이트
-        const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true'
-        if (!isLoggedIn) {
-          setIsLiked(false)
-          setCurrentUser(null)
-        } else {
-          // 로그인 상태로 변경 시 사용자 정보 재확인
-          authHelpers.getCurrentUser().then(setCurrentUser).catch(() => setCurrentUser(null))
-        }
-      }
-    }
-
-    window.addEventListener('storage', handleStorageChange)
-    return () => window.removeEventListener('storage', handleStorageChange)
-  }, [])
+  }, [whisky.id, whisky.likes, user])
 
   const handleClick = () => {
     navigateWithTransition(`/whisky/${whisky.id}`, `${whisky.name} 상세 정보를 불러오는 중...`)
@@ -558,9 +504,7 @@ function WhiskyCard({ whisky, navigateWithTransition }: { whisky: WhiskyData, ro
     e.stopPropagation()
 
     // 로그인 상태 확인
-    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true'
-
-    if (!isLoggedIn) {
+    if (!user) {
       alert('찜 기능을 사용하려면 로그인해주세요.')
       return
     }
@@ -607,7 +551,7 @@ function WhiskyCard({ whisky, navigateWithTransition }: { whisky: WhiskyData, ro
       {/* 위스키 이미지/글래스 영역 */}
       <div className="h-32 sm:h-40 mb-2 sm:mb-3 bg-gray-100 rounded flex items-center justify-center relative">
         <img
-          src={encodeURI(whisky.image)}
+          src={whisky.image}
           alt={whisky.name}
           className="max-w-full max-h-full object-contain"
           onError={(e) => {
@@ -667,45 +611,20 @@ function CommunityPreview({ navigateWithTransition }: { navigateWithTransition: 
   const [posts, setPosts] = useState<any[]>([])
 
   useEffect(() => {
-    // localStorage에서 커뮤니티 게시글 로드
-    const savedPosts = localStorage.getItem('communityPosts')
-    if (savedPosts) {
-      const posts = JSON.parse(savedPosts)
-      const currentUserNickname = localStorage.getItem('userNickname')
-      const currentUserProfileImage = localStorage.getItem('userProfileImage')
-
-      // 현재 사용자의 게시글에 프로필 이미지 업데이트
-      const updatedPosts = posts.map((post: any) => {
-        if (post.author === currentUserNickname && !post.authorImage && currentUserProfileImage) {
-          return { ...post, authorImage: currentUserProfileImage }
-        }
-        return post
-      })
-
-      setPosts(updatedPosts.slice(0, 3)) // 최대 3개만 표시
-    } else {
-      // 초기 더미 데이터
-      const initialPosts = [
-        {
-          id: '1',
-          title: '오늘 마신 맥켈란 18년 후기',
-          author: 'WhiskyLover',
-          createdAt: new Date().toISOString(),
-          likes: 5,
-          comments: 3
-        },
-        {
-          id: '2',
-          title: '위스키 입문자를 위한 추천',
-          author: 'MaltExpert',
-          createdAt: new Date(Date.now() - 86400000).toISOString(),
-          likes: 12,
-          comments: 8
-        }
-      ]
-      setPosts(initialPosts)
-      localStorage.setItem('communityPosts', JSON.stringify(initialPosts))
+    // Supabase에서 커뮤니티 게시글 로드
+    const loadCommunityPosts = async () => {
+      try {
+        const { getAllCommunityPosts } = await import('../lib/communityPosts')
+        const communityPosts = await getAllCommunityPosts()
+        // 최대 3개만 표시
+        setPosts(communityPosts.slice(0, 3))
+      } catch (error) {
+        console.error('커뮤니티 게시글 로드 실패:', error)
+        setPosts([])
+      }
     }
+
+    loadCommunityPosts()
   }, [])
 
   const formatDate = (dateString: string) => {

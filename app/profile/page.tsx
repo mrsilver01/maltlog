@@ -2,12 +2,13 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { loadWhiskyDataFromStorage, whiskeyDatabase } from '../../lib/whiskyData'
+import { whiskeyDatabase } from '../../lib/whiskyData'
 import { getCurrentUserProfile, updateNickname } from '../../lib/userProfiles'
 import { uploadAndSetAvatar } from '../../lib/avatarStorage'
 import { getUserWhiskyReviews } from '../../lib/whiskyReviews'
 import { getUserWhiskyLikes } from '../../lib/whiskyLikes'
-import { supabase } from '../../lib/supabase'
+import { useWhiskyImage } from '../../lib/updateWhiskyImages'
+import { useAuth } from '../context/AuthContext'
 import LoadingAnimation from '../../components/LoadingAnimation'
 
 interface Comment {
@@ -19,9 +20,8 @@ interface Comment {
 
 export default function ProfilePage() {
   const router = useRouter()
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const { user, profile, signOut, loading: authLoading, updateProfile } = useAuth()
   const [isLoading, setIsLoading] = useState(true)
-  const [authChecked, setAuthChecked] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
   const [nickname, setNickname] = useState('MrSilverr')
   const [profileImage, setProfileImage] = useState<string | null>(null)
@@ -38,34 +38,20 @@ export default function ProfilePage() {
   // 로그인 상태 확인 및 프로필 로드
   useEffect(() => {
     const checkLoginAndLoadProfile = async () => {
+      if (authLoading) return // 인증 로딩 중이면 대기
+
+      if (!user) {
+        router.push('/login')
+        return
+      }
+
       try {
-        // Supabase 인증 상태 확인
-        const { data: { user }, error: userError } = await supabase.auth.getUser()
-
-        if (userError || !user) {
-          console.log('로그인되지 않음 - 로그인 페이지로 이동')
-          setAuthChecked(true)
-          setIsLoading(false)
-          router.push('/login')
-          return
-        }
-
-        setIsLoggedIn(true)
-        setAuthChecked(true)
-
-        // 위스키 데이터 로드
-        loadWhiskyDataFromStorage()
-
-        // Supabase에서 프로필 정보 로드
-        const profile = await getCurrentUserProfile()
+        // 프로필 정보 설정
         if (profile) {
           setNickname(profile.nickname)
           if (profile.avatar_url) {
             setProfileImage(profile.avatar_url)
           }
-          console.log('✅ 프로필 로드 완료:', profile.nickname)
-        } else {
-          console.log('프로필이 없음 - 기본값 사용')
         }
 
         // 사용자의 위스키 리뷰들로부터 리뷰한 위스키 목록 생성
@@ -82,7 +68,7 @@ export default function ProfilePage() {
     }
 
     checkLoginAndLoadProfile()
-  }, [router])
+  }, [user, profile, authLoading, router])
 
   // 사용자 통계 상태
   const [userStats, setUserStats] = useState({ reviewCount: 0, noteCount: 0, wishlistCount: 0 })
@@ -115,13 +101,13 @@ export default function ProfilePage() {
   // 통계 로드
   useEffect(() => {
     const loadStats = async () => {
-      if (isLoggedIn) {
+      if (user) {
         const stats = await getUserStats()
         setUserStats(stats)
       }
     }
     loadStats()
-  }, [isLoggedIn])
+  }, [user])
 
   // myReviews는 notesData에서 별점만 필터링하여 사용
 
@@ -140,7 +126,7 @@ export default function ProfilePage() {
           likes: 0, // 리뷰 좋아요는 아직 구현되지 않음
           comments: [], // 리뷰 댓글은 아직 구현되지 않음
           date: new Date(review.created_at).toLocaleDateString('ko-KR'),
-          whiskyImage: whiskyData?.image || '/whiskies/no-pic.webp',
+          whiskyImage: useWhiskyImage(review.whisky_id, whiskyData?.image),
           whiskyId: review.whisky_id,
           reviewId: review.id
         }
@@ -155,7 +141,7 @@ export default function ProfilePage() {
   // 컴포넌트 마운트 시 노트 데이터 초기화
   useEffect(() => {
     const loadReviewsData = async () => {
-      if (isLoggedIn) {
+      if (user) {
         // Supabase에서 사용자 리뷰 데이터 로드
         const userReviews = await loadUserReviews()
         setNotesData(userReviews)
@@ -166,7 +152,7 @@ export default function ProfilePage() {
     }
 
     loadReviewsData()
-  }, [isLoggedIn, nickname])
+  }, [user, nickname])
 
   const myNotes = showAllNotes ? notesData : notesData.slice(0, 3)
 
@@ -175,7 +161,7 @@ export default function ProfilePage() {
   // 로그아웃 함수
   const handleLogout = async () => {
     try {
-      await supabase.auth.signOut()
+      await signOut()
       alert('로그아웃되었습니다.')
       router.push('/')
     } catch (error) {
@@ -220,6 +206,8 @@ export default function ProfilePage() {
           setProfileImage(result.url)
           console.log('✅ 프로필 이미지 업로드 성공:', result.url)
           alert('프로필 이미지가 업데이트되었습니다.')
+          // AuthContext의 프로필 정보 새로고침
+          await updateProfile()
         } else {
           console.error('이미지 업로드 실패:', result.error)
           alert(result.error || '이미지 업로드에 실패했습니다.')
@@ -255,6 +243,8 @@ export default function ProfilePage() {
           setProfileImage(result.url)
           console.log('✅ 프로필 이미지 업로드 성공 (드래그 앤 드롭):', result.url)
           alert('프로필 이미지가 업데이트되었습니다.')
+          // AuthContext의 프로필 정보 새로고침
+          await updateProfile()
         } else {
           console.error('이미지 업로드 실패:', result.error)
           alert(result.error || '이미지 업로드에 실패했습니다.')
@@ -333,13 +323,13 @@ export default function ProfilePage() {
   //   setExpandedComments({})
   // }
 
-  // 로딩 중일 때 로딩 애니메이션 표시 (인증 확인 전에만)
-  if (!authChecked) {
+  // 로딩 중일 때 로딩 애니메이션 표시
+  if (authLoading || isLoading) {
     return <LoadingAnimation message="프로필을 불러오는 중..." />
   }
 
   // 로그인되지 않은 경우
-  if (!isLoggedIn) {
+  if (!user) {
     return (
       <div className="min-h-screen bg-rose-50 flex items-center justify-center">
         <div className="text-center">
@@ -524,7 +514,7 @@ export default function ProfilePage() {
                       reviewedWhiskies.slice(0, 3).map((whisky, index) => (
                         <div key={index} className="w-8 md:w-10 h-16 md:h-20 bg-white bg-opacity-20 rounded overflow-hidden flex items-center justify-center">
                           <img
-                            src={whisky.image}
+                            src={useWhiskyImage(whisky.id, whisky.image)}
                             alt={whisky.name}
                             className="w-full h-full object-cover"
                             style={{ filter: 'brightness(1.1)' }}

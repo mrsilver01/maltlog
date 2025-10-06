@@ -3,7 +3,7 @@
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '../../../lib/supabase'
-import { migrateTempLikesToUser } from '../../../lib/whiskyData'
+// Migration functions removed as we now use Supabase only
 
 export default function AuthCallback() {
   const router = useRouter()
@@ -31,18 +31,8 @@ export default function AuthCallback() {
                           user.email?.split('@')[0] ||
                           '카카오사용자'
 
-          // Supabase 세션이 자동으로 관리되므로 localStorage는 필요 시에만 사용
-          localStorage.setItem('userNickname', nickname)
-
-          // 프로필 이미지가 있다면 저장
-          if (user.user_metadata?.avatar_url) {
-            localStorage.setItem('userProfileImage', user.user_metadata.avatar_url)
-          }
-
-          // 로그인 전 임시 찜을 사용자 찜으로 이동
-          if (user.id) {
-            migrateTempLikesToUser(user.id)
-          }
+          // 카카오 로그인 성공 - Supabase가 모든 데이터를 처리합니다
+          console.log('카카오 로그인 성공:', nickname)
 
           alert('카카오 로그인 성공!')
           router.push('/')
