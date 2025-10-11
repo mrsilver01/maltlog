@@ -139,10 +139,11 @@ export async function createCommunityPost(
       user_id: user.id,
       title: title.trim(),
       content: content.trim(),
-      image_url: imageUrl || null,
-      likes_count: 0,
-      comments_count: 0
+      image_url: imageUrl || null
     }
+
+    console.log('📝 게시글 작성 시도 - 입력 데이터:', postData)
+    console.log('📝 사용자 정보:', { userId: user.id, email: user.email })
 
     const { data: newPost, error } = await supabase
       .from('posts')
@@ -151,14 +152,20 @@ export async function createCommunityPost(
       .single()
 
     if (error) {
-      console.error('게시글 작성 실패:', error)
+      console.error('Supabase 게시글 insert 실패! 상세 오류:', error)
+      console.error('오류 코드:', error.code)
+      console.error('오류 메시지:', error.message)
+      console.error('오류 상세:', error.details)
+      console.error('오류 힌트:', error.hint)
       return { success: false }
     }
 
     console.log('✅ 게시글 작성 성공:', newPost.id)
     return { success: true, postId: newPost.id }
   } catch (error) {
-    console.error('게시글 작성 중 오류:', error)
+    console.error('게시글 작성 중 예상치 못한 오류:', error)
+    console.error('에러 타입:', typeof error)
+    console.error('에러 전체 객체:', JSON.stringify(error, null, 2))
     return { success: false }
   }
 }
@@ -313,5 +320,55 @@ export async function updatePostCommentsCount(postId: string, newCount: number):
   } catch (error) {
     console.error('댓글 수 업데이트 중 오류:', error)
     return false
+  }
+}
+
+// 페이지네이션을 지원하는 커뮤니티 게시글 가져오기 (무한 스크롤용)
+export async function getCommunityPosts(page: number = 0, limit: number = 10): Promise<CommunityPostWithProfile[]> {
+  try {
+    const startIndex = page * limit
+    const endIndex = startIndex + limit - 1
+
+    const { data: posts, error } = await supabase
+      .from('posts')
+      .select(`
+        *,
+        profiles (
+          nickname,
+          avatar_url
+        )
+      `)
+      .order('created_at', { ascending: false })
+      .range(startIndex, endIndex)
+
+    if (error) {
+      console.error('게시글 페이지네이션 가져오기 실패:', error)
+      return []
+    }
+
+    // 데이터 변환
+    const transformedPosts = posts?.map(post => ({
+      id: post.id,
+      user_id: post.user_id,
+      title: post.title,
+      content: post.content,
+      image_url: post.image_url,
+      likes_count: post.likes_count || 0,
+      comments_count: post.comments_count || 0,
+      created_at: post.created_at,
+      updated_at: post.updated_at,
+      // 추가 필드
+      author: post.profiles?.nickname || '익명 사용자',
+      authorImage: post.profiles?.avatar_url || null,
+      likes: post.likes_count || 0,
+      comments: post.comments_count || 0,
+      createdAt: post.created_at
+    })) || []
+
+    console.log(`✅ 페이지 ${page}: ${transformedPosts.length}개 게시글 로드 완료`)
+    return transformedPosts
+  } catch (error) {
+    console.error('게시글 페이지네이션 가져오기 중 오류:', error)
+    return []
   }
 }

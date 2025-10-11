@@ -16,7 +16,7 @@ export async function getUserWhiskyLikes(): Promise<string[]> {
 
     const { data: likes, error } = await supabase
       .from('likes')
-      .select('whisky_name')
+      .select('whisky_id')
       .eq('user_id', user.id)
       .is('post_id', null) // 위스키 찜만 가져오기 (게시글 좋아요 제외)
 
@@ -25,7 +25,7 @@ export async function getUserWhiskyLikes(): Promise<string[]> {
       return []
     }
 
-    return likes?.map(like => like.whisky_name) || []
+    return likes?.map(like => like.whisky_id) || []
   } catch (error) {
     console.error('찜 목록 가져오기 중 오류:', error)
     return []
@@ -46,7 +46,7 @@ export async function addWhiskyLike(whiskyId: string): Promise<boolean> {
       .from('likes')
       .insert({
         user_id: user.id,
-        whisky_name: whiskyId,
+        whisky_id: whiskyId,
         post_id: null
       })
 
@@ -77,7 +77,7 @@ export async function removeWhiskyLike(whiskyId: string): Promise<boolean> {
       .from('likes')
       .delete()
       .eq('user_id', user.id)
-      .eq('whisky_name', whiskyId)
+      .eq('whisky_id', whiskyId)
       .is('post_id', null)
 
     if (error) {
@@ -106,7 +106,7 @@ export async function isWhiskyLiked(whiskyId: string): Promise<boolean> {
       .from('likes')
       .select('id')
       .eq('user_id', user.id)
-      .eq('whisky_name', whiskyId)
+      .eq('whisky_id', whiskyId)
       .is('post_id', null)
       .single()
 

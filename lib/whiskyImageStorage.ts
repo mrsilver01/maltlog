@@ -115,9 +115,20 @@ export async function migrateWhiskyImagesToSupabase(): Promise<void> {
       return
     }
 
-    // whiskyData에서 모든 이미지 목록 가져오기
-    const { whiskeyDatabase } = await import('./whiskyData')
-    const whiskies = Object.values(whiskeyDatabase)
+    // Supabase whiskies 테이블에서 모든 위스키 정보 가져오기
+    const { data: whiskies, error } = await supabase
+      .from('whiskies')
+      .select('id, name, image')
+
+    if (error) {
+      console.error('위스키 데이터 로드 실패:', error)
+      return
+    }
+
+    if (!whiskies) {
+      console.log('위스키 데이터가 없습니다.')
+      return
+    }
 
     console.log(`총 ${whiskies.length}개 위스키 이미지 처리 예정`)
 

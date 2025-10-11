@@ -39,33 +39,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Initialize auth
   useEffect(() => {
-    const initializeAuth = async () => {
-      try {
-        const { data: { session }, error } = await supabase.auth.getSession()
-
-        if (error) {
-          console.error('Session load failed:', error)
-          return
-        }
-
-        if (session) {
-          setSession(session)
-          setUser(session.user)
-
-          const userProfile = await getCurrentUserProfile()
-          setProfile(userProfile)
-
-          console.log('Auth state loaded:', session.user.email)
-        }
-      } catch (error) {
-        console.error('Auth init failed:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    initializeAuth()
-
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log('Auth state changed:', event, session?.user?.email)
@@ -74,20 +47,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(session?.user ?? null)
 
         if (session?.user) {
-          const userProfile = await getCurrentUserProfile()
-          setProfile(userProfile)
+          try {
+            const userProfile = await getCurrentUserProfile()
+            setProfile(userProfile)
+          } catch (error) {
+            console.error('Profile load failed:', error)
+            setProfile(null)
+          }
         } else {
           setProfile(null)
         }
 
-        if (loading) {
-          setLoading(false)
-        }
+        // 인증 상태가 처음 확정되면 로딩 종료
+        setLoading(false)
       }
     )
 
     return () => subscription.unsubscribe()
-  }, [loading])
+  }, [])
 
   const signIn = async (email: string, password: string) => {
     try {
