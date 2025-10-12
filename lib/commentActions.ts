@@ -55,18 +55,39 @@ export async function addComment(
   parentCommentId?: number
 ): Promise<boolean> {
   try {
-    const commentData: any = {
-      user_id: userId,
-      content: content.trim(),
-      parent_comment_id: parentCommentId || null
+    // 입력값 검증
+    if (!targetId || !userId || !content.trim()) {
+      console.error('댓글 추가 실패: 필수 파라미터 누락', { targetId, userId, content: content.trim() })
+      return false
     }
 
+    // 댓글 데이터 구성 - 명시적으로 post_id와 review_id 설정
+    const commentData: {
+      user_id: string;
+      content: string;
+      parent_comment_id: number | null;
+      post_id: string | null;
+      review_id: string | null;
+    } = {
+      user_id: userId,
+      content: content.trim(),
+      parent_comment_id: parentCommentId || null,
+      post_id: null,
+      review_id: null
+    }
+
+    // 타입에 따라 적절한 ID 설정
     if (type === 'review') {
       commentData.review_id = targetId
       commentData.post_id = null
-    } else {
+      console.log('리뷰 댓글 데이터 준비:', { review_id: targetId, post_id: null, parent_comment_id: parentCommentId || null })
+    } else if (type === 'post') {
       commentData.post_id = targetId
       commentData.review_id = null
+      console.log('게시글 댓글 데이터 준비:', { post_id: targetId, review_id: null, parent_comment_id: parentCommentId || null })
+    } else {
+      console.error('댓글 추가 실패: 잘못된 type 값', type)
+      return false
     }
 
     const { error } = await supabase
@@ -74,14 +95,21 @@ export async function addComment(
       .insert(commentData)
 
     if (error) {
-      console.error('댓글 추가 실패:', error)
+      console.error('Supabase 댓글 추가 실패! 상세 오류:', error)
+      console.error('오류 코드:', error.code)
+      console.error('오류 메시지:', error.message)
+      console.error('오류 상세:', error.details)
+      console.error('오류 힌트:', error.hint)
+      console.error('전송된 데이터:', commentData)
       return false
     }
 
-    console.log('✅ 댓글 추가 성공:', targetId)
+    console.log('✅ 댓글 추가 성공:', { type, targetId, parentCommentId })
     return true
   } catch (error) {
-    console.error('댓글 추가 중 오류:', error)
+    console.error('댓글 추가 중 예상치 못한 오류:', error)
+    console.error('에러 타입:', typeof error)
+    console.error('에러 전체 객체:', JSON.stringify(error, null, 2))
     return false
   }
 }

@@ -37,11 +37,7 @@ export default function LoginPage() {
     try {
       if (isLogin) {
         // 로그인
-        const result = await signIn(formData.email, formData.password)
-        if (!result.success) {
-          throw new Error(result.error || '로그인에 실패했습니다.')
-        }
-
+        await signIn({ email: formData.email, password: formData.password })
         alert('로그인 성공!')
         router.push('/')
       } else {
@@ -51,11 +47,11 @@ export default function LoginPage() {
           return
         }
 
-        const result = await signUp(formData.email, formData.password, formData.nickname)
-        if (!result.success) {
-          throw new Error(result.error || '회원가입에 실패했습니다.')
-        }
-
+        await signUp({
+          email: formData.email,
+          password: formData.password,
+          nickname: formData.nickname
+        })
         alert('회원가입이 완료되었습니다. 이메일을 확인해주세요.')
         setIsLogin(true)
         setFormData({ email: '', password: '', confirmPassword: '', nickname: '' })
@@ -70,10 +66,7 @@ export default function LoginPage() {
   const handleKakaoLogin = async () => {
     setLoading(true)
     try {
-      const result = await signInWithKakao()
-      if (!result.success) {
-        throw new Error(result.error || 'Kakao 로그인에 실패했습니다.')
-      }
+      await signInWithKakao()
       // OAuth 리다이렉트 처리는 callback 페이지에서 진행
     } catch (error: unknown) {
       alert('오류: ' + (error instanceof Error ? error.message : 'Unknown error'))

@@ -323,13 +323,17 @@ export async function updatePostCommentsCount(postId: string, newCount: number):
   }
 }
 
-// 페이지네이션을 지원하는 커뮤니티 게시글 가져오기 (무한 스크롤용)
-export async function getCommunityPosts(page: number = 0, limit: number = 10): Promise<CommunityPostWithProfile[]> {
+// 페이지네이션을 지원하는 커뮤니티 게시글 가져오기 (무한 스크롤용, 검색 지원)
+export async function getCommunityPosts(
+  page: number = 0,
+  limit: number = 10,
+  searchQuery?: string
+): Promise<CommunityPostWithProfile[]> {
   try {
     const startIndex = page * limit
     const endIndex = startIndex + limit - 1
 
-    const { data: posts, error } = await supabase
+    let query = supabase
       .from('posts')
       .select(`
         *,
@@ -338,6 +342,13 @@ export async function getCommunityPosts(page: number = 0, limit: number = 10): P
           avatar_url
         )
       `)
+
+    // 검색어가 있으면 제목에서 검색
+    if (searchQuery && searchQuery.trim()) {
+      query = query.ilike('title', `%${searchQuery.trim()}%`)
+    }
+
+    const { data: posts, error } = await query
       .order('created_at', { ascending: false })
       .range(startIndex, endIndex)
 
@@ -365,7 +376,8 @@ export async function getCommunityPosts(page: number = 0, limit: number = 10): P
       createdAt: post.created_at
     })) || []
 
-    console.log(`✅ 페이지 ${page}: ${transformedPosts.length}개 게시글 로드 완료`)
+    const searchInfo = searchQuery ? ` (검색어: "${searchQuery.trim()}")` : ''
+    console.log(`✅ 페이지 ${page}: ${transformedPosts.length}개 게시글 로드 완료${searchInfo}`)
     return transformedPosts
   } catch (error) {
     console.error('게시글 페이지네이션 가져오기 중 오류:', error)

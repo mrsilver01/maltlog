@@ -3,7 +3,8 @@ import CommunityClient from '@/components/CommunityClient'
 import { CommunityPostWithProfile } from '@/lib/communityPosts'
 
 export default async function CommunityPage() {
-  // 서버에서 게시글 데이터 로드 (profiles 테이블과 JOIN)
+  // 서버에서 게시글 데이터 로드 (profiles 테이블과 JOIN) - 임시 비활성화
+  /*
   const { data: posts, error } = await supabase
     .from('posts')
     .select(`
@@ -18,6 +19,11 @@ export default async function CommunityPage() {
   if (error) {
     console.error('게시글 목록 가져오기 실패:', error)
   }
+  */
+
+  // 테스트용: 데이터를 빈 배열로 강제 할당
+  const posts = []
+  const error = null
 
   // 데이터 변환
   const transformedPosts: CommunityPostWithProfile[] = posts?.map(post => ({

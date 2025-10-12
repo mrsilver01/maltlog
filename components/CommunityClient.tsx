@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/app/context/AuthContext'
 import LoadingAnimation from '@/components/LoadingAnimation'
-import { getAllCommunityPosts, getCommunityPosts, CommunityPostWithProfile } from '@/lib/communityPosts'
+import { getCommunityPosts, CommunityPostWithProfile } from '@/lib/communityPosts'
 import { likePost, unlikePost, checkMultiplePostsLiked, getPostLikesCount } from '@/lib/postActions'
 
 interface CommunityClientProps {
@@ -24,11 +24,17 @@ export default function CommunityClient({ initialPosts }: CommunityClientProps) 
   const [postLikes, setPostLikes] = useState<{[key: string]: {isLiked: boolean, count: number}}>({})
   const [likesLoading, setLikesLoading] = useState<{[key: string]: boolean}>({})
 
+  // 검색 관련 상태 (임시 주석 처리)
+  // const [searchQuery, setSearchQuery] = useState('')
+  // const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('')
+  // const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+
   const POSTS_PER_PAGE = 10
 
-  // 초기 게시글 로드
+  // 초기 게시글 로드 (단순화)
   const loadSupabasePosts = useCallback(async () => {
     setIsLoadingPosts(true)
+    setIsLoadingMore(false)
     try {
       const supabasePosts = await getCommunityPosts(0, POSTS_PER_PAGE)
       setPosts(supabasePosts)
@@ -37,14 +43,15 @@ export default function CommunityClient({ initialPosts }: CommunityClientProps) 
     } catch (error) {
       console.error('Supabase 게시글 로드 실패:', error)
       setPosts([])
+      setHasMore(false)
     } finally {
       setIsLoadingPosts(false)
     }
-  }, [])
+  }, [POSTS_PER_PAGE])
 
-  // 추가 게시글 로드 (무한 스크롤용)
+  // 추가 게시글 로드 (무한 스크롤용, 단순화)
   const loadMorePosts = useCallback(async () => {
-    if (isLoadingMore || !hasMore) return
+    if (isLoadingMore || !hasMore || isLoadingPosts) return
 
     setIsLoadingMore(true)
     try {
@@ -63,17 +70,19 @@ export default function CommunityClient({ initialPosts }: CommunityClientProps) 
       }
     } catch (error) {
       console.error('추가 게시글 로드 실패:', error)
+      setHasMore(false)
     } finally {
       setIsLoadingMore(false)
     }
-  }, [currentPage, hasMore, isLoadingMore])
+  }, [currentPage, hasMore, isLoadingMore, POSTS_PER_PAGE, isLoadingPosts])
 
-  // IntersectionObserver를 사용한 무한 스크롤 감지
+  // IntersectionObserver를 사용한 무한 스크롤 감지 - 임시 비활성화
+  /*
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
         const target = entries[0]
-        if (target.isIntersecting && hasMore && !isLoadingMore) {
+        if (target.isIntersecting && hasMore && !isLoadingMore && !isLoadingPosts) {
           loadMorePosts()
         }
       },
@@ -93,16 +102,74 @@ export default function CommunityClient({ initialPosts }: CommunityClientProps) 
         observer.unobserve(currentObserverRef)
       }
     }
-  }, [hasMore, isLoadingMore, loadMorePosts])
+  }, [hasMore, isLoadingMore, isLoadingPosts, loadMorePosts])
+  */
 
-  // 초기 데이터 설정
+  // 초기 데이터 설정 (한 번만 실행) - 임시 비활성화
+  /*
   useEffect(() => {
-    setPosts(initialPosts.slice(0, POSTS_PER_PAGE))
-    setHasMore(initialPosts.length === POSTS_PER_PAGE)
-    setCurrentPage(0)
-  }, [initialPosts])
+    if (initialPosts.length > 0) {
+      setPosts(initialPosts.slice(0, POSTS_PER_PAGE))
+      setHasMore(initialPosts.length === POSTS_PER_PAGE)
+      setCurrentPage(0)
+    } else {
+      // 초기 데이터가 없으면 Supabase에서 로드
+      loadSupabasePosts()
+    }
+  }, [loadSupabasePosts]) // loadSupabasePosts 의존성 추가
+  */
 
-  // 게시글 좋아요 상태 로딩
+  // 테스트용: 단순하고 안전한 초기화 로직
+  useEffect(() => {
+    setPosts(initialPosts);
+    setIsLoadingPosts(false); // 로딩 상태를 강제로 종료
+  }, [initialPosts]);
+
+  // 검색어 디바운싱 처리 (임시 주석 처리)
+  // useEffect(() => {
+  //   if (searchTimeoutRef.current) {
+  //     clearTimeout(searchTimeoutRef.current)
+  //   }
+  //   searchTimeoutRef.current = setTimeout(() => {
+  //     setDebouncedSearchQuery(searchQuery)
+  //   }, 300)
+  //   return () => {
+  //     if (searchTimeoutRef.current) {
+  //       clearTimeout(searchTimeoutRef.current)
+  //     }
+  //   }
+  // }, [searchQuery])
+
+  // 디바운싱된 검색어가 변경될 때 검색 실행 (임시 주석 처리)
+  // useEffect(() => {
+  //   const performSearch = async () => {
+  //     if (debouncedSearchQuery.trim()) {
+  //       setIsLoadingPosts(true)
+  //       setIsLoadingMore(false)
+  //       try {
+  //         const supabasePosts = await getCommunityPosts(0, POSTS_PER_PAGE, debouncedSearchQuery)
+  //         setPosts(supabasePosts)
+  //         setCurrentPage(0)
+  //         setHasMore(supabasePosts.length === POSTS_PER_PAGE)
+  //       } catch (error) {
+  //         console.error('검색 실패:', error)
+  //         setPosts([])
+  //         setHasMore(false)
+  //       } finally {
+  //         setIsLoadingPosts(false)
+  //       }
+  //     } else {
+  //       setPosts(initialPosts.slice(0, POSTS_PER_PAGE))
+  //       setHasMore(initialPosts.length === POSTS_PER_PAGE)
+  //       setCurrentPage(0)
+  //       setIsLoadingPosts(false)
+  //     }
+  //   }
+  //   performSearch()
+  // }, [debouncedSearchQuery, POSTS_PER_PAGE, initialPosts])
+
+  // 게시글 좋아요 상태 로딩 - 임시 비활성화
+  /*
   useEffect(() => {
     const loadPostLikes = async () => {
       if (posts.length === 0) return
@@ -128,6 +195,7 @@ export default function CommunityClient({ initialPosts }: CommunityClientProps) 
 
     loadPostLikes()
   }, [posts, user])
+  */
 
   // 게시글 좋아요/취소 핸들러
   const handlePostLike = async (postId: string, event: React.MouseEvent) => {
@@ -267,6 +335,39 @@ export default function CommunityClient({ initialPosts }: CommunityClientProps) 
           </div>
         )}
 
+        {/* 검색창 (임시 주석 처리) */}
+        {/* <div className="mb-8">
+          <div className="relative max-w-md">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="게시글 제목으로 검색..."
+              className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute inset-y-0 right-0 pr-3 flex items-center"
+              >
+                <svg className="h-5 w-5 text-gray-400 hover:text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            )}
+          </div>
+          {debouncedSearchQuery && (
+            <div className="mt-2 text-sm text-gray-600">
+              검색 결과: "<span className="font-medium text-blue-600">{debouncedSearchQuery}</span>"
+            </div>
+          )}
+        </div> */}
+
         {isLoadingPosts ? (
           <LoadingAnimation message="게시글을 불러오는 중..." />
         ) : (
@@ -338,11 +439,13 @@ export default function CommunityClient({ initialPosts }: CommunityClientProps) 
               ))
             ) : (
               <div className="text-center py-12">
-                <div className="text-gray-500 text-lg mb-2">
-                  아직 게시글이 없습니다.
-                </div>
-                <div className="text-gray-400 text-sm">
-                  첫 번째 게시글을 작성해보세요!
+                <div>
+                  <div className="text-gray-500 text-lg mb-2">
+                    아직 게시글이 없습니다.
+                  </div>
+                  <div className="text-gray-400 text-sm">
+                    첫 번째 게시글을 작성해보세요!
+                  </div>
                 </div>
               </div>
             )}

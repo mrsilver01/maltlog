@@ -1,151 +1,27 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
-import { User, Session } from '@supabase/supabase-js'
-import { supabase } from '../../lib/supabase'
-import { getCurrentUserProfile, saveUserProfile, UserProfile } from '../../lib/userProfiles'
+import { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react'
+import { supabase } from '@/lib/supabase'
+import { Session, User } from '@supabase/supabase-js'
+import { getCurrentUserProfile, UserProfile, saveUserProfile } from '@/lib/userProfiles'
+
+export interface AuthCredentials {
+  email?: string
+  password?: string
+  nickname?: string
+}
 
 interface AuthContextType {
   user: User | null
   profile: UserProfile | null
-  session: Session | null
   loading: boolean
-  signIn: (email: string, password: string) => Promise<{ success: boolean; error?: string }>
-  signInWithKakao: () => Promise<{ success: boolean; error?: string }>
-  signUp: (email: string, password: string, nickname: string) => Promise<{ success: boolean; error?: string }>
+  signIn: (credentials: AuthCredentials) => Promise<void>
+  signUp: (credentials: AuthCredentials) => Promise<void>
   signOut: () => Promise<void>
-  updateProfile: () => Promise<void>
+  signInWithKakao: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
-
-export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
-  const [profile, setProfile] = useState<UserProfile | null>(null)
-  const [session, setSession] = useState<Session | null>(null)
-  const [loading, setLoading] = useState(true)
-
-  // Update profile info
-  const updateProfile = async () => {
-    if (user) {
-      try {
-        const userProfile = await getCurrentUserProfile()
-        setProfile(userProfile)
-      } catch (error) {
-        console.error('Profile update failed:', error)
-      }
-    }
-  }
-
-  // Initialize auth
-  useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log('Auth state changed:', event, session?.user?.email)
-
-        setSession(session)
-        setUser(session?.user ?? null)
-
-        if (session?.user) {
-          try {
-            const userProfile = await getCurrentUserProfile()
-            setProfile(userProfile)
-          } catch (error) {
-            console.error('Profile load failed:', error)
-            setProfile(null)
-          }
-        } else {
-          setProfile(null)
-        }
-
-        // 인증 상태가 처음 확정되면 로딩 종료
-        setLoading(false)
-      }
-    )
-
-    return () => subscription.unsubscribe()
-  }, [])
-
-  const signIn = async (email: string, password: string) => {
-    try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      })
-
-      if (error) {
-        return { success: false, error: error.message }
-      }
-
-      return { success: true }
-    } catch (error) {
-      return { success: false, error: 'Login error occurred.' }
-    }
-  }
-
-  const signInWithKakao = async () => {
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'kakao'
-      })
-
-      if (error) {
-        return { success: false, error: error.message }
-      }
-
-      return { success: true }
-    } catch (error) {
-      return { success: false, error: 'Kakao login error occurred.' }
-    }
-  }
-
-  const signUp = async (email: string, password: string, nickname: string) => {
-    try {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password
-      })
-
-      if (error) {
-        return { success: false, error: error.message }
-      }
-
-      if (data.user) {
-        await saveUserProfile(nickname)
-      }
-
-      return { success: true }
-    } catch (error) {
-      return { success: false, error: 'Signup error occurred.' }
-    }
-  }
-
-  const signOut = async () => {
-    try {
-      await supabase.auth.signOut()
-    } catch (error) {
-      console.error('Logout failed:', error)
-    }
-  }
-
-  const value = {
-    user,
-    profile,
-    session,
-    loading,
-    signIn,
-    signInWithKakao,
-    signUp,
-    signOut,
-    updateProfile
-  }
-
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  )
-}
 
 export function useAuth() {
   const context = useContext(AuthContext)
@@ -153,4 +29,108 @@ export function useAuth() {
     throw new Error('useAuth must be used within an AuthProvider')
   }
   return context
+}
+
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const [user, setUser] = useState<User | null>(null)
+  const [profile, setProfile] = useState<UserProfile | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const initializeAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        setUser(session?.user ?? null)
+
+        if (session?.user) {
+          const userProfile = await getCurrentUserProfile()
+          setProfile(userProfile)
+        } else {
+          setProfile(null)
+        }
+      } catch (error) {
+        console.error('인증 초기화 중 에러 발생:', error)
+        setUser(null)
+        setProfile(null)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    initializeAuth()
+
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      setUser(session?.user ?? null)
+      if (session?.user) {
+        try {
+          const userProfile = await getCurrentUserProfile()
+          setProfile(userProfile)
+        } catch (error) {
+          console.error('인증 상태 변경 중 프로필 로드 에러:', error)
+          setProfile(null)
+        }
+      } else {
+        setProfile(null)
+      }
+    })
+
+    return () => {
+      authListener.subscription.unsubscribe()
+    }
+  }, [])
+
+  const signIn = useCallback(async (credentials: AuthCredentials) => {
+    if (!credentials.email || !credentials.password) throw new Error('이메일과 비밀번호를 입력해주세요.')
+    const { error } = await supabase.auth.signInWithPassword({
+      email: credentials.email,
+      password: credentials.password,
+    })
+    if (error) throw error
+  }, [])
+
+  const signUp = useCallback(async (credentials: AuthCredentials) => {
+    if (!credentials.email || !credentials.password || !credentials.nickname) throw new Error('이메일, 비밀번호, 닉네임을 모두 입력해주세요.')
+    const { data, error } = await supabase.auth.signUp({
+      email: credentials.email,
+      password: credentials.password,
+      options: { data: { nickname: credentials.nickname } },
+    })
+    if (error) throw error
+    if (data.user) {
+       try {
+          await saveUserProfile(data.user.id, credentials.nickname)
+       } catch(e) {
+          console.error("Failed to save profile on signup:", e)
+       }
+    }
+  }, [])
+
+  const signOut = useCallback(async () => {
+    const { error } = await supabase.auth.signOut()
+    if (error) throw error
+  }, [])
+
+  const signInWithKakao = useCallback(async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'kakao',
+      options: { redirectTo: `${window.location.origin}/` },
+    })
+    if (error) throw error
+  }, [])
+
+  const value = useMemo(() => ({
+    user,
+    profile,
+    loading,
+    signIn,
+    signUp,
+    signOut,
+    signInWithKakao,
+  }), [user, profile, loading, signIn, signUp, signOut, signInWithKakao])
+
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  )
 }

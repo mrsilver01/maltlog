@@ -7,6 +7,12 @@ import { supabase } from './supabase'
 // 현재 사용자의 모든 찜한 위스키 목록 가져오기
 export async function getUserWhiskyLikes(): Promise<string[]> {
   try {
+    console.log('⚠️ 위스키 찜 기능 임시 비활성화됨 - 데이터베이스 스키마 문제로 인해')
+    return []
+
+    // TODO: likes 테이블에 whisky_id 컬럼이 존재하지 않음.
+    // 데이터베이스 스키마 확인 후 다시 활성화 필요
+    /*
     const { data: { user }, error: userError } = await supabase.auth.getUser()
 
     if (userError || !user) {
@@ -26,6 +32,7 @@ export async function getUserWhiskyLikes(): Promise<string[]> {
     }
 
     return likes?.map(like => like.whisky_id) || []
+    */
   } catch (error) {
     console.error('찜 목록 가져오기 중 오류:', error)
     return []
@@ -35,28 +42,9 @@ export async function getUserWhiskyLikes(): Promise<string[]> {
 // 위스키 찜하기 (좋아요 추가)
 export async function addWhiskyLike(whiskyId: string): Promise<boolean> {
   try {
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
-
-    if (userError || !user) {
-      console.log('로그인이 필요합니다')
-      return false
-    }
-
-    const { error } = await supabase
-      .from('likes')
-      .insert({
-        user_id: user.id,
-        whisky_id: whiskyId,
-        post_id: null
-      })
-
-    if (error) {
-      console.error('찜하기 실패:', error)
-      return false
-    }
-
-    console.log('✅ 위스키 찜하기 성공:', whiskyId)
-    return true
+    console.log('⚠️ 위스키 찜 기능 임시 비활성화됨:', whiskyId)
+    return false
+    // TODO: likes 테이블 스키마 문제로 임시 비활성화
   } catch (error) {
     console.error('찜하기 중 오류:', error)
     return false
@@ -66,27 +54,9 @@ export async function addWhiskyLike(whiskyId: string): Promise<boolean> {
 // 위스키 찜 취소 (좋아요 제거)
 export async function removeWhiskyLike(whiskyId: string): Promise<boolean> {
   try {
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
-
-    if (userError || !user) {
-      console.log('로그인이 필요합니다')
-      return false
-    }
-
-    const { error } = await supabase
-      .from('likes')
-      .delete()
-      .eq('user_id', user.id)
-      .eq('whisky_id', whiskyId)
-      .is('post_id', null)
-
-    if (error) {
-      console.error('찜 취소 실패:', error)
-      return false
-    }
-
-    console.log('✅ 위스키 찜 취소 성공:', whiskyId)
-    return true
+    console.log('⚠️ 위스키 찜 취소 기능 임시 비활성화됨:', whiskyId)
+    return false
+    // TODO: likes 테이블 스키마 문제로 임시 비활성화
   } catch (error) {
     console.error('찜 취소 중 오류:', error)
     return false
@@ -96,26 +66,9 @@ export async function removeWhiskyLike(whiskyId: string): Promise<boolean> {
 // 특정 위스키가 찜되어 있는지 확인
 export async function isWhiskyLiked(whiskyId: string): Promise<boolean> {
   try {
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
-
-    if (userError || !user) {
-      return false
-    }
-
-    const { data, error } = await supabase
-      .from('likes')
-      .select('id')
-      .eq('user_id', user.id)
-      .eq('whisky_id', whiskyId)
-      .is('post_id', null)
-      .single()
-
-    if (error && error.code !== 'PGRST116') { // PGRST116은 "no rows returned" 에러
-      console.error('찜 상태 확인 실패:', error)
-      return false
-    }
-
-    return !!data
+    console.log('⚠️ 위스키 찜 상태 확인 기능 임시 비활성화됨:', whiskyId)
+    return false
+    // TODO: likes 테이블 스키마 문제로 임시 비활성화
   } catch (error) {
     console.error('찜 상태 확인 중 오류:', error)
     return false

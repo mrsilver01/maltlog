@@ -6,6 +6,13 @@ import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
+// ============ DEBUG LOGGING: ADD THIS BLOCK ============
+console.log('--- Supabase Client Initialization ---');
+console.log('Attempting to create Supabase client.');
+console.log('URL loaded:', !!supabaseUrl);
+console.log('Anon Key loaded:', !!supabaseAnonKey);
+// =======================================================
+
 // 환경 변수가 없는 경우 에러를 발생시켜 설정 실수를 방지합니다.
 if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Supabase URL and Anon Key are not defined in .env.local')

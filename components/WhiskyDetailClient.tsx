@@ -163,6 +163,8 @@ export default function WhiskyDetailClient({ whisky, initialReviews }: WhiskyDet
   const router = useRouter()
   const { user, loading: authLoading } = useAuth()
 
+  const REVIEWS_PER_PAGE = 6
+
   const [reviews, setReviews] = useState<Review[]>(initialReviews.slice(0, REVIEWS_PER_PAGE))
   const [myReview, setMyReview] = useState<Review | null>(null)
   const [currentRating, setCurrentRating] = useState(0)
@@ -183,8 +185,6 @@ export default function WhiskyDetailClient({ whisky, initialReviews }: WhiskyDet
   const [currentPage, setCurrentPage] = useState(1)
   const [hasMoreReviews, setHasMoreReviews] = useState(true)
   const [loadingMoreReviews, setLoadingMoreReviews] = useState(false)
-
-  const REVIEWS_PER_PAGE = 6
 
   // 평균 별점 계산
   const avgRating = reviews.length > 0
