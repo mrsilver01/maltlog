@@ -91,10 +91,10 @@ export default function HomePageClient({ initialWhiskies }: HomePageClientProps)
           <header className="flex flex-col sm:flex-row items-center justify-between mb-6 sm:mb-8 gap-4 sm:gap-0">
             <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-6">
               <div className="flex items-center gap-2 sm:gap-4">
-                {/* 로고 이미지 */}
+                {/* 글렌케언 글래스 로고 */}
                 <div className="w-10 h-12 sm:w-12 sm:h-16 flex items-center justify-center">
                   <img
-                    src="/whiskies/LOGO.png"
+                    src="/whiskies/logo.png"
                     alt="Maltlog Logo"
                     className="w-10 h-10 sm:w-12 sm:h-12 object-contain"
                   />
@@ -329,7 +329,26 @@ export default function HomePageClient({ initialWhiskies }: HomePageClientProps)
                       const endIndex = startIndex + itemsPerPage
                       whiskiesToShow = filteredWhiskies.slice(startIndex, endIndex)
                     } else {
-                      whiskiesToShow = filteredWhiskies.slice(0, 4)
+                      // 9월 추천 위스키 명단 - 이름으로 검색
+                      const septemberRecommendationNames = [
+                        '글렌그란트 아보랄리스',
+                        '보모어 18년 딥앤컴플렉스',
+                        '카발란 솔리스트 비노바리끄',
+                        '러셀 리저브 싱글배럴'
+                      ];
+
+                      whiskiesToShow = septemberRecommendationNames
+                        .map(name => filteredWhiskies.find(whisky =>
+                          whisky.name.includes(name) ||
+                          whisky.name.includes(name.replace(/\s/g, '')) ||
+                          name.includes(whisky.name.substring(0, 10))
+                        ))
+                        .filter(whisky => whisky !== undefined)
+
+                      // 지정된 위스키를 찾지 못한 경우 기본값으로 처음 4개 사용
+                      if (whiskiesToShow.length === 0) {
+                        whiskiesToShow = filteredWhiskies.slice(0, 4)
+                      }
                     }
 
                     return whiskiesToShow.map((whisky) => (
@@ -394,9 +413,23 @@ export default function HomePageClient({ initialWhiskies }: HomePageClientProps)
             <section className="mb-12">
               <h2 className="text-lg font-bold text-gray-800 mb-6">추천</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
-                {whiskies.slice(4, 8).map((whisky) => (
-                  <WhiskyCard key={whisky.id} whisky={whisky} router={router} navigateWithTransition={navigateWithTransition} />
-                ))}
+                {(() => {
+                  // 이미지가 있는 위스키들을 우선적으로 표시
+                  const whiskiesWithImages = whiskies.filter(whisky =>
+                    whisky.image &&
+                    !whisky.image.includes('no.pic') &&
+                    whisky.image.trim() !== ''
+                  );
+
+                  // 이미지가 있는 위스키가 4개 미만이면 나머지로 채움
+                  const recommendedWhiskies = whiskiesWithImages.length >= 4
+                    ? whiskiesWithImages.slice(0, 4)
+                    : [...whiskiesWithImages, ...whiskies.filter(w => !whiskiesWithImages.includes(w))].slice(0, 4);
+
+                  return recommendedWhiskies.map((whisky) => (
+                    <WhiskyCard key={whisky.id} whisky={whisky} router={router} navigateWithTransition={navigateWithTransition} />
+                  ));
+                })()}
               </div>
             </section>
           )}
@@ -641,7 +674,12 @@ function CommunityPreview({ navigateWithTransition }: { navigateWithTransition: 
                   <span>{formatDate(post.createdAt)}</span>
                 </div>
                 <div className="flex items-center gap-3">
-                  <span>❤️ {post.likes}</span>
+                  <span className="flex items-center gap-1">
+                    <svg className="w-4 h-4 fill-current text-gray-400" viewBox="0 0 24 24">
+                      <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                    </svg>
+                    {post.likes}
+                  </span>
                   <span>💬 {post.comments}</span>
                 </div>
               </div>

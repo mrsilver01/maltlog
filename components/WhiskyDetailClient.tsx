@@ -81,7 +81,7 @@ const RatingChart = ({ reviews }: RatingChartProps) => {
 
   const getBarColor = (count: number, rating: number) => {
     if (count === 0) return 'bg-gray-200';
-    if (rating >= 4) return 'bg-green-400';
+    if (rating >= 4) return 'bg-amber-700';
     if (rating >= 3) return 'bg-yellow-400';
     return 'bg-red-400';
   };
@@ -185,6 +185,7 @@ export default function WhiskyDetailClient({ whisky, initialReviews }: WhiskyDet
   const [currentPage, setCurrentPage] = useState(1)
   const [hasMoreReviews, setHasMoreReviews] = useState(true)
   const [loadingMoreReviews, setLoadingMoreReviews] = useState(false)
+  const [expandedNotes, setExpandedNotes] = useState<{[key: string]: boolean}>({})
 
   // 평균 별점 계산
   const avgRating = reviews.length > 0
@@ -695,7 +696,7 @@ export default function WhiskyDetailClient({ whisky, initialReviews }: WhiskyDet
         <div className="flex items-center gap-4">
           <div className="w-12 h-16 flex items-center justify-center">
             <img
-              src="/whiskies/LOGO.png"
+              src="/whiskies/logo.png"
               alt="Maltlog Logo"
               className="w-12 h-12 object-contain"
             />
@@ -841,8 +842,8 @@ export default function WhiskyDetailClient({ whisky, initialReviews }: WhiskyDet
                       readOnly={true}
                     />
                     {myReview && (
-                      <div className="mt-2 text-center text-sm text-green-600">
-                        Supabase에서 로드된 데이터
+                      <div className="mt-2 text-center text-sm text-amber-700">
+                        별점을 남겼습니다.
                       </div>
                     )}
                   </div>
@@ -928,7 +929,9 @@ export default function WhiskyDetailClient({ whisky, initialReviews }: WhiskyDet
                   <textarea
                     value={currentNote}
                     onChange={(e) => setCurrentNote(e.target.value)}
-                    placeholder="노즈: 바닐라, 캬라멜이 느껴짐&#10;팔레트: &#10;피니시: 긴 여운..."
+                    placeholder="노즈:
+팔레트:
+피니쉬:"
                     className="w-full h-28 p-4 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-gray-800 placeholder-gray-500"
                     disabled={submitting}
                   />
@@ -959,11 +962,45 @@ export default function WhiskyDetailClient({ whisky, initialReviews }: WhiskyDet
                 <h3 className="text-xl font-bold text-red-500">위스키 노트/리뷰</h3>
               </div>
 
+              {/* 새 리뷰 작성 영역 */}
+              {user && (
+                <div className="bg-gray-50 border border-gray-200 p-4 rounded-xl mb-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-8 h-8 rounded-full border border-gray-300 bg-gray-100 overflow-hidden flex-shrink-0">
+                      {user.user_metadata?.avatar_url ? (
+                        <img
+                          src={user.user_metadata.avatar_url}
+                          alt="내 프로필"
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">
+                          👤
+                        </div>
+                      )}
+                    </div>
+                    <span className="text-sm font-medium text-gray-800">새 리뷰 작성</span>
+                  </div>
+                  <textarea
+                    placeholder="노즈:
+팔레트:
+피니쉬: "
+                    className="w-full h-24 p-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-800 placeholder-gray-400"
+                    rows={4}
+                  />
+                  <div className="flex justify-end mt-3">
+                    <button className="bg-amber-700 text-white px-4 py-2 rounded-lg hover:bg-amber-800 transition-colors text-sm">
+                      리뷰 등록
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {reviews.length > 0 ? (
-                <div className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="space-y-4">
+                  <div className="space-y-4">
                     {reviews.map((review) => (
-                    <div key={review.id} className="bg-white border border-gray-200 p-6 rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 cursor-pointer">
+                    <div key={review.id} className="bg-white border border-gray-200 p-4 rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer">
                       <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 rounded-full border border-gray-300 bg-gray-100 overflow-hidden flex-shrink-0">
@@ -988,9 +1025,27 @@ export default function WhiskyDetailClient({ whisky, initialReviews }: WhiskyDet
                       </div>
 
                       {review.note && review.note.trim() !== '' && (
-                        <p className="text-sm text-gray-700 mb-4 min-h-16 leading-relaxed">
-                          {review.note}
-                        </p>
+                        <div className="mb-4">
+                          <p className={`text-sm text-gray-700 leading-relaxed ${
+                            expandedNotes[review.id] ? '' : 'line-clamp-1'
+                          }`}>
+                            {review.note}
+                          </p>
+                          {review.note.length > 50 && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                setExpandedNotes(prev => ({
+                                  ...prev,
+                                  [review.id]: !prev[review.id]
+                                }))
+                              }}
+                              className="text-xs text-blue-500 hover:text-blue-700 mt-1"
+                            >
+                              {expandedNotes[review.id] ? '접기' : '더보기'}
+                            </button>
+                          )}
+                        </div>
                       )}
 
                       <div className="flex items-center justify-between">
@@ -1006,7 +1061,7 @@ export default function WhiskyDetailClient({ whisky, initialReviews }: WhiskyDet
                             }}
                             className="flex items-center gap-1 text-sm hover:bg-gray-50 px-2 py-1 rounded-md transition-colors group"
                           >
-                            <span className="text-gray-400 group-hover:text-blue-400">
+                            <span className="text-gray-300 group-hover:text-gray-400 opacity-50">
                               💬
                             </span>
                             <span className="text-gray-600">

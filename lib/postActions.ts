@@ -8,12 +8,10 @@ import { supabase } from './supabase'
 export async function likePost(postId: string, userId: string): Promise<boolean> {
   try {
     const { error } = await supabase
-      .from('likes')
+      .from('post_likes')
       .insert({
         post_id: postId,
-        user_id: userId,
-        // review_id는 null로 남겨둠 (게시글 좋아요와 리뷰 좋아요 구분)
-        review_id: null
+        user_id: userId
       })
 
     if (error) {
@@ -33,11 +31,10 @@ export async function likePost(postId: string, userId: string): Promise<boolean>
 export async function unlikePost(postId: string, userId: string): Promise<boolean> {
   try {
     const { error } = await supabase
-      .from('likes')
+      .from('post_likes')
       .delete()
       .eq('post_id', postId)
       .eq('user_id', userId)
-      .is('review_id', null)
 
     if (error) {
       console.error('게시글 좋아요 취소 실패:', error)
@@ -56,11 +53,10 @@ export async function unlikePost(postId: string, userId: string): Promise<boolea
 export async function checkIfPostLiked(postId: string, userId: string): Promise<boolean> {
   try {
     const { data, error } = await supabase
-      .from('likes')
+      .from('post_likes')
       .select('id')
       .eq('post_id', postId)
       .eq('user_id', userId)
-      .is('review_id', null)
       .single()
 
     if (error && error.code !== 'PGRST116') { // PGRST116은 "no rows returned" 에러
@@ -79,10 +75,9 @@ export async function checkIfPostLiked(postId: string, userId: string): Promise<
 export async function getPostLikesCount(postId: string): Promise<number> {
   try {
     const { count, error } = await supabase
-      .from('likes')
+      .from('post_likes')
       .select('*', { count: 'exact', head: true })
       .eq('post_id', postId)
-      .is('review_id', null)
 
     if (error) {
       console.error('게시글 좋아요 개수 조회 실패:', error)
@@ -100,11 +95,10 @@ export async function getPostLikesCount(postId: string): Promise<number> {
 export async function checkMultiplePostsLiked(postIds: string[], userId: string): Promise<{[key: string]: boolean}> {
   try {
     const { data, error } = await supabase
-      .from('likes')
+      .from('post_likes')
       .select('post_id')
       .eq('user_id', userId)
       .in('post_id', postIds)
-      .is('review_id', null)
 
     if (error) {
       console.error('여러 게시글 좋아요 상태 확인 실패:', error)

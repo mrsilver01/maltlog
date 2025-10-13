@@ -25,7 +25,11 @@ export default function Header() {
       <div className="container mx-auto px-6 py-3 flex justify-between items-center">
         {/* 로고 */}
         <Link href="/" className="flex items-center gap-2">
-          <img src="/whiskies/LOGO.png" alt="Maltlog Logo" className="w-8 h-8 object-contain" />
+          <img
+            src="/whiskies/logo.png"
+            alt="Maltlog Logo"
+            className="w-8 h-8 object-contain"
+          />
           <span className="text-2xl font-bold text-amber-800 font-[family-name:var(--font-jolly-lodger)]">
             Maltlog
           </span>

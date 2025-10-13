@@ -14,9 +14,6 @@ export interface UserProfile {
 
 // 현재 로그인한 사용자의 프로필 정보 가져오기
 export async function getCurrentUserProfile(): Promise<UserProfile | null> {
-  console.log("⚠️ getCurrentUserProfile is temporarily disabled for debugging.");
-  return null;
-  /*
   try {
     const { data: { user }, error: userError } = await supabase.auth.getUser()
 
@@ -47,7 +44,6 @@ export async function getCurrentUserProfile(): Promise<UserProfile | null> {
     console.error('프로필 가져오기 중 오류:', error)
     return null
   }
-  */
 }
 
 // 사용자 프로필 생성 또는 업데이트 (upsert 사용)

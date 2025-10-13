@@ -110,7 +110,7 @@ export default function ProfilePageClient({
     }
   }
 
-  const myNotes = showAllNotes ? notesData : notesData.slice(0, 3)
+  const myNotes = showAllNotes ? (notesData || []) : (notesData || []).slice(0, 3)
 
   // 로그아웃 함수
   const handleLogout = async () => {
@@ -288,7 +288,7 @@ export default function ProfilePageClient({
             {/* 로고 이미지 */}
             <div className="w-12 h-16 flex items-center justify-center">
               <img
-                src="/whiskies/LOGO.png"
+                src="/whiskies/logo.png"
                 alt="Maltlog Logo"
                 className="w-12 h-12 object-contain"
               />

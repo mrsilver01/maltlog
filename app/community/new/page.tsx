@@ -143,7 +143,11 @@ export default function NewPostPage() {
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-4">
             <div className="w-12 h-16 flex items-center justify-center">
-              <img src="/whiskies/LOGO.png" alt="Maltlog Logo" className="w-12 h-12 object-contain" />
+              <img
+                src="/whiskies/logo.png"
+                alt="Maltlog Logo"
+                className="w-12 h-12 object-contain"
+              />
             </div>
             <h1 className="text-4xl font-bold text-amber-800 font-[family-name:var(--font-jolly-lodger)]">Maltlog</h1>
             <span className="text-4xl font-bold text-blue-500 ml-2 font-[family-name:var(--font-jolly-lodger)]">Community</span>
