@@ -73,3 +73,27 @@ export async function removeWhiskyLike(whiskyId: string): Promise<boolean> {
     return false;
   }
 }
+
+// 내가 찜한 모든 위스키 ID 목록 가져오기
+export async function getUserWhiskyLikes(): Promise<string[]> {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return [];
+
+    const { data, error } = await supabase
+      .from('whisky_likes')
+      .select('whisky_id')
+      .eq('user_id', user.id);
+
+    if (error) {
+      console.error('찜 목록 조회 중 오류:', error);
+      return [];
+    }
+
+    // data는 [{ whisky_id: '...' }, { whisky_id: '...' }] 형태이므로, id만 추출하여 배열로 반환
+    return data.map(like => like.whisky_id);
+  } catch (error) {
+    console.error('찜 목록 조회 중 예외 발생:', error);
+    return [];
+  }
+}
