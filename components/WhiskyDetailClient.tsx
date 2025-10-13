@@ -696,7 +696,7 @@ export default function WhiskyDetailClient({ whisky, initialReviews }: WhiskyDet
         <div className="flex items-center gap-4">
           <div className="w-12 h-16 flex items-center justify-center">
             <img
-              src="/whiskies/logo.png"
+              src="/whiskies/LOGO.png"
               alt="Maltlog Logo"
               className="w-12 h-12 object-contain"
             />

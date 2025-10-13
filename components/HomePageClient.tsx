@@ -94,7 +94,7 @@ export default function HomePageClient({ initialWhiskies }: HomePageClientProps)
                 {/* 글렌케언 글래스 로고 */}
                 <div className="w-10 h-12 sm:w-12 sm:h-16 flex items-center justify-center">
                   <img
-                    src="/whiskies/logo.png"
+                    src="/whiskies/LOGO.png"
                     alt="Maltlog Logo"
                     className="w-10 h-10 sm:w-12 sm:h-12 object-contain"
                   />
