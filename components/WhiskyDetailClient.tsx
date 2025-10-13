@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase'
 import LoadingAnimation from '@/components/LoadingAnimation'
 import { likeReview, unlikeReview, checkMultipleReviewsLiked, getReviewLikesCount, deleteReview } from '@/lib/reviewActions'
 import { getReviewComments, addComment, getReviewCommentsCount, ReviewComment, updateComment, deleteComment } from '@/lib/commentActions'
+import toast from 'react-hot-toast'
 
 // RatingSystem 컴포넌트 - 원본 디자인 적용
 interface RatingSystemProps {
@@ -328,7 +329,7 @@ export default function WhiskyDetailClient({ whisky, initialReviews }: WhiskyDet
   // 별점만 저장하는 함수
   const handleRatingOnlySubmit = async (rating: number) => {
     if (!user) {
-      alert('평점을 남기려면 로그인해주세요.')
+      toast('평점을 남기려면 로그인해주세요.')
       router.push('/login')
       return
     }
@@ -349,34 +350,34 @@ export default function WhiskyDetailClient({ whisky, initialReviews }: WhiskyDet
 
       if (error) {
         console.error('평점 저장 실패:', error)
-        alert('평점 저장에 실패했습니다.')
+        toast.error('평점 저장에 실패했습니다.')
       } else {
         setCurrentRating(rating)
         setHasUserRated(true)
         await refreshReviews()
-        alert('평점이 저장되었습니다!')
+        toast.success('평점이 저장되었습니다!')
       }
     } catch (error) {
       console.error('평점 저장 중 오류:', error)
-      alert('평점 저장 중 오류가 발생했습니다.')
+      toast.error('평점 저장 중 오류가 발생했습니다.')
     }
   }
 
   // 노트 포함 리뷰 저장
   const handleReviewSubmit = async () => {
     if (!user) {
-      alert('로그인이 필요합니다.')
+      toast('로그인이 필요합니다.')
       router.push('/login')
       return
     }
 
     if (currentRating === 0) {
-      alert('별점을 먼저 선택해주세요.')
+      toast('별점을 먼저 선택해주세요.')
       return
     }
 
     if (!currentNote.trim()) {
-      alert('노트를 입력해주세요.')
+      toast('노트를 입력해주세요.')
       return
     }
 
@@ -398,7 +399,7 @@ export default function WhiskyDetailClient({ whisky, initialReviews }: WhiskyDet
 
       if (error) {
         console.error('리뷰 저장 실패:', error)
-        alert('리뷰 저장에 실패했습니다: ' + error.message)
+        toast.error('리뷰 저장에 실패했습니다: ' + error.message)
       } else {
         // 사용자의 리뷰 정보 즉시 업데이트
         const newReview = {
@@ -421,11 +422,11 @@ export default function WhiskyDetailClient({ whisky, initialReviews }: WhiskyDet
         // 리뷰 목록 새로고침
         await refreshReviews()
 
-        alert('리뷰가 저장되었습니다!')
+        toast.success('리뷰가 저장되었습니다!')
       }
     } catch (error) {
       console.error('리뷰 저장 중 오류:', error)
-      alert('리뷰 저장 중 오류가 발생했습니다.')
+      toast.error('리뷰 저장 중 오류가 발생했습니다.')
     } finally {
       setSubmitting(false)
     }
@@ -434,7 +435,7 @@ export default function WhiskyDetailClient({ whisky, initialReviews }: WhiskyDet
   // 리뷰 좋아요/취소 핸들러
   const handleReviewLike = async (reviewId: string) => {
     if (!user) {
-      alert('좋아요를 누르려면 로그인해주세요.')
+      toast('좋아요를 누르려면 로그인해주세요.')
       router.push('/login')
       return
     }
@@ -475,7 +476,7 @@ export default function WhiskyDetailClient({ whisky, initialReviews }: WhiskyDet
             count: currentCount
           }
         }))
-        alert('좋아요 처리에 실패했습니다. 다시 시도해주세요.')
+        toast.error('좋아요 처리에 실패했습니다. 다시 시도해주세요.')
       }
     } catch (error) {
       console.error('좋아요 처리 중 오류:', error)
@@ -488,7 +489,7 @@ export default function WhiskyDetailClient({ whisky, initialReviews }: WhiskyDet
           count: currentCount
         }
       }))
-      alert('좋아요 처리 중 오류가 발생했습니다.')
+      toast.error('좋아요 처리 중 오류가 발생했습니다.')
     } finally {
       setLikesLoading(prev => ({ ...prev, [reviewId]: false }))
     }
@@ -516,14 +517,14 @@ export default function WhiskyDetailClient({ whisky, initialReviews }: WhiskyDet
   // 새 댓글 제출
   const handleCommentSubmit = async (reviewId: string) => {
     if (!user) {
-      alert('댓글을 작성하려면 로그인해주세요.')
+      toast('댓글을 작성하려면 로그인해주세요.')
       router.push('/login')
       return
     }
 
     const content = newComments[reviewId]?.trim()
     if (!content) {
-      alert('댓글 내용을 입력해주세요.')
+      toast('댓글 내용을 입력해주세요.')
       return
     }
 
@@ -552,13 +553,13 @@ export default function WhiskyDetailClient({ whisky, initialReviews }: WhiskyDet
           [reviewId]: ''
         }))
 
-        alert('댓글이 등록되었습니다!')
+        toast.success('댓글이 등록되었습니다!')
       } else {
-        alert('댓글 등록에 실패했습니다. 다시 시도해주세요.')
+        toast.error('댓글 등록에 실패했습니다. 다시 시도해주세요.')
       }
     } catch (error) {
       console.error('댓글 등록 중 오류:', error)
-      alert('댓글 등록 중 오류가 발생했습니다.')
+      toast.error('댓글 등록 중 오류가 발생했습니다.')
     } finally {
       setCommentSubmitting(prev => ({ ...prev, [reviewId]: false }))
     }
@@ -585,13 +586,13 @@ export default function WhiskyDetailClient({ whisky, initialReviews }: WhiskyDet
         // 리뷰 목록 새로고침
         await refreshReviews()
 
-        alert('리뷰가 삭제되었습니다.')
+        toast.success('리뷰가 삭제되었습니다.')
       } else {
-        alert('리뷰 삭제에 실패했습니다. 다시 시도해주세요.')
+        toast.error('리뷰 삭제에 실패했습니다. 다시 시도해주세요.')
       }
     } catch (error) {
       console.error('리뷰 삭제 중 오류:', error)
-      alert('리뷰 삭제 중 오류가 발생했습니다.')
+      toast.error('리뷰 삭제 중 오류가 발생했습니다.')
     }
   }
 
@@ -622,7 +623,7 @@ export default function WhiskyDetailClient({ whisky, initialReviews }: WhiskyDet
 
     const newContent = editCommentTexts[commentId]?.trim()
     if (!newContent) {
-      alert('댓글 내용을 입력해주세요.')
+      toast('댓글 내용을 입력해주세요.')
       return
     }
 
@@ -641,13 +642,13 @@ export default function WhiskyDetailClient({ whisky, initialReviews }: WhiskyDet
         setEditingComments(prev => ({ ...prev, [commentId]: false }))
         setEditCommentTexts(prev => ({ ...prev, [commentId]: '' }))
 
-        alert('댓글이 수정되었습니다.')
+        toast.success('댓글이 수정되었습니다.')
       } else {
-        alert('댓글 수정에 실패했습니다. 다시 시도해주세요.')
+        toast.error('댓글 수정에 실패했습니다. 다시 시도해주세요.')
       }
     } catch (error) {
       console.error('댓글 수정 중 오류:', error)
-      alert('댓글 수정 중 오류가 발생했습니다.')
+      toast.error('댓글 수정 중 오류가 발생했습니다.')
     }
   }
 
@@ -675,13 +676,13 @@ export default function WhiskyDetailClient({ whisky, initialReviews }: WhiskyDet
           [reviewId]: Math.max((prev[reviewId] || 0) - 1, 0)
         }))
 
-        alert('댓글이 삭제되었습니다.')
+        toast.success('댓글이 삭제되었습니다.')
       } else {
-        alert('댓글 삭제에 실패했습니다. 다시 시도해주세요.')
+        toast.error('댓글 삭제에 실패했습니다. 다시 시도해주세요.')
       }
     } catch (error) {
       console.error('댓글 삭제 중 오류:', error)
-      alert('댓글 삭제 중 오류가 발생했습니다.')
+      toast.error('댓글 삭제 중 오류가 발생했습니다.')
     }
   }
 

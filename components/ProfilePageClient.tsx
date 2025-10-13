@@ -9,6 +9,7 @@ import { getUserWhiskyLikes } from '../lib/whiskyLikes'
 import { useWhiskyImage } from '../lib/updateWhiskyImages'
 import { useAuth } from '../app/context/AuthContext'
 import LoadingAnimation from './LoadingAnimation'
+import toast from 'react-hot-toast'
 
 interface WhiskyData {
   id: string
@@ -116,11 +117,11 @@ export default function ProfilePageClient({
   const handleLogout = async () => {
     try {
       await signOut()
-      alert('로그아웃되었습니다.')
+      toast.success('로그아웃되었습니다.')
       router.push('/')
     } catch (error) {
       console.error('로그아웃 중 오류:', error)
-      alert('로그아웃 중 오류가 발생했습니다.')
+      toast.error('로그아웃 중 오류가 발생했습니다.')
     }
   }
 
@@ -131,14 +132,14 @@ export default function ProfilePageClient({
         const success = await updateNickname(nickname)
         if (success) {
           console.log('✅ 닉네임 저장 성공:', nickname)
-          alert('닉네임이 저장되었습니다.')
+          toast.success('닉네임이 저장되었습니다.')
         } else {
-          alert('닉네임 저장에 실패했습니다.')
+          toast.error('닉네임 저장에 실패했습니다.')
           return
         }
       } catch (error) {
         console.error('닉네임 저장 중 오류:', error)
-        alert('닉네임 저장 중 오류가 발생했습니다.')
+        toast.error('닉네임 저장 중 오류가 발생했습니다.')
         return
       }
     }
@@ -159,16 +160,16 @@ export default function ProfilePageClient({
         if (result.success && result.url) {
           setProfileImage(result.url)
           console.log('✅ 프로필 이미지 업로드 성공:', result.url)
-          alert('프로필 이미지가 업데이트되었습니다.')
+          toast.success('프로필 이미지가 업데이트되었습니다.')
           // AuthContext의 프로필 정보 새로고침
           await updateProfile()
         } else {
           console.error('이미지 업로드 실패:', result.error)
-          alert(result.error || '이미지 업로드에 실패했습니다.')
+          toast.error(result.error || '이미지 업로드에 실패했습니다.')
         }
       } catch (error) {
         console.error('이미지 업로드 중 오류:', error)
-        alert('이미지 업로드 중 오류가 발생했습니다.')
+        toast.error('이미지 업로드 중 오류가 발생했습니다.')
       }
     }
   }
@@ -196,16 +197,16 @@ export default function ProfilePageClient({
         if (result.success && result.url) {
           setProfileImage(result.url)
           console.log('✅ 프로필 이미지 업로드 성공 (드래그 앤 드롭):', result.url)
-          alert('프로필 이미지가 업데이트되었습니다.')
+          toast.success('프로필 이미지가 업데이트되었습니다.')
           // AuthContext의 프로필 정보 새로고침
           await updateProfile()
         } else {
           console.error('이미지 업로드 실패:', result.error)
-          alert(result.error || '이미지 업로드에 실패했습니다.')
+          toast.error(result.error || '이미지 업로드에 실패했습니다.')
         }
       } catch (error) {
         console.error('이미지 업로드 중 오류:', error)
-        alert('이미지 업로드 중 오류가 발생했습니다.')
+        toast.error('이미지 업로드 중 오류가 발생했습니다.')
       }
     }
   }
@@ -248,17 +249,17 @@ export default function ProfilePageClient({
       if (success) {
         // 상태에서 삭제
         setNotesData(prevNotes => prevNotes.filter(note => note.id !== noteId))
-        alert('리뷰가 삭제되었습니다.')
+        toast.success('리뷰가 삭제되었습니다.')
 
         // 통계 다시 로드
         const stats = await getUserStats()
         setUserStats(stats)
       } else {
-        alert('리뷰 삭제에 실패했습니다.')
+        toast.error('리뷰 삭제에 실패했습니다.')
       }
     } catch (error) {
       console.error('리뷰 삭제 중 오류:', error)
-      alert('리뷰 삭제 중 오류가 발생했습니다.')
+      toast.error('리뷰 삭제 중 오류가 발생했습니다.')
     }
   }
 

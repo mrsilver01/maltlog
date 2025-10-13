@@ -3,7 +3,8 @@
 import React from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useAuth } from '@/app/context/AuthContext' // 1. 중앙 관리 시스템을 import 합니다.
+import { useAuth } from '@/app/context/AuthContext'
+import toast from 'react-hot-toast' // 1. 중앙 관리 시스템을 import 합니다.
 
 export default function Header() {
   const router = useRouter()
@@ -13,10 +14,10 @@ export default function Header() {
     try {
       // 3. Context의 signOut 함수를 호출합니다.
       await signOut()
-      alert('로그아웃되었습니다.')
+      toast.success('로그아웃되었습니다.')
       router.push('/') // 홈페이지로 이동
     } catch (error: any) {
-      alert('로그아웃 중 오류가 발생했습니다: ' + error.message)
+      toast.error('로그아웃 중 오류가 발생했습니다: ' + error.message)
     }
   }
 

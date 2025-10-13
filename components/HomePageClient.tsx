@@ -7,6 +7,7 @@ import { usePageTransition } from '../hooks/usePageTransition'
 import DrawerSidebar from './DrawerSidebar'
 import { getUserWhiskyLikes, addWhiskyLike, removeWhiskyLike, isWhiskyLiked } from '../lib/whiskyLikes'
 import { useAuth } from '../app/context/AuthContext'
+import toast from 'react-hot-toast'
 
 interface WhiskyData {
   id: string
@@ -72,9 +73,9 @@ export default function HomePageClient({ initialWhiskies }: HomePageClientProps)
   const handleLogout = async () => {
     try {
       await signOut()
-      alert('로그아웃되었습니다.')
+      toast.success('로그아웃되었습니다.')
     } catch (error: unknown) {
-      alert('로그아웃 오류: ' + (error instanceof Error ? error.message : 'Unknown error'))
+      toast.error('로그아웃 오류: ' + (error instanceof Error ? error.message : 'Unknown error'))
     }
   }
 
@@ -509,7 +510,7 @@ function WhiskyCard({ whisky, navigateWithTransition }: { whisky: WhiskyData, ro
 
     // 로그인 상태 확인
     if (!user) {
-      alert('찜 기능을 사용하려면 로그인해주세요.')
+      toast('찜 기능을 사용하려면 로그인해주세요.')
       return
     }
 
@@ -540,11 +541,11 @@ function WhiskyCard({ whisky, navigateWithTransition }: { whisky: WhiskyData, ro
       }
 
       if (!success) {
-        alert('찜 처리 중 오류가 발생했습니다.')
+        toast.error('찜 처리 중 오류가 발생했습니다.')
       }
     } catch (error) {
       console.error('찜 처리 오류:', error)
-      alert('찜 처리 중 오류가 발생했습니다.')
+      toast.error('찜 처리 중 오류가 발생했습니다.')
     } finally {
       setIsCheckingLikeStatus(false)
     }

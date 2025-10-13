@@ -8,6 +8,7 @@ import { updateCommunityPost, deleteCommunityPost } from '@/lib/communityPosts'
 import { likePost, unlikePost, checkIfPostLiked, getPostLikesCount } from '@/lib/postActions'
 import { getPostComments, getReplies, addComment, updateComment, deleteComment, ReviewComment } from '@/lib/commentActions'
 import { supabase } from '@/lib/supabase'
+import toast from 'react-hot-toast'
 
 interface Post {
   id: string
@@ -101,7 +102,7 @@ export default function PostDetailClient({ post: initialPost, initialComments }:
   // 게시글 좋아요/취소 핸들러
   const handlePostLike = async () => {
     if (!user) {
-      alert('좋아요를 누르려면 로그인해주세요.')
+      toast('좋아요를 누르려면 로그인해주세요.')
       router.push('/login')
       return
     }
@@ -133,7 +134,7 @@ export default function PostDetailClient({ post: initialPost, initialComments }:
           isLiked: isCurrentlyLiked,
           count: currentCount
         })
-        alert('좋아요 처리에 실패했습니다. 다시 시도해주세요.')
+        toast.error('좋아요 처리에 실패했습니다. 다시 시도해주세요.')
       }
     } catch (error) {
       console.error('좋아요 처리 중 오류:', error)
@@ -142,7 +143,7 @@ export default function PostDetailClient({ post: initialPost, initialComments }:
         isLiked: isCurrentlyLiked,
         count: currentCount
       })
-      alert('좋아요 처리 중 오류가 발생했습니다.')
+      toast.error('좋아요 처리 중 오류가 발생했습니다.')
     } finally {
       setLikeLoading(false)
     }
@@ -215,7 +216,7 @@ export default function PostDetailClient({ post: initialPost, initialComments }:
   // 답글 수정
   const handleEditReply = async (replyId: string) => {
     if (!editReplyContent.trim()) {
-      alert('답글 내용을 입력해주세요.')
+      toast('답글 내용을 입력해주세요.')
       return
     }
 
@@ -235,13 +236,13 @@ export default function PostDetailClient({ post: initialPost, initialComments }:
         }
         setReplies(newReplies)
 
-        alert('답글이 수정되었습니다!')
+        toast.success('답글이 수정되었습니다!')
       } else {
-        alert('답글 수정에 실패했습니다.')
+        toast.error('답글 수정에 실패했습니다.')
       }
     } catch (error) {
       console.error('답글 수정 중 오류:', error)
-      alert('답글 수정 중 오류가 발생했습니다.')
+      toast.error('답글 수정 중 오류가 발생했습니다.')
     }
   }
 
@@ -263,26 +264,26 @@ export default function PostDetailClient({ post: initialPost, initialComments }:
         // 전체 댓글 목록도 새로고침 (댓글 수 업데이트용)
         await refreshComments()
 
-        alert('답글이 삭제되었습니다!')
+        toast.success('답글이 삭제되었습니다!')
       } else {
-        alert('답글 삭제에 실패했습니다.')
+        toast.error('답글 삭제에 실패했습니다.')
       }
     } catch (error) {
       console.error('답글 삭제 중 오류:', error)
-      alert('답글 삭제 중 오류가 발생했습니다.')
+      toast.error('답글 삭제 중 오류가 발생했습니다.')
     }
   }
 
   // 답글 작성
   const handleSubmitReply = async (parentCommentId: string) => {
     if (!user) {
-      alert('답글을 작성하려면 로그인해주세요.')
+      toast('답글을 작성하려면 로그인해주세요.')
       return
     }
 
     const content = replyContents[parentCommentId]?.trim()
     if (!content) {
-      alert('답글 내용을 입력해주세요.')
+      toast('답글 내용을 입력해주세요.')
       return
     }
 
@@ -318,13 +319,13 @@ export default function PostDetailClient({ post: initialPost, initialComments }:
         // 전체 댓글 목록도 새로고침
         await refreshComments()
 
-        alert('답글이 작성되었습니다!')
+        toast.success('답글이 작성되었습니다!')
       } else {
-        alert('답글 작성에 실패했습니다.')
+        toast.error('답글 작성에 실패했습니다.')
       }
     } catch (error) {
       console.error('답글 작성 중 오류:', error)
-      alert('답글 작성 중 오류가 발생했습니다.')
+      toast.error('답글 작성 중 오류가 발생했습니다.')
     } finally {
       setReplySubmitting(prev => ({ ...prev, [parentCommentId]: false }))
     }
@@ -333,12 +334,12 @@ export default function PostDetailClient({ post: initialPost, initialComments }:
   // 댓글 작성
   const handleAddComment = async () => {
     if (!user) {
-      alert('로그인이 필요합니다.')
+      toast('로그인이 필요합니다.')
       return
     }
 
     if (!newComment.trim()) {
-      alert('댓글 내용을 입력해주세요.')
+      toast('댓글 내용을 입력해주세요.')
       return
     }
 
@@ -368,7 +369,7 @@ export default function PostDetailClient({ post: initialPost, initialComments }:
       }
     } catch (error) {
       console.error('댓글 작성 중 오류:', error)
-      alert('댓글 작성 중 오류가 발생했습니다.')
+      toast.error('댓글 작성 중 오류가 발생했습니다.')
     } finally {
       setIsSubmittingComment(false)
     }
@@ -377,7 +378,7 @@ export default function PostDetailClient({ post: initialPost, initialComments }:
   // 댓글 수정
   const handleEditComment = async (commentId: string) => {
     if (!editCommentContent.trim()) {
-      alert('댓글 내용을 입력해주세요.')
+      toast('댓글 내용을 입력해주세요.')
       return
     }
 
@@ -390,7 +391,7 @@ export default function PostDetailClient({ post: initialPost, initialComments }:
 
       if (error) {
         console.error('댓글 수정 실패:', error)
-        alert('댓글 수정에 실패했습니다.')
+        toast.error('댓글 수정에 실패했습니다.')
       } else {
         setEditingCommentId(null)
         setEditCommentContent('')
@@ -398,7 +399,7 @@ export default function PostDetailClient({ post: initialPost, initialComments }:
       }
     } catch (error) {
       console.error('댓글 수정 중 오류:', error)
-      alert('댓글 수정 중 오류가 발생했습니다.')
+      toast.error('댓글 수정 중 오류가 발생했습니다.')
     }
   }
 
@@ -415,7 +416,7 @@ export default function PostDetailClient({ post: initialPost, initialComments }:
 
       if (error) {
         console.error('댓글 삭제 실패:', error)
-        alert('댓글 삭제에 실패했습니다.')
+        toast.error('댓글 삭제에 실패했습니다.')
       } else {
         await refreshComments()
 
@@ -436,7 +437,7 @@ export default function PostDetailClient({ post: initialPost, initialComments }:
       }
     } catch (error) {
       console.error('댓글 삭제 중 오류:', error)
-      alert('댓글 삭제 중 오류가 발생했습니다.')
+      toast.error('댓글 삭제 중 오류가 발생했습니다.')
     }
   }
 
@@ -452,7 +453,7 @@ export default function PostDetailClient({ post: initialPost, initialComments }:
 
   const handleSaveEdit = async () => {
     if (!editPost.title.trim() || !editPost.content.trim()) {
-      alert('제목과 내용을 모두 입력해주세요.')
+      toast('제목과 내용을 모두 입력해주세요.')
       return
     }
 
@@ -473,13 +474,13 @@ export default function PostDetailClient({ post: initialPost, initialComments }:
           image_url: editPost.image || undefined
         }))
         setIsEditing(false)
-        alert('게시글이 수정되었습니다.')
+        toast.success('게시글이 수정되었습니다.')
       } else {
-        alert('게시글 수정에 실패했습니다.')
+        toast.error('게시글 수정에 실패했습니다.')
       }
     } catch (error) {
       console.error('게시글 수정 오류:', error)
-      alert('게시글 수정 중 오류가 발생했습니다.')
+      toast.error('게시글 수정 중 오류가 발생했습니다.')
     } finally {
       setUploading(false)
     }
@@ -492,14 +493,14 @@ export default function PostDetailClient({ post: initialPost, initialComments }:
     try {
       const success = await deleteCommunityPost(post.id)
       if (success) {
-        alert('게시글이 삭제되었습니다.')
+        toast.success('게시글이 삭제되었습니다.')
         router.push('/community')
       } else {
-        alert('게시글 삭제에 실패했습니다.')
+        toast.error('게시글 삭제에 실패했습니다.')
       }
     } catch (error) {
       console.error('게시글 삭제 오류:', error)
-      alert('게시글 삭제 중 오류가 발생했습니다.')
+      toast.error('게시글 삭제 중 오류가 발생했습니다.')
     }
   }
 
@@ -536,7 +537,7 @@ export default function PostDetailClient({ post: initialPost, initialComments }:
       const compressedImage = await compressImage(file, 600, 0.7)
       setEditPost(prev => ({ ...prev, image: compressedImage }))
     } catch (error) {
-      alert('이미지 처리 중 오류가 발생했습니다.')
+      toast.error('이미지 처리 중 오류가 발생했습니다.')
     } finally {
       setUploading(false)
     }

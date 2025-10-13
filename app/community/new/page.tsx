@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/app/context/AuthContext'
 import LoadingAnimation from '@/components/LoadingAnimation'
 import { createCommunityPost } from '@/lib/communityPosts'
+import toast from 'react-hot-toast'
 
 export default function NewPostPage() {
   const router = useRouter()
@@ -19,15 +20,15 @@ export default function NewPostPage() {
 
   const handleCreatePost = async () => {
     if (!newPost.title.trim() || !newPost.content.trim()) {
-      alert('제목과 내용을 모두 입력해주세요.')
+      toast.error('제목과 내용을 모두 입력해주세요.')
       return
     }
     if (!user) {
-      alert('게시글을 작성하려면 로그인해주세요.')
+      toast('게시글을 작성하려면 로그인해주세요.')
       return
     }
     if (uploading) {
-      alert('이미지 업로드 중입니다. 잠시만 기다려주세요.')
+      toast('이미지 업로드 중입니다. 잠시만 기다려주세요.')
       return
     }
 
@@ -39,14 +40,14 @@ export default function NewPostPage() {
         newPost.image || undefined
       )
       if (result.success) {
-        alert('게시글이 성공적으로 작성되었습니다!')
+        toast.success('게시글이 성공적으로 작성되었습니다!')
         router.push('/community')
       } else {
-        alert('게시글 작성에 실패했습니다. 다시 시도해주세요.')
+        toast.error('게시글 작성에 실패했습니다. 다시 시도해주세요.')
       }
     } catch (error) {
       console.error('게시글 작성 오류:', error)
-      alert('게시글 작성 중 오류가 발생했습니다.')
+      toast.error('게시글 작성 중 오류가 발생했습니다.')
     } finally {
       setUploading(false)
     }
@@ -85,13 +86,13 @@ export default function NewPostPage() {
     if (!file) return
 
     if (file.size > 20 * 1024 * 1024) {
-      alert('이미지 파일 크기는 20MB 이하로 해주세요.')
+      toast.error('이미지 파일 크기는 20MB 이하로 해주세요.')
       event.target.value = ''
       return
     }
     const supportedFormats = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/bmp', 'image/tiff', 'image/svg+xml']
     if (!supportedFormats.includes(file.type)) {
-      alert('지원하는 이미지 포맷: JPEG, PNG, GIF, WebP, BMP, TIFF, SVG')
+      toast('지원하는 이미지 포맷: JPEG, PNG, GIF, WebP, BMP, TIFF, SVG')
       event.target.value = ''
       return
     }
@@ -108,7 +109,7 @@ export default function NewPostPage() {
       }
       setNewPost(prev => ({ ...prev, image: compressedImage }))
     } catch (error) {
-      alert('이미지 처리 중 오류가 발생했습니다.')
+      toast.error('이미지 처리 중 오류가 발생했습니다.')
       event.target.value = ''
     } finally {
       setUploading(false)

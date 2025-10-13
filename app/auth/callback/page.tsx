@@ -3,6 +3,7 @@
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '../../../lib/supabase'
+import toast from 'react-hot-toast'
 // Migration functions removed as we now use Supabase only
 
 export default function AuthCallback() {
@@ -16,7 +17,7 @@ export default function AuthCallback() {
 
         if (error) {
           console.error('Auth callback error:', error)
-          alert('로그인 중 오류가 발생했습니다.')
+          toast.error('로그인 중 오류가 발생했습니다.')
           router.push('/login')
           return
         }
@@ -34,7 +35,7 @@ export default function AuthCallback() {
           // 카카오 로그인 성공 - Supabase가 모든 데이터를 처리합니다
           console.log('카카오 로그인 성공:', nickname)
 
-          alert('카카오 로그인 성공!')
+          toast.success('카카오 로그인 성공!')
           router.push('/')
         } else {
           console.error('No session found')
@@ -42,7 +43,7 @@ export default function AuthCallback() {
         }
       } catch (error) {
         console.error('Unexpected error:', error)
-        alert('로그인 중 오류가 발생했습니다.')
+        toast.error('로그인 중 오류가 발생했습니다.')
         router.push('/login')
       }
     }

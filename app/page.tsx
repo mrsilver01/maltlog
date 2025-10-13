@@ -18,11 +18,12 @@ interface WhiskyData {
 }
 
 export default async function HomePage() {
-  // 서버에서 직접 위스키 데이터 로드
+  // 서버에서 직접 위스키 데이터 로드 (최초 12개만)
   const { data: whiskies, error } = await supabase
     .from('whiskies')
     .select('*')
     .order('name')
+    .limit(12)
 
   if (error) {
     console.error('위스키 데이터 로드 실패:', error)

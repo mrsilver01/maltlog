@@ -39,12 +39,12 @@ export default function LoginPage() {
       if (isLogin) {
         // 로그인
         await signIn({ email: formData.email, password: formData.password })
-        alert('로그인 성공!')
+        toast.success('로그인 성공!')
         router.push('/')
       } else {
         // 회원가입
         if (formData.password !== formData.confirmPassword) {
-          alert('비밀번호가 일치하지 않습니다.')
+          toast.error('비밀번호가 일치하지 않습니다.')
           return
         }
 
@@ -66,7 +66,7 @@ export default function LoginPage() {
         console.error('회원가입 또는 자동 로그인 오류:', error)
         toast.error((error instanceof Error ? error.message : 'Unknown error') || '회원가입 중 오류가 발생했습니다.')
       } else {
-        alert('오류: ' + (error instanceof Error ? error.message : 'Unknown error'))
+        toast.error('오류: ' + (error instanceof Error ? error.message : 'Unknown error'))
       }
     } finally {
       setLoading(false)
@@ -79,7 +79,7 @@ export default function LoginPage() {
       await signInWithKakao()
       // OAuth 리다이렉트 처리는 callback 페이지에서 진행
     } catch (error: unknown) {
-      alert('오류: ' + (error instanceof Error ? error.message : 'Unknown error'))
+      toast.error('오류: ' + (error instanceof Error ? error.message : 'Unknown error'))
       setLoading(false)
     }
   }

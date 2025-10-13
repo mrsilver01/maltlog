@@ -6,6 +6,7 @@ import { useAuth } from '@/app/context/AuthContext';
 import type { CommunityPostWithProfile } from '@/lib/communityPosts';
 import { likePost, unlikePost, checkMultiplePostsLiked, getPostLikesCount } from '@/lib/postActions';
 import LoadingAnimation from '@/components/LoadingAnimation';
+import toast from 'react-hot-toast';
 
 interface CommunityClientProps {
   initialPosts: CommunityPostWithProfile[];
@@ -66,7 +67,7 @@ export default function CommunityClient({ initialPosts }: CommunityClientProps) 
   // 좋아요 처리 함수 (옵티미스틱 업데이트)
   const handlePostLike = useCallback(async (postId: string) => {
     if (!user) {
-      alert('로그인이 필요합니다.');
+      toast('로그인이 필요합니다.');
       return;
     }
 
@@ -97,7 +98,7 @@ export default function CommunityClient({ initialPosts }: CommunityClientProps) 
           ...prev,
           [postId]: currentState
         }));
-        alert('좋아요 처리 중 오류가 발생했습니다.');
+        toast.error('좋아요 처리 중 오류가 발생했습니다.');
       }
     } catch (error) {
       console.error('좋아요 처리 오류:', error);
@@ -106,7 +107,7 @@ export default function CommunityClient({ initialPosts }: CommunityClientProps) 
         ...prev,
         [postId]: currentState
       }));
-      alert('좋아요 처리 중 오류가 발생했습니다.');
+      toast.error('좋아요 처리 중 오류가 발생했습니다.');
     }
   }, [user, postLikes]);
 
@@ -128,10 +129,10 @@ export default function CommunityClient({ initialPosts }: CommunityClientProps) 
   const handleLogout = async () => {
     try {
       await signOut();
-      alert('로그아웃되었습니다.');
+      toast.success('로그아웃되었습니다.');
       router.push('/');
     } catch (error: unknown) {
-      alert('로그아웃 오류: ' + (error instanceof Error ? error.message : 'Unknown error'));
+      toast.error('로그아웃 오류: ' + (error instanceof Error ? error.message : 'Unknown error'));
     }
   };
 
