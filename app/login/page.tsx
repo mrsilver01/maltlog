@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '../context/AuthContext'
+import toast from 'react-hot-toast'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -47,17 +48,26 @@ export default function LoginPage() {
           return
         }
 
+        // 1. 먼저 회원가입을 시도합니다.
         await signUp({
           email: formData.email,
           password: formData.password,
           nickname: formData.nickname
         })
-        alert('회원가입이 완료되었습니다. 이메일을 확인해주세요.')
-        setIsLogin(true)
-        setFormData({ email: '', password: '', confirmPassword: '', nickname: '' })
+
+        // 2. 회원가입 성공 후, 동일한 정보로 즉시 로그인을 시도합니다.
+        await signIn({ email: formData.email, password: formData.password })
+        toast.success('회원가입을 환영합니다! 자동으로 로그인되었습니다.')
+        // 3. 메인 페이지로 이동합니다.
+        router.push('/')
       }
     } catch (error: unknown) {
-      alert('오류: ' + (error instanceof Error ? error.message : 'Unknown error'))
+      if (!isLogin) {
+        console.error('회원가입 또는 자동 로그인 오류:', error)
+        toast.error((error instanceof Error ? error.message : 'Unknown error') || '회원가입 중 오류가 발생했습니다.')
+      } else {
+        alert('오류: ' + (error instanceof Error ? error.message : 'Unknown error'))
+      }
     } finally {
       setLoading(false)
     }
