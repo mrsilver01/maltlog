@@ -9,7 +9,7 @@ import { getUserWhiskyLikes, addWhiskyLike, removeWhiskyLike, isWhiskyLiked } fr
 import { useAuth } from '../app/context/AuthContext'
 import toast from 'react-hot-toast'
 
-interface WhiskyData {
+export interface WhiskyData {
   id: string
   name: string
   image: string
