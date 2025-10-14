@@ -330,25 +330,41 @@ export default function HomePageClient({ initialWhiskies }: HomePageClientProps)
                       const endIndex = startIndex + itemsPerPage
                       whiskiesToShow = filteredWhiskies.slice(startIndex, endIndex)
                     } else {
-                      // 9월 추천 위스키 명단 - 이름으로 검색
-                      const septemberRecommendationNames = [
-                        '글렌그란트 아보랄리스',
-                        '보모어 18년 딥앤컴플렉스',
-                        '카발란 솔리스트 비노바리끄',
-                        '러셀 리저브 싱글배럴'
+                      // 9월 추천 위스키 명단 - 더 유연한 키워드 매칭
+                      const septemberRecommendationKeywords = [
+                        ['글렌그란트', '아보랄리스'],
+                        ['보모어', '18', '딥앤컴플렉스'],
+                        ['카발란', '솔리스트', '비노바리끄'],
+                        ['러셀', '리저브', '싱글배럴'],
+                        ['글렌피딕', '12'], // 추가 후보
+                        ['맥캘란', '12'], // 추가 후보
+                        ['아드벡', '10'], // 추가 후보
+                        ['라가불린', '16'] // 추가 후보
                       ];
 
-                      whiskiesToShow = septemberRecommendationNames
-                        .map(name => filteredWhiskies.find(whisky =>
-                          whisky.name.includes(name) ||
-                          whisky.name.includes(name.replace(/\s/g, '')) ||
-                          name.includes(whisky.name.substring(0, 10))
-                        ))
-                        .filter(whisky => whisky !== undefined)
+                      whiskiesToShow = [];
 
-                      // 지정된 위스키를 찾지 못한 경우 기본값으로 처음 4개 사용
-                      if (whiskiesToShow.length === 0) {
-                        whiskiesToShow = filteredWhiskies.slice(0, 4)
+                      // 각 키워드 조합으로 위스키 찾기
+                      for (const keywords of septemberRecommendationKeywords) {
+                        if (whiskiesToShow.length >= 8) break; // 최대 8개까지
+
+                        const foundWhisky = filteredWhiskies.find(whisky =>
+                          keywords.every(keyword =>
+                            whisky.name.toLowerCase().includes(keyword.toLowerCase())
+                          )
+                        );
+
+                        if (foundWhisky && !whiskiesToShow.some(w => w.id === foundWhisky.id)) {
+                          whiskiesToShow.push(foundWhisky);
+                        }
+                      }
+
+                      // 여전히 부족하면 평점이나 인기도 순으로 추가
+                      if (whiskiesToShow.length < 8) {
+                        const remainingWhiskies = filteredWhiskies
+                          .filter(w => !whiskiesToShow.some(shown => shown.id === w.id))
+                          .slice(0, 8 - whiskiesToShow.length);
+                        whiskiesToShow.push(...remainingWhiskies);
                       }
                     }
 
