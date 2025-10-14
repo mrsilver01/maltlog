@@ -323,10 +323,37 @@ export async function updatePostCommentsCount(postId: string, newCount: number):
   }
 }
 
-// 페이지네이션을 지원하는 커뮤니티 게시글 가져오기 (무한 스크롤용, 검색 지원)
+// 전체 게시글 개수 가져오기 (페이지네이션용)
+export async function getPostsCount(searchQuery?: string): Promise<number> {
+  try {
+    let query = supabase
+      .from('posts')
+      .select('id', { count: 'exact', head: true })
+
+    // 검색어가 있고 2글자 이상이면 제목 또는 내용에서 검색
+    if (searchQuery && searchQuery.trim().length >= 2) {
+      const searchTerm = searchQuery.trim()
+      query = query.or(`title.ilike.%${searchTerm}%,content.ilike.%${searchTerm}%`)
+    }
+
+    const { count, error } = await query
+
+    if (error) {
+      console.error('게시글 개수 가져오기 실패:', error)
+      return 0
+    }
+
+    return count || 0
+  } catch (error) {
+    console.error('게시글 개수 가져오기 중 오류:', error)
+    return 0
+  }
+}
+
+// 페이지네이션을 지원하는 커뮤니티 게시글 가져오기 (검색 지원, 제목+내용 검색)
 export async function getCommunityPosts(
   page: number = 0,
-  limit: number = 10,
+  limit: number = 4,
   searchQuery?: string
 ): Promise<CommunityPostWithProfile[]> {
   try {
@@ -343,9 +370,10 @@ export async function getCommunityPosts(
         )
       `)
 
-    // 검색어가 있으면 제목에서 검색
-    if (searchQuery && searchQuery.trim()) {
-      query = query.ilike('title', `%${searchQuery.trim()}%`)
+    // 검색어가 있고 2글자 이상이면 제목 또는 내용에서 검색
+    if (searchQuery && searchQuery.trim().length >= 2) {
+      const searchTerm = searchQuery.trim()
+      query = query.or(`title.ilike.%${searchTerm}%,content.ilike.%${searchTerm}%`)
     }
 
     const { data: posts, error } = await query
@@ -376,8 +404,8 @@ export async function getCommunityPosts(
       createdAt: post.created_at
     })) || []
 
-    const searchInfo = searchQuery ? ` (검색어: "${searchQuery.trim()}")` : ''
-    console.log(`✅ 페이지 ${page}: ${transformedPosts.length}개 게시글 로드 완료${searchInfo}`)
+    const searchInfo = (searchQuery && searchQuery.trim().length >= 2) ? ` (검색어: "${searchQuery.trim()}")` : ''
+    console.log(`✅ 페이지 ${page + 1}: ${transformedPosts.length}개 게시글 로드 완료${searchInfo}`)
     return transformedPosts
   } catch (error) {
     console.error('게시글 페이지네이션 가져오기 중 오류:', error)

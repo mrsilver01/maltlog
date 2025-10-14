@@ -10,14 +10,30 @@ import toast from 'react-hot-toast';
 
 interface CommunityClientProps {
   initialPosts: CommunityPostWithProfile[];
+  initialSearch?: string;
+  initialPage?: number;
+  totalPages?: number;
+  totalCount?: number;
 }
 
-export default function CommunityClient({ initialPosts }: CommunityClientProps) {
+export default function CommunityClient({
+  initialPosts,
+  initialSearch = '',
+  initialPage = 1,
+  totalPages = 1,
+  totalCount = 0
+}: CommunityClientProps) {
   const router = useRouter();
   const { user, profile, signOut, loading: authLoading } = useAuth();
 
   // 서버로부터 받은 초기 데이터를 state로 설정
   const [posts, setPosts] = useState<CommunityPostWithProfile[]>(initialPosts);
+
+  // 검색 및 페이지네이션 상태
+  const [searchQuery, setSearchQuery] = useState<string>(initialSearch);
+  const [searchInput, setSearchInput] = useState<string>(initialSearch);
+  const [currentPage, setCurrentPage] = useState<number>(initialPage);
+  const [isSearching, setIsSearching] = useState<boolean>(false);
 
   // 좋아요 상태 관리
   const [postLikes, setPostLikes] = useState<{ [key: string]: { isLiked: boolean; count: number } }>({});
@@ -111,6 +127,51 @@ export default function CommunityClient({ initialPosts }: CommunityClientProps) 
     }
   }, [user, postLikes]);
 
+  // 검색 처리 함수
+  const handleSearch = useCallback((e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmedQuery = searchInput.trim();
+
+    if (trimmedQuery.length >= 2 || trimmedQuery === '') {
+      setIsSearching(true);
+
+      // URL 업데이트
+      const params = new URLSearchParams();
+      if (trimmedQuery) {
+        params.set('search', trimmedQuery);
+      }
+      params.set('page', '1');
+
+      router.push(`/community?${params.toString()}`);
+    } else if (trimmedQuery.length > 0) {
+      toast.error('검색어는 2글자 이상 입력해주세요.');
+    }
+  }, [searchInput, router]);
+
+  // 페이지 변경 처리 함수
+  const handlePageChange = useCallback((newPage: number) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setIsSearching(true);
+
+      // URL 업데이트
+      const params = new URLSearchParams();
+      if (searchQuery) {
+        params.set('search', searchQuery);
+      }
+      params.set('page', newPage.toString());
+
+      router.push(`/community?${params.toString()}`);
+    }
+  }, [searchQuery, totalPages, router]);
+
+  // 새로운 데이터가 로드되면 검색 상태 리셋
+  useEffect(() => {
+    setIsSearching(false);
+    setSearchQuery(initialSearch);
+    setSearchInput(initialSearch);
+    setCurrentPage(initialPage);
+  }, [initialSearch, initialPage, initialPosts]);
+
   // 클라이언트 사이드 로딩은 이제 필요 없으므로, authLoading만 확인
   if (authLoading) {
     return <LoadingAnimation />;
@@ -183,6 +244,54 @@ export default function CommunityClient({ initialPosts }: CommunityClientProps) 
         </div>
 
         <div className="max-w-4xl mx-auto">
+          {/* 검색 UI */}
+          <div className="mb-8">
+            <form onSubmit={handleSearch} className="flex gap-3 mb-4">
+              <div className="flex-1">
+                <input
+                  type="text"
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
+                  placeholder="제목 또는 내용으로 검색... (2글자 이상)"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={isSearching}
+                className="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 disabled:opacity-50 font-medium flex items-center gap-2"
+              >
+                {isSearching ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    검색중...
+                  </>
+                ) : (
+                  <>
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+                    </svg>
+                    검색
+                  </>
+                )}
+              </button>
+            </form>
+
+            {/* 검색 결과 정보 */}
+            <div className="flex justify-between items-center text-sm text-gray-600 mb-4">
+              <div>
+                {searchQuery ? (
+                  <span>검색어 "{searchQuery}" 결과: 총 {totalCount}개</span>
+                ) : (
+                  <span>전체 게시글: {totalCount}개</span>
+                )}
+              </div>
+              {totalPages > 1 && (
+                <span>{currentPage} / {totalPages} 페이지</span>
+              )}
+            </div>
+          </div>
+
           {user && (
             <div className="mb-8">
               <button
@@ -275,6 +384,65 @@ export default function CommunityClient({ initialPosts }: CommunityClientProps) 
             <div className="text-center py-20 bg-gray-50 rounded-lg">
               <h3 className="text-lg text-gray-500">아직 게시글이 없습니다.</h3>
               <p className="text-sm text-gray-400 mt-2">첫 번째 게시글을 작성해보세요!</p>
+            </div>
+          )}
+
+          {/* 페이지네이션 UI */}
+          {totalPages > 1 && (
+            <div className="mt-8 flex justify-center">
+              <nav className="flex items-center gap-2">
+                {/* 이전 페이지 버튼 */}
+                <button
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage <= 1}
+                  className="px-3 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
+                  </svg>
+                  이전
+                </button>
+
+                {/* 페이지 번호들 */}
+                {Array.from({ length: Math.min(5, totalPages) }, (_, index) => {
+                  let pageNum;
+                  if (totalPages <= 5) {
+                    pageNum = index + 1;
+                  } else if (currentPage <= 3) {
+                    pageNum = index + 1;
+                  } else if (currentPage >= totalPages - 2) {
+                    pageNum = totalPages - 4 + index;
+                  } else {
+                    pageNum = currentPage - 2 + index;
+                  }
+
+                  return (
+                    <button
+                      key={pageNum}
+                      onClick={() => handlePageChange(pageNum)}
+                      className={`px-3 py-2 rounded-lg border ${
+                        currentPage === pageNum
+                          ? 'bg-blue-500 text-white border-blue-500'
+                          : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
+                      }`}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                })}
+
+                {/* 다음 페이지 버튼 */}
+                <button
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage >= totalPages}
+                  className="px-3 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                >
+                  다음
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+                  </svg>
+                </button>
+              </nav>
             </div>
           )}
         </div>
