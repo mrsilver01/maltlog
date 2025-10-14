@@ -32,7 +32,9 @@ interface HomePageClientProps {
 export default function HomePageClient({ initialWhiskies }: HomePageClientProps) {
   const { user, profile, signOut } = useAuth()
   const [searchQuery, setSearchQuery] = useState('')
-  const [whiskies] = useState<WhiskyData[]>(initialWhiskies)
+  const [whiskies, setWhiskies] = useState<WhiskyData[]>(initialWhiskies)
+  const [hasLoadedMore, setHasLoadedMore] = useState(false)
+  const [isLoadingMore, setIsLoadingMore] = useState(false)
   const [showAllWhiskies, setShowAllWhiskies] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
@@ -78,6 +80,25 @@ export default function HomePageClient({ initialWhiskies }: HomePageClientProps)
       toast.error('로그아웃 오류: ' + (error instanceof Error ? error.message : 'Unknown error'))
     }
   }
+
+  // 더보기 기능
+  const handleShowMore = async () => {
+    setIsLoadingMore(true);
+    try {
+      const response = await fetch('/api/whiskies');
+      if (!response.ok) {
+        throw new Error('Failed to fetch more whiskies');
+      }
+      const additionalWhiskies = await response.json();
+      setWhiskies(currentWhiskies => [...currentWhiskies, ...additionalWhiskies]);
+      setHasLoadedMore(true);
+    } catch (error) {
+      console.error(error);
+      toast.error('추가 위스키를 불러오는 데 실패했습니다.');
+    } finally {
+      setIsLoadingMore(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-rose-50 p-3 sm:p-6">
@@ -230,15 +251,13 @@ export default function HomePageClient({ initialWhiskies }: HomePageClientProps)
 
               {/* 버튼들 */}
               <div className="flex justify-center gap-2">
-                {!searchQuery.trim() && (
+                {!searchQuery.trim() && !hasLoadedMore && (
                   <button
-                    onClick={() => {
-                      setShowAllWhiskies(!showAllWhiskies)
-                      setCurrentPage(1) // 페이지 리셋
-                    }}
-                    className="text-xs font-medium text-amber-700 hover:text-amber-800 transition-colors bg-amber-50 px-3 py-1.5 rounded-full"
+                    onClick={handleShowMore}
+                    disabled={isLoadingMore}
+                    className="text-xs font-medium text-amber-700 hover:text-amber-800 transition-colors bg-amber-50 px-3 py-1.5 rounded-full disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {showAllWhiskies ? '돌아가기' : '모두 보기'}
+                    {isLoadingMore ? '로딩 중...' : '더보기'}
                   </button>
                 )}
                 {searchQuery.trim() && (
@@ -266,12 +285,13 @@ export default function HomePageClient({ initialWhiskies }: HomePageClientProps)
                     &quot;{searchQuery}&quot; 검색 결과 ({filteredWhiskies.length}개)
                   </h2>
                 )}
-                {!searchQuery.trim() && (
+                {!searchQuery.trim() && !hasLoadedMore && (
                   <button
-                    onClick={() => setShowAllWhiskies(!showAllWhiskies)}
-                    className="text-sm font-medium text-amber-700 hover:text-amber-800 transition-colors"
+                    onClick={handleShowMore}
+                    disabled={isLoadingMore}
+                    className="text-sm font-medium text-amber-700 hover:text-amber-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {showAllWhiskies ? '돌아가기' : '모두 보기'}
+                    {isLoadingMore ? '로딩 중...' : '더보기'}
                   </button>
                 )}
                 {searchQuery.trim() && (

@@ -17,15 +17,29 @@ interface WhiskyData {
   updated_at?: string
 }
 
-export default async function HomePage() {
-  // 서버에서 직접 위스키 데이터 로드 (모든 위스키)
-  const { data: whiskies, error } = await supabase
+// app/page.tsx 파일의 getWhiskies 함수
+async function getWhiskies(): Promise<WhiskyData[]> {
+  const { data, error } = await supabase
     .from('whiskies')
     .select('*')
-    .order('name')
+    .eq('is_featured', true) // 추천 위스키만 선택
+    .limit(12) // 최대 12개로 제한
+    .order('name', { ascending: true });
 
   if (error) {
-    console.error('위스키 데이터 로드 실패:', error)
+    console.error("Failed to fetch featured whiskies on server:", error);
+    return [];
+  }
+
+  return data as WhiskyData[];
+}
+
+export default async function HomePage() {
+  // 서버에서 추천 위스키 데이터만 로드
+  const whiskies = await getWhiskies();
+
+  if (whiskies.length === 0) {
+    console.error('위스키 데이터 로드 실패')
     return (
       <div className="min-h-screen bg-rose-50 p-6 flex items-center justify-center">
         <div className="text-center">
@@ -42,7 +56,7 @@ export default async function HomePage() {
     )
   }
 
-  console.log(`서버에서 ${whiskies?.length || 0}개의 위스키 데이터 로드 완료`)
+  console.log(`서버에서 ${whiskies.length}개의 추천 위스키 데이터 로드 완료`)
 
-  return <HomePageClient initialWhiskies={whiskies || []} />
+  return <HomePageClient initialWhiskies={whiskies} />
 }

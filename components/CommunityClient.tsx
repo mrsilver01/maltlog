@@ -219,7 +219,7 @@ export default function CommunityClient({
               />
             </div>
             <h1 className="text-4xl font-bold text-amber-800 font-[family-name:var(--font-jolly-lodger)]">Maltlog</h1>
-            <span className="text-4xl font-bold text-blue-500 ml-2 font-[family-name:var(--font-jolly-lodger)]">Community</span>
+            <span className="text-4xl font-bold text-purple-700 ml-2 font-[family-name:var(--font-jolly-lodger)]">Community</span>
           </div>
           <div className="flex gap-4">
             {user ? (
@@ -253,13 +253,13 @@ export default function CommunityClient({
                   value={searchInput}
                   onChange={(e) => setSearchInput(e.target.value)}
                   placeholder="제목 또는 내용으로 검색... (2글자 이상)"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-purple-600 outline-none"
                 />
               </div>
               <button
                 type="submit"
                 disabled={isSearching}
-                className="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 disabled:opacity-50 font-medium flex items-center gap-2"
+                className="bg-purple-700 text-white px-6 py-2 rounded-lg hover:bg-purple-800 disabled:opacity-50 font-medium flex items-center gap-2"
               >
                 {isSearching ? (
                   <>
@@ -296,7 +296,7 @@ export default function CommunityClient({
             <div className="mb-8">
               <button
                 onClick={() => router.push('/community/new')}
-                className="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 font-medium"
+                className="bg-purple-700 text-white px-6 py-3 rounded-lg hover:bg-purple-800 font-medium"
               >
                 새 게시글 작성
               </button>
@@ -422,7 +422,7 @@ export default function CommunityClient({
                       onClick={() => handlePageChange(pageNum)}
                       className={`px-3 py-2 rounded-lg border ${
                         currentPage === pageNum
-                          ? 'bg-blue-500 text-white border-blue-500'
+                          ? 'bg-purple-700 text-white border-purple-700'
                           : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
                       }`}
                     >
