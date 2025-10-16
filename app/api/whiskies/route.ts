@@ -3,11 +3,12 @@ import { NextResponse } from 'next/server';
 
 export async function GET() {
   try {
+    // 모든 위스키를 가져옴 (초기 20개 이후의 나머지)
     const { data, error } = await supabase
       .from('whiskies')
       .select('*')
-      .eq('is_featured', false) // 추천되지 않은 위스키만 선택
-      .order('name', { ascending: true });
+      .order('name', { ascending: true })
+      .range(20, 1000); // 21번째부터 모든 위스키 가져오기
 
     if (error) {
       throw error;
