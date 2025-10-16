@@ -94,7 +94,7 @@ export async function saveWhiskyReview(
       user_id: user.id,
       whisky_name: whiskyName,
       rating: rating,
-      note: note || null
+      note: note || undefined
     }
 
     const { error } = await supabase

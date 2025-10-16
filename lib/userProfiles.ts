@@ -67,7 +67,7 @@ export async function saveUserProfile(
     const profileData: Partial<UserProfile> = {
       id: user.id,
       nickname: nickname.trim(),
-      avatar_url: avatarUrl || null
+      avatar_url: avatarUrl || undefined
     }
 
     const { error } = await supabase

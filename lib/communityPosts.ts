@@ -24,6 +24,9 @@ export interface CommunityPost {
 export interface CommunityPostWithProfile extends CommunityPost {
   author: string  // 닉네임
   authorImage?: string  // 프로필 이미지
+  likes: number  // 좋아요 수
+  comments: number  // 댓글 수
+  createdAt?: string  // 생성 일시 (변환된 형태)
 }
 
 // 모든 커뮤니티 게시글 가져오기 (프로필 정보 포함)
@@ -139,7 +142,7 @@ export async function createCommunityPost(
       user_id: user.id,
       title: title.trim(),
       content: content.trim(),
-      image_url: imageUrl || null
+      image_url: imageUrl || undefined
     }
 
     console.log('📝 게시글 작성 시도 - 입력 데이터:', postData)
@@ -188,7 +191,7 @@ export async function updateCommunityPost(
     const updateData: Partial<CommunityPost> = {
       title: title.trim(),
       content: content.trim(),
-      image_url: imageUrl || null
+      image_url: imageUrl || undefined
     }
 
     const { error } = await supabase

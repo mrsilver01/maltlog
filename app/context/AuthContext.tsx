@@ -19,6 +19,7 @@ interface AuthContextType {
   signUp: (credentials: AuthCredentials) => Promise<void>
   signOut: () => Promise<void>
   signInWithKakao: () => Promise<void>
+  updateProfile: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -118,6 +119,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (error) throw error
   }, [])
 
+  const updateProfile = useCallback(async () => {
+    if (user) {
+      const userProfile = await getCurrentUserProfile()
+      setProfile(userProfile)
+    }
+  }, [user])
+
   const value = useMemo(() => ({
     user,
     profile,
@@ -126,7 +134,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signUp,
     signOut,
     signInWithKakao,
-  }), [user, profile, loading, signIn, signUp, signOut, signInWithKakao])
+    updateProfile,
+  }), [user, profile, loading, signIn, signUp, signOut, signInWithKakao, updateProfile])
 
   return (
     <AuthContext.Provider value={value}>

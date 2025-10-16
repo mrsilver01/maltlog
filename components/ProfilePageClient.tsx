@@ -99,9 +99,9 @@ export default function ProfilePageClient({
 
       // 실제 노트가 있는 리뷰 개수 (단순 별점이 아닌 경우)
       const noteCount = userReviews.filter(review =>
-        review.notes && review.notes.trim() !== '' &&
-        !review.notes.includes('별점') &&
-        review.notes.trim() !== `별점 ${review.rating}점을 남겼습니다.`
+        review.note && review.note.trim() !== '' &&
+        !review.note.includes('별점') &&
+        review.note.trim() !== `별점 ${review.rating}점을 남겼습니다.`
       ).length
 
       return { reviewCount, noteCount, wishlistCount }

@@ -16,12 +16,11 @@ export default function LoadingAnimation({ message = "데이터를 불러오는 
       transition: {
         duration: 1,
         times: [0, 0.3, 1],
-        ease: [0.4, 0, 0.2, 1],
         repeat: Infinity,
         repeatDelay: 0.5,
       },
     },
-  }
+  } as const
 
   const bottleCorkVariants = {
     animate: {
@@ -34,7 +33,7 @@ export default function LoadingAnimation({ message = "데이터를 불러오는 
         repeatDelay: 0.5,
       },
     },
-  }
+  } as const
 
   const flyingCorkVariants = {
     animate: {
@@ -45,12 +44,11 @@ export default function LoadingAnimation({ message = "데이터를 불러오는 
       transition: {
         duration: 1,
         times: [0, 0.49, 0.5, 0.85, 1],
-        ease: [0, 0, 0.2, 1],
         repeat: Infinity,
         repeatDelay: 0.5,
       },
     },
-  }
+  } as const
 
   return (
     <div className="fixed inset-0 bg-amber-900 flex items-center justify-center z-50">
@@ -65,7 +63,7 @@ export default function LoadingAnimation({ message = "데이터를 불러오는 
             height="220"
             viewBox="0 0 100 220"
             animate="animate"
-            variants={bottleVariants}
+            variants={bottleVariants as any}
             style={{ transformOrigin: "50px 110px" }}
           >
             <defs>
@@ -111,7 +109,7 @@ export default function LoadingAnimation({ message = "데이터를 불러오는 
               <path d="M 36 75 L 36 195" stroke="rgba(255, 255, 255, 0.4)" strokeWidth="2" opacity="0.5" strokeLinecap="round"/>
 
               {/* 코르크 - 병에서 사라짐 */}
-              <motion.g animate="animate" variants={bottleCorkVariants}>
+              <motion.g animate="animate" variants={bottleCorkVariants as any}>
                 <ellipse cx="50" cy="18" rx="8" ry="4" fill="#8B4513" stroke="#654321" strokeWidth="1"/>
                 <ellipse cx="50" cy="15" rx="8" ry="2.5" fill="#A0522D"/>
                 <ellipse cx="50" cy="13" rx="6" ry="1.5" fill="#CD853F"/>
@@ -123,7 +121,7 @@ export default function LoadingAnimation({ message = "데이터를 불러오는 
           <motion.div
             className="absolute top-4 left-12"
             animate="animate"
-            variants={flyingCorkVariants}
+            variants={flyingCorkVariants as any}
           >
             <svg width="16" height="8" viewBox="0 0 16 8">
               <ellipse cx="8" cy="4" rx="8" ry="4" fill="#8B4513" stroke="#654321" strokeWidth="1"/>

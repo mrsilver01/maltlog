@@ -341,7 +341,7 @@ export default function HomePageClient({ initialWhiskies }: HomePageClientProps)
               <>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
                   {(() => {
-                    let whiskiesToShow
+                    let whiskiesToShow: WhiskyData[]
                     if (searchQuery.trim()) {
                       whiskiesToShow = filteredWhiskies
                     } else if (showAllWhiskies) {
