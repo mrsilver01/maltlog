@@ -35,10 +35,7 @@ export default function HomePageClient({ initialWhiskies }: HomePageClientProps)
   const [whiskies, setWhiskies] = useState<WhiskyData[]>(initialWhiskies)
   const [hasLoadedMore, setHasLoadedMore] = useState(false)
   const [isLoadingMore, setIsLoadingMore] = useState(false)
-  const [showAllWhiskies, setShowAllWhiskies] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  const [currentPage, setCurrentPage] = useState(1)
-  const itemsPerPage = 20
   const router = useRouter()
   const { isTransitioning, transitionMessage, navigateWithTransition } = usePageTransition()
 
@@ -214,10 +211,7 @@ export default function HomePageClient({ initialWhiskies }: HomePageClientProps)
             <div className="flex flex-col gap-4 sm:hidden">
               {/* 제목 */}
               <div className="flex items-center justify-center gap-2">
-                {!showAllWhiskies && !searchQuery.trim() && (
-                  <h2 className="text-base font-bold text-gray-800 text-center">유행 위스키 (9월 기준)</h2>
-                )}
-                {showAllWhiskies && !searchQuery.trim() && (
+{!searchQuery.trim() && (
                   <h2 className="text-base font-bold text-gray-800 text-center">모든 위스키</h2>
                 )}
                 {searchQuery.trim() && (
@@ -274,10 +268,7 @@ export default function HomePageClient({ initialWhiskies }: HomePageClientProps)
             {/* 데스크톱: 가로 레이아웃 */}
             <div className="hidden sm:flex justify-between items-center mb-6">
               <div className="flex items-center gap-4">
-                {!showAllWhiskies && !searchQuery.trim() && (
-                  <h2 className="text-lg font-bold text-gray-800">유행 위스키 (9월 기준)</h2>
-                )}
-                {showAllWhiskies && !searchQuery.trim() && (
+{!searchQuery.trim() && (
                   <h2 className="text-lg font-bold text-gray-800">모든 위스키</h2>
                 )}
                 {searchQuery.trim() && (
@@ -340,113 +331,17 @@ export default function HomePageClient({ initialWhiskies }: HomePageClientProps)
             {!(searchQuery.trim() && filteredWhiskies.length === 0) && (
               <>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
-                  {(() => {
-                    let whiskiesToShow: WhiskyData[]
-                    if (searchQuery.trim()) {
-                      whiskiesToShow = filteredWhiskies
-                    } else if (showAllWhiskies) {
-                      // 페이지네이션 적용
-                      const startIndex = (currentPage - 1) * itemsPerPage
-                      const endIndex = startIndex + itemsPerPage
-                      whiskiesToShow = filteredWhiskies.slice(startIndex, endIndex)
-                    } else {
-                      // 9월 추천 위스키 명단 - 더 유연한 키워드 매칭
-                      const septemberRecommendationKeywords = [
-                        ['글렌그란트', '아보랄리스'],
-                        ['보모어', '18', '딥앤컴플렉스'],
-                        ['카발란', '솔리스트', '비노바리끄'],
-                        ['러셀', '리저브', '싱글배럴'],
-                        ['글렌피딕', '12'], // 추가 후보
-                        ['맥캘란', '12'], // 추가 후보
-                        ['아드벡', '10'], // 추가 후보
-                        ['라가불린', '16'] // 추가 후보
-                      ];
-
-                      whiskiesToShow = [];
-
-                      // 각 키워드 조합으로 위스키 찾기
-                      for (const keywords of septemberRecommendationKeywords) {
-                        if (whiskiesToShow.length >= 8) break; // 최대 8개까지
-
-                        const foundWhisky = filteredWhiskies.find(whisky =>
-                          keywords.every(keyword =>
-                            whisky.name.toLowerCase().includes(keyword.toLowerCase())
-                          )
-                        );
-
-                        if (foundWhisky && !whiskiesToShow.some(w => w.id === foundWhisky.id)) {
-                          whiskiesToShow.push(foundWhisky);
-                        }
-                      }
-
-                      // 여전히 부족하면 평점이나 인기도 순으로 추가
-                      if (whiskiesToShow.length < 8) {
-                        const remainingWhiskies = filteredWhiskies
-                          .filter(w => !whiskiesToShow.some(shown => shown.id === w.id))
-                          .slice(0, 8 - whiskiesToShow.length);
-                        whiskiesToShow.push(...remainingWhiskies);
-                      }
-                    }
-
-                    return whiskiesToShow.map((whisky) => (
-                      <WhiskyCard key={whisky.id} whisky={whisky} router={router} navigateWithTransition={navigateWithTransition} />
-                    ))
-                  })()}
+                  {filteredWhiskies.map((whisky) => (
+                    <WhiskyCard key={whisky.id} whisky={whisky} router={router} navigateWithTransition={navigateWithTransition} />
+                  ))}
                 </div>
 
-                {/* 페이지네이션 - 모두 보기일 때만 표시 */}
-                {showAllWhiskies && !searchQuery.trim() && filteredWhiskies.length > itemsPerPage && (
-                  <div className="flex justify-center items-center gap-2 mt-8">
-                    <button
-                      onClick={() => {
-                        setCurrentPage(Math.max(1, currentPage - 1))
-                        window.scrollTo({ top: 0, behavior: 'smooth' })
-                      }}
-                      disabled={currentPage === 1}
-                      className="px-3 py-2 rounded-lg bg-rose-100 text-rose-700 hover:bg-rose-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    >
-                      이전
-                    </button>
-
-                    <div className="flex gap-1">
-                      {Array.from({ length: Math.ceil(filteredWhiskies.length / itemsPerPage) }, (_, i) => i + 1)
-                        .slice(Math.max(0, currentPage - 3), Math.min(Math.ceil(filteredWhiskies.length / itemsPerPage), currentPage + 2))
-                        .map((page) => (
-                          <button
-                            key={page}
-                            onClick={() => {
-                              setCurrentPage(page)
-                              window.scrollTo({ top: 0, behavior: 'smooth' })
-                            }}
-                            className={`px-3 py-2 rounded-lg transition-colors ${
-                              page === currentPage
-                                ? 'bg-rose-500 text-white'
-                                : 'bg-rose-100 text-rose-700 hover:bg-rose-200'
-                            }`}
-                          >
-                            {page}
-                          </button>
-                        ))}
-                    </div>
-
-                    <button
-                      onClick={() => {
-                        setCurrentPage(Math.min(Math.ceil(filteredWhiskies.length / itemsPerPage), currentPage + 1))
-                        window.scrollTo({ top: 0, behavior: 'smooth' })
-                      }}
-                      disabled={currentPage === Math.ceil(filteredWhiskies.length / itemsPerPage)}
-                      className="px-3 py-2 rounded-lg bg-rose-100 text-rose-700 hover:bg-rose-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    >
-                      다음
-                    </button>
-                  </div>
-                )}
               </>
             )}
           </section>
 
-          {/* 추천 섹션 - 모두 보기나 검색 시 숨김 */}
-          {!showAllWhiskies && !searchQuery.trim() && (
+          {/* 추천 섹션 - 검색 시 숨김 */}
+          {!searchQuery.trim() && (
             <section className="mb-12">
               <h2 className="text-lg font-bold text-gray-800 mb-6">추천</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
@@ -471,8 +366,8 @@ export default function HomePageClient({ initialWhiskies }: HomePageClientProps)
             </section>
           )}
 
-          {/* 커뮤니티 섹션 - 모두 보기나 검색 시 숨김 */}
-          {!showAllWhiskies && !searchQuery.trim() && (
+          {/* 커뮤니티 섹션 - 검색 시 숨김 */}
+          {!searchQuery.trim() && (
             <section>
               <div className="flex flex-col sm:flex-row items-center sm:gap-8 gap-2 mb-4 sm:mb-6">
                 <h2
