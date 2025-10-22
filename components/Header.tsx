@@ -27,7 +27,7 @@ export default function Header() {
         {/* 로고 */}
         <Link href="/" className="flex items-center gap-2">
           <img
-            src="/whiskies/LOGO.png"
+            src="/LOGO.png"
             alt="Maltlog Logo"
             className="w-8 h-8 object-contain"
           />

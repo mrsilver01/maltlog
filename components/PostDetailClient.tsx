@@ -555,7 +555,7 @@ export default function PostDetailClient({ post: initialPost, initialComments }:
           <div className="flex items-center gap-4">
             <div className="w-12 h-16 flex items-center justify-center">
               <img
-                src="/whiskies/LOGO.png"
+                src="/LOGO.png"
                 alt="Maltlog Logo"
                 className="w-12 h-12 object-contain"
               />
