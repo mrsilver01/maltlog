@@ -69,9 +69,9 @@ export default async function PostDetailPage({ params }: PostDetailPageProps) {
     comments_count: post.comments_count || 0,
     created_at: post.created_at,
     updated_at: post.updated_at,
-    profiles: post.profiles,
-    author: post.profiles?.nickname || '익명 사용자',
-    authorImage: post.profiles?.avatar_url || null
+    profiles: Array.isArray(post.profiles) ? post.profiles[0] : post.profiles,
+    author: Array.isArray(post.profiles) ? (post.profiles[0]?.nickname || '익명 사용자') : ((post.profiles as any)?.nickname || '익명 사용자'),
+    authorImage: Array.isArray(post.profiles) ? (post.profiles[0]?.avatar_url || null) : ((post.profiles as any)?.avatar_url || null)
   }
 
   const transformedComments = comments?.map(comment => ({
@@ -81,9 +81,9 @@ export default async function PostDetailPage({ params }: PostDetailPageProps) {
     content: comment.content,
     created_at: comment.created_at,
     updated_at: comment.updated_at,
-    profiles: comment.profiles,
-    author: comment.profiles?.nickname || '익명 사용자',
-    authorImage: comment.profiles?.avatar_url || null
+    profiles: Array.isArray(comment.profiles) ? comment.profiles[0] : comment.profiles,
+    author: Array.isArray(comment.profiles) ? (comment.profiles[0]?.nickname || '익명 사용자') : ((comment.profiles as any)?.nickname || '익명 사용자'),
+    authorImage: Array.isArray(comment.profiles) ? (comment.profiles[0]?.avatar_url || null) : ((comment.profiles as any)?.avatar_url || null)
   })) || []
 
   // 서버 로그 제거 (운영 시 Sentry 연결 권장)

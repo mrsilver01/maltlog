@@ -15,7 +15,11 @@ async function getWhiskies(): Promise<WhiskyData[]> {
     return [];
   }
 
-  return data as WhiskyData[];
+  return data.map(whisky => ({
+    ...whisky,
+    avgRating: whisky.avg_rating || 0,
+    totalReviews: whisky.likes || 0
+  })) as WhiskyData[];
 }
 
 export default async function HomePage() {

@@ -124,17 +124,17 @@ export default function ProfilePageClient({
           // 사용자 리뷰 로드
           const userReviews = await getUserWhiskyReviews()
           const reviewsWithFormat = userReviews.map(review => ({
-            id: review.id,
+            id: review.id || '',
             user: profile?.nickname || '익명',
             whisky: review.whisky_name || '위스키',
             rating: review.rating,
             content: review.note || '',
             likes: 0,
             comments: [],
-            date: new Date(review.created_at).toLocaleDateString(),
-            whiskyImage: review.whisky_image || '',
-            whiskyId: review.whisky_id,
-            reviewId: review.id
+            date: review.created_at ? new Date(review.created_at).toLocaleDateString() : '',
+            whiskyImage: (review as any).whisky_image || '',
+            whiskyId: (review as any).whisky_id,
+            reviewId: review.id || ''
           }))
           setNotesData(reviewsWithFormat)
         } catch (error) {

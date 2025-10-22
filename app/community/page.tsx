@@ -1,6 +1,5 @@
 import { getCommunityPosts, getPostsCount } from '@/lib/communityPosts'
 import CommunityClient from '@/components/CommunityClient'
-import { noStore } from 'next/cache'
 
 // 라우트 캐시 해제 (Next 14/15)
 export const dynamic = 'force-dynamic'
@@ -12,8 +11,7 @@ interface CommunityPageProps {
 }
 
 export default async function CommunityPage({ searchParams }: CommunityPageProps) {
-  // RSC 단에서 캐시 힌트 제거
-  noStore()
+  // force-dynamic이 설정되어 있어 추가 캐시 힌트 불필요
   // URL 파라미터에서 검색어와 페이지 추출 (Next.js 15 requires await)
   const params = await searchParams
   const searchQuery = typeof params.search === 'string' ? params.search : ''
