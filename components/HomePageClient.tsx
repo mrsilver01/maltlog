@@ -35,7 +35,10 @@ export default function HomePageClient({ initialWhiskies }: HomePageClientProps)
   const [whiskies, setWhiskies] = useState<WhiskyData[]>(initialWhiskies)
   const [hasLoadedMore, setHasLoadedMore] = useState(false)
   const [isLoadingMore, setIsLoadingMore] = useState(false)
+  const [showAllWhiskies, setShowAllWhiskies] = useState(false)
+  const [currentPage, setCurrentPage] = useState(1)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const itemsPerPage = 12
   const router = useRouter()
   const { isTransitioning, transitionMessage, navigateWithTransition } = usePageTransition()
 
@@ -78,22 +81,33 @@ export default function HomePageClient({ initialWhiskies }: HomePageClientProps)
     }
   }
 
-  // 더보기 기능
-  const handleShowMore = async () => {
-    setIsLoadingMore(true);
-    try {
-      const response = await fetch('/api/whiskies');
-      if (!response.ok) {
-        throw new Error('Failed to fetch more whiskies');
+  // 더보기/접기 토글 기능
+  const handleToggleShowAll = async () => {
+    if (showAllWhiskies) {
+      // 접기: 원래 상태로 돌아가기
+      setShowAllWhiskies(false);
+      setCurrentPage(1);
+      setWhiskies(initialWhiskies);
+      setHasLoadedMore(false);
+    } else {
+      // 더보기: 모든 위스키 로드
+      setIsLoadingMore(true);
+      try {
+        const response = await fetch('/api/whiskies');
+        if (!response.ok) {
+          throw new Error('Failed to fetch more whiskies');
+        }
+        const additionalWhiskies = await response.json();
+        setWhiskies(currentWhiskies => [...currentWhiskies, ...additionalWhiskies]);
+        setShowAllWhiskies(true);
+        setHasLoadedMore(true);
+        setCurrentPage(1);
+      } catch (error) {
+        console.error(error);
+        toast.error('추가 위스키를 불러오는 데 실패했습니다.');
+      } finally {
+        setIsLoadingMore(false);
       }
-      const additionalWhiskies = await response.json();
-      setWhiskies(currentWhiskies => [...currentWhiskies, ...additionalWhiskies]);
-      setHasLoadedMore(true);
-    } catch (error) {
-      console.error(error);
-      toast.error('추가 위스키를 불러오는 데 실패했습니다.');
-    } finally {
-      setIsLoadingMore(false);
     }
   };
 
@@ -124,12 +138,12 @@ export default function HomePageClient({ initialWhiskies }: HomePageClientProps)
             </div>
 
             <div className="flex items-center gap-3 sm:gap-6">
-              <span className="text-lg sm:text-xl font-bold text-red-500 font-[family-name:var(--font-jolly-lodger)]">HOME</span>
+              <span className="text-lg sm:text-xl font-bold text-red-500 font-[family-name:var(--font-jolly-lodger)] max-[480px]:border max-[480px]:border-gray-300 max-[480px]:px-2 max-[480px]:py-1 max-[480px]:rounded">HOME</span>
               <button
                 onClick={() => navigateWithTransition('/profile', '프로필 페이지로 이동 중...')}
-                className="text-center hover:text-gray-600 transition-all duration-200 hover:scale-110 transform"
+                className="text-center hover:text-gray-600 transition-all duration-200 hover:scale-110 transform max-[480px]:border max-[480px]:border-gray-300 max-[480px]:px-2 max-[480px]:py-1 max-[480px]:rounded"
               >
-                <div className="text-sm sm:text-lg font-bold text-gray-800 font-[family-name:var(--font-jolly-lodger)] hover:text-red-500 transition-colors">PROFILE/</div>
+                <div className="text-sm sm:text-lg font-bold text-gray-800 font-[family-name:var(--font-jolly-lodger)] hover:text-red-500 transition-colors">PROFILE</div>
                 <div className="text-xs text-gray-600 hidden sm:block">내 노트 보러가기</div>
               </button>
               {user ? (
@@ -205,13 +219,16 @@ export default function HomePageClient({ initialWhiskies }: HomePageClientProps)
             </div>
           </header>
 
-          {/* 유행 위스키 섹션 - 검색창 오른쪽으로 이동 */}
+          {/* 메인 위스키 섹션 */}
           <section className="mb-8 sm:mb-12">
             {/* 모바일: 세로 레이아웃 */}
             <div className="flex flex-col gap-4 sm:hidden">
               {/* 제목 */}
               <div className="flex items-center justify-center gap-2">
-{!searchQuery.trim() && (
+{!searchQuery.trim() && !showAllWhiskies && (
+                  <h2 className="text-base font-bold text-gray-800 text-center">위스키 컬렉션</h2>
+                )}
+                {!searchQuery.trim() && showAllWhiskies && (
                   <h2 className="text-base font-bold text-gray-800 text-center">모든 위스키</h2>
                 )}
                 {searchQuery.trim() && (
@@ -244,14 +261,14 @@ export default function HomePageClient({ initialWhiskies }: HomePageClientProps)
               </div>
 
               {/* 버튼들 */}
-              <div className="flex justify-center gap-2">
-                {!searchQuery.trim() && !hasLoadedMore && (
+              <div className="flex justify-center gap-2 -mt-2">
+{!searchQuery.trim() && (
                   <button
-                    onClick={handleShowMore}
+                    onClick={handleToggleShowAll}
                     disabled={isLoadingMore}
-                    className="text-xs font-medium text-amber-700 hover:text-amber-800 transition-colors bg-amber-50 px-3 py-1.5 rounded-full disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="text-xs font-medium text-red-600 hover:text-red-700 transition-colors bg-amber-900 hover:bg-amber-800 px-3 py-1.5 rounded-full disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {isLoadingMore ? '로딩 중...' : '더보기'}
+                    {isLoadingMore ? '로딩 중...' : showAllWhiskies ? '접기' : '더보기'}
                   </button>
                 )}
                 {searchQuery.trim() && (
@@ -268,7 +285,10 @@ export default function HomePageClient({ initialWhiskies }: HomePageClientProps)
             {/* 데스크톱: 가로 레이아웃 */}
             <div className="hidden sm:flex justify-between items-center mb-6">
               <div className="flex items-center gap-4">
-{!searchQuery.trim() && (
+{!searchQuery.trim() && !showAllWhiskies && (
+                  <h2 className="text-lg font-bold text-gray-800">위스키 컬렉션</h2>
+                )}
+                {!searchQuery.trim() && showAllWhiskies && (
                   <h2 className="text-lg font-bold text-gray-800">모든 위스키</h2>
                 )}
                 {searchQuery.trim() && (
@@ -276,13 +296,13 @@ export default function HomePageClient({ initialWhiskies }: HomePageClientProps)
                     &quot;{searchQuery}&quot; 검색 결과 ({filteredWhiskies.length}개)
                   </h2>
                 )}
-                {!searchQuery.trim() && !hasLoadedMore && (
+{!searchQuery.trim() && (
                   <button
-                    onClick={handleShowMore}
+                    onClick={handleToggleShowAll}
                     disabled={isLoadingMore}
                     className="text-sm font-medium text-amber-700 hover:text-amber-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {isLoadingMore ? '로딩 중...' : '더보기'}
+                    {isLoadingMore ? '로딩 중...' : showAllWhiskies ? '접기' : '더보기'}
                   </button>
                 )}
                 {searchQuery.trim() && (
@@ -331,17 +351,82 @@ export default function HomePageClient({ initialWhiskies }: HomePageClientProps)
             {!(searchQuery.trim() && filteredWhiskies.length === 0) && (
               <>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
-                  {filteredWhiskies.map((whisky) => (
-                    <WhiskyCard key={whisky.id} whisky={whisky} router={router} navigateWithTransition={navigateWithTransition} />
-                  ))}
+                  {(() => {
+                    let whiskiesToShow: WhiskyData[]
+
+                    if (searchQuery.trim()) {
+                      // 검색 모드: 모든 검색 결과 표시
+                      whiskiesToShow = filteredWhiskies
+                    } else if (showAllWhiskies) {
+                      // 모든 위스키 모드: 페이지네이션 적용
+                      const startIndex = (currentPage - 1) * itemsPerPage
+                      const endIndex = startIndex + itemsPerPage
+                      whiskiesToShow = filteredWhiskies.slice(startIndex, endIndex)
+                    } else {
+                      // 초기 모드: 처음 위스키들만 표시
+                      whiskiesToShow = filteredWhiskies.slice(0, 12)
+                    }
+
+                    return whiskiesToShow.map((whisky) => (
+                      <WhiskyCard key={whisky.id} whisky={whisky} router={router} navigateWithTransition={navigateWithTransition} />
+                    ))
+                  })()}
                 </div>
+
+                {/* 페이지네이션 - 모든 위스키 모드일 때만 표시 */}
+                {showAllWhiskies && !searchQuery.trim() && filteredWhiskies.length > itemsPerPage && (
+                  <div className="flex justify-center items-center gap-2 mt-8">
+                    <button
+                      onClick={() => {
+                        setCurrentPage(Math.max(1, currentPage - 1))
+                        window.scrollTo({ top: 0, behavior: 'smooth' })
+                      }}
+                      disabled={currentPage === 1}
+                      className="px-3 py-2 rounded-lg bg-rose-100 text-rose-700 hover:bg-rose-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      이전
+                    </button>
+
+                    <div className="flex gap-1">
+                      {Array.from({ length: Math.ceil(filteredWhiskies.length / itemsPerPage) }, (_, i) => i + 1)
+                        .slice(Math.max(0, currentPage - 3), Math.min(Math.ceil(filteredWhiskies.length / itemsPerPage), currentPage + 2))
+                        .map((page) => (
+                          <button
+                            key={page}
+                            onClick={() => {
+                              setCurrentPage(page)
+                              window.scrollTo({ top: 0, behavior: 'smooth' })
+                            }}
+                            className={`px-3 py-2 rounded-lg transition-colors ${
+                              page === currentPage
+                                ? 'bg-rose-500 text-white'
+                                : 'bg-rose-100 text-rose-700 hover:bg-rose-200'
+                            }`}
+                          >
+                            {page}
+                          </button>
+                        ))}
+                    </div>
+
+                    <button
+                      onClick={() => {
+                        setCurrentPage(Math.min(Math.ceil(filteredWhiskies.length / itemsPerPage), currentPage + 1))
+                        window.scrollTo({ top: 0, behavior: 'smooth' })
+                      }}
+                      disabled={currentPage === Math.ceil(filteredWhiskies.length / itemsPerPage)}
+                      className="px-3 py-2 rounded-lg bg-rose-100 text-rose-700 hover:bg-rose-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      다음
+                    </button>
+                  </div>
+                )}
 
               </>
             )}
           </section>
 
-          {/* 추천 섹션 - 검색 시 숨김 */}
-          {!searchQuery.trim() && (
+          {/* 추천 섹션 - 검색이나 모든 위스키 모드에서 숨김 */}
+          {!searchQuery.trim() && !showAllWhiskies && (
             <section className="mb-12">
               <h2 className="text-lg font-bold text-gray-800 mb-6">추천</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
@@ -366,8 +451,8 @@ export default function HomePageClient({ initialWhiskies }: HomePageClientProps)
             </section>
           )}
 
-          {/* 커뮤니티 섹션 - 검색 시 숨김 */}
-          {!searchQuery.trim() && (
+          {/* 커뮤니티 섹션 - 검색이나 모든 위스키 모드에서 숨김 */}
+          {!searchQuery.trim() && !showAllWhiskies && (
             <section>
               <div className="flex flex-col sm:flex-row items-center sm:gap-8 gap-2 mb-4 sm:mb-6">
                 <h2
@@ -534,9 +619,46 @@ function WhiskyCard({ whisky, navigateWithTransition }: { whisky: WhiskyData, ro
 
       {/* 평점 */}
       <div className="flex items-center justify-center gap-1 text-xs text-gray-500">
-        <span className="hidden sm:inline">평균</span>
-        <span className="text-yellow-400">⭐</span>
-        <span>{whisky.avgRating > 0 ? whisky.avgRating : '-'}</span>
+        {whisky.avgRating > 0 ? (
+          // 별점이 있는 경우: 0.5점 단위로 별 표시
+          <div className="flex items-center gap-0.5">
+            {[1, 2, 3, 4, 5].map((starIndex) => {
+              const rating = whisky.avgRating;
+              const fullStars = Math.floor(rating);
+              const hasHalfStar = rating % 1 >= 0.5;
+
+              if (starIndex <= fullStars) {
+                // 채워진 별
+                return (
+                  <span key={starIndex} className="text-sm text-yellow-400">
+                    ⭐
+                  </span>
+                );
+              } else if (starIndex === fullStars + 1 && hasHalfStar) {
+                // 반별 (0.5점)
+                return (
+                  <span key={starIndex} className="text-sm text-yellow-400 opacity-50">
+                    ⭐
+                  </span>
+                );
+              } else {
+                // 빈 별
+                return (
+                  <span key={starIndex} className="text-sm text-gray-300">
+                    ⭐
+                  </span>
+                );
+              }
+            })}
+            <span className="ml-1">{whisky.avgRating.toFixed(1)}</span>
+          </div>
+        ) : (
+          // 별점이 없는 경우: 투명한 별 1개만
+          <div className="flex items-center gap-1">
+            <span className="text-sm text-gray-300">⭐</span>
+            <span>-</span>
+          </div>
+        )}
       </div>
     </div>
   )

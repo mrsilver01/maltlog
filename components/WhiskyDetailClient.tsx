@@ -31,24 +31,48 @@ const RatingSystem = ({
     lg: 'text-4xl',
   }[size];
 
+  const handleStarClick = (star: number, event: React.MouseEvent) => {
+    if (readOnly || !onRatingChange) return;
+
+    const rect = event.currentTarget.getBoundingClientRect();
+    const clickX = event.clientX - rect.left;
+    const width = rect.width;
+
+    // 왼쪽 절반 클릭: 0.5점, 오른쪽 절반 클릭: 1점
+    const rating = clickX < width / 2 ? star - 0.5 : star;
+    onRatingChange(rating);
+  };
+
   return (
     <div className="flex items-center gap-1">
-      {[1, 2, 3, 4, 5].map((star) => (
-        <button
-          key={star}
-          type="button"
-          onClick={() => !readOnly && onRatingChange && onRatingChange(star)}
-          disabled={readOnly}
-          className={`
-            transition-colors duration-200
-            ${starSizeClass}
-            ${currentRating >= star ? 'text-amber-500' : 'text-gray-300'}
-            ${!readOnly ? 'hover:text-amber-400 hover:scale-110 transform' : 'cursor-default'}
-          `}
-        >
-          ★
-        </button>
-      ))}
+      {[1, 2, 3, 4, 5].map((star) => {
+        const fullStars = Math.floor(currentRating);
+        const hasHalfStar = currentRating % 1 >= 0.5;
+
+        let starColor = 'text-gray-300';
+        if (star <= fullStars) {
+          starColor = 'text-amber-500';
+        } else if (star === fullStars + 1 && hasHalfStar) {
+          starColor = 'text-amber-500 opacity-50';
+        }
+
+        return (
+          <button
+            key={star}
+            type="button"
+            onClick={(e) => handleStarClick(star, e)}
+            disabled={readOnly}
+            className={`
+              relative transition-colors duration-200
+              ${starSizeClass}
+              ${starColor}
+              ${!readOnly ? 'hover:text-amber-400 hover:scale-110 transform cursor-pointer' : 'cursor-default'}
+            `}
+          >
+            ★
+          </button>
+        );
+      })}
       {showLabels && (
         <span className="ml-2 text-sm text-gray-600">
           {currentRating > 0 ? `${currentRating}/5` : '평가해주세요'}

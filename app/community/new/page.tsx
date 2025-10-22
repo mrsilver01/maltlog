@@ -39,9 +39,9 @@ export default function NewPostPage() {
         newPost.content.trim(),
         newPost.image || undefined
       )
-      if (result.success) {
+      if (result.success && result.id) {
         toast.success('게시글이 성공적으로 작성되었습니다!')
-        router.push('/community')
+        router.push(`/community/post/${result.id}`)
       } else {
         toast.error('게시글 작성에 실패했습니다. 다시 시도해주세요.')
       }
@@ -81,6 +81,8 @@ export default function NewPostPage() {
     })
   }
 
+  const estimateMB = (dataUrl: string) => (dataUrl.length * 0.75) / 1024 / 1024
+
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (!file) return
@@ -90,24 +92,28 @@ export default function NewPostPage() {
       event.target.value = ''
       return
     }
-    const supportedFormats = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/bmp', 'image/tiff', 'image/svg+xml']
-    if (!supportedFormats.includes(file.type)) {
-      toast('지원하는 이미지 포맷: JPEG, PNG, GIF, WebP, BMP, TIFF, SVG')
+
+    // SVG/TIFF/BMP는 캔버스/용량 면에서 비추천: MVP에선 비활성 권장
+    const supported = ['image/jpeg','image/jpg','image/png','image/gif','image/webp']
+    if (!supported.includes(file.type)) {
+      toast('지원 포맷: JPEG, PNG, GIF, WebP')
       event.target.value = ''
       return
     }
 
     setUploading(true)
     try {
-      let compressedImage = await compressImage(file, 600, 0.7)
-      let estimatedSize = (compressedImage.length * 0.75) / 1024 / 1024
-      if (estimatedSize > 1.2) {
-        compressedImage = await compressImage(file, 500, 0.6)
+      let img = await compressImage(file, 600, 0.7)
+      let size = estimateMB(img)
+      if (size > 1.2) {
+        img = await compressImage(file, 500, 0.6)
+        size = estimateMB(img)
       }
-      if (estimatedSize > 0.8) {
-        compressedImage = await compressImage(file, 400, 0.5)
+      if (size > 0.8) {
+        img = await compressImage(file, 400, 0.5)
+        size = estimateMB(img)
       }
-      setNewPost(prev => ({ ...prev, image: compressedImage }))
+      setNewPost(prev => ({ ...prev, image: img }))
     } catch (error) {
       toast.error('이미지 처리 중 오류가 발생했습니다.')
       event.target.value = ''
@@ -156,7 +162,7 @@ export default function NewPostPage() {
         </div>
         <div className="flex items-center gap-6">
           <button
-            onClick={() => router.push('/community')}
+            onClick={() => router.push('/community?ts=' + Date.now())}
             className="text-xl font-bold text-gray-600 hover:text-blue-500 transition-all duration-200 hover:scale-110 transform font-[family-name:var(--font-jolly-lodger)]"
           >
             뒤로가기
@@ -244,7 +250,7 @@ export default function NewPostPage() {
           {/* 버튼 */}
           <div className="flex gap-4 mt-8 pt-6 border-t border-gray-200">
             <button
-              onClick={() => router.push('/community')}
+              onClick={() => router.push('/community?ts=' + Date.now())}
               className="flex-1 px-6 py-3 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors font-medium"
             >
               취소

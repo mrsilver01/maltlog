@@ -8,12 +8,19 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: false,
   },
   images: {
-    unoptimized: true,
+    unoptimized: false, // Enable Next.js Image optimization for Supabase Storage
     domains: ['localhost'],
     remotePatterns: [
       {
         protocol: 'https',
         hostname: '**',
+      },
+      // Supabase Storage - specific pattern for better security
+      {
+        protocol: 'https',
+        hostname: '*.supabase.co',
+        port: '',
+        pathname: '/storage/v1/object/public/**',
       },
     ],
   },

@@ -91,19 +91,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signUp = useCallback(async (credentials: AuthCredentials) => {
     if (!credentials.email || !credentials.password || !credentials.nickname) throw new Error('이메일, 비밀번호, 닉네임을 모두 입력해주세요.')
-    const { data, error } = await supabase.auth.signUp({
+    const { error } = await supabase.auth.signUp({
       email: credentials.email,
       password: credentials.password,
       options: { data: { nickname: credentials.nickname } },
     })
     if (error) throw error
-    if (data.user) {
-       try {
-          await saveUserProfile(data.user.id, credentials.nickname)
-       } catch(e) {
-          console.error("Failed to save profile on signup:", e)
-       }
-    }
+    // DB 트리거(handle_new_user)가 자동으로 프로필 생성
   }, [])
 
   const signOut = useCallback(async () => {
@@ -114,7 +108,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signInWithKakao = useCallback(async () => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'kakao',
-      options: { redirectTo: `${window.location.origin}/` },
+      options: { redirectTo: `${window.location.origin}/auth/callback` },
     })
     if (error) throw error
   }, [])

@@ -566,7 +566,9 @@ export default function PostDetailClient({ post: initialPost, initialComments }:
         </div>
         <div className="flex items-center gap-6">
           <button
-            onClick={() => router.push('/community')}
+            onClick={() => {
+              router.push('/community?ts=' + Date.now())
+            }}
             className="text-xl font-bold text-gray-600 hover:text-blue-500 transition-all duration-200 hover:scale-110 transform font-[family-name:var(--font-jolly-lodger)]"
           >
             뒤로가기

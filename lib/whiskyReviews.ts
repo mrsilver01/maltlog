@@ -85,8 +85,9 @@ export async function saveWhiskyReview(
       return false
     }
 
-    if (rating < 1 || rating > 5) {
-      console.error('올바르지 않은 평점:', rating)
+    // 0.5 단위 별점만 허용 (1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0)
+    if (rating < 1 || rating > 5 || (rating * 2) % 1 !== 0) {
+      console.error('올바르지 않은 평점 (0.5 단위만 허용):', rating)
       return false
     }
 

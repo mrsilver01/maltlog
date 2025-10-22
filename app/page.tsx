@@ -3,10 +3,10 @@ import HomePageClient from '@/components/HomePageClient'
 import type { WhiskyData } from '@/components/HomePageClient'
 
 async function getWhiskies(): Promise<WhiskyData[]> {
-  // [수정] 성능을 위해 초기 로드 시 20개로 제한
+  // [수정] 성능을 위해 초기 로드 시 20개로 제한, 필요한 컬럼만 선택
   const { data, error } = await supabase
     .from('whiskies')
-    .select('*')
+    .select('id, name, image, abv, region, price, cask, avg_rating, likes')
     .order('name', { ascending: true })
     .limit(20);
 

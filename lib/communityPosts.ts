@@ -119,12 +119,24 @@ export async function getUserCommunityPosts(userId: string): Promise<CommunityPo
   }
 }
 
+// dataURL을 File 객체로 변환하는 헬퍼 함수
+function dataUrlToFile(dataUrl: string, filename: string): File {
+  const [meta, b64] = dataUrl.split(',')
+  const mime = /data:(.*?);base64/.exec(meta)?.[1] || 'image/jpeg'
+  const bin = atob(b64)
+  const bytes = new Uint8Array(bin.length)
+  for (let i = 0; i < bin.length; i++) {
+    bytes[i] = bin.charCodeAt(i)
+  }
+  return new File([bytes], filename, { type: mime })
+}
+
 // 새 게시글 작성
 export async function createCommunityPost(
   title: string,
   content: string,
-  imageUrl?: string
-): Promise<{ success: boolean; postId?: string }> {
+  imageDataUrl?: string
+): Promise<{ success: boolean; id?: string }> {
   try {
     const { data: { user }, error: userError } = await supabase.auth.getUser()
 
@@ -138,37 +150,56 @@ export async function createCommunityPost(
       return { success: false }
     }
 
+    let image_url: string | null = null
+
+    // 이미지가 있으면 Storage에 업로드
+    if (imageDataUrl) {
+      const file = dataUrlToFile(imageDataUrl, 'post.jpg')
+      const path = `${user.id}/${crypto.randomUUID()}.jpg`
+
+      const { error: uploadError } = await supabase.storage
+        .from('community')
+        .upload(path, file, {
+          cacheControl: '31536000',
+          upsert: false
+        })
+
+      if (uploadError) {
+        console.error('이미지 업로드 실패:', uploadError)
+        throw uploadError
+      }
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('community')
+        .getPublicUrl(path)
+
+      image_url = publicUrl
+    }
+
     const postData: Partial<CommunityPost> = {
       user_id: user.id,
       title: title.trim(),
       content: content.trim(),
-      image_url: imageUrl || undefined
+      image_url: image_url || undefined
     }
 
     console.log('📝 게시글 작성 시도 - 입력 데이터:', postData)
-    console.log('📝 사용자 정보:', { userId: user.id, email: user.email })
 
     const { data: newPost, error } = await supabase
       .from('posts')
       .insert(postData)
-      .select()
+      .select('id')
       .single()
 
     if (error) {
       console.error('Supabase 게시글 insert 실패! 상세 오류:', error)
-      console.error('오류 코드:', error.code)
-      console.error('오류 메시지:', error.message)
-      console.error('오류 상세:', error.details)
-      console.error('오류 힌트:', error.hint)
       return { success: false }
     }
 
     console.log('✅ 게시글 작성 성공:', newPost.id)
-    return { success: true, postId: newPost.id }
+    return { success: true, id: newPost.id }
   } catch (error) {
     console.error('게시글 작성 중 예상치 못한 오류:', error)
-    console.error('에러 타입:', typeof error)
-    console.error('에러 전체 객체:', JSON.stringify(error, null, 2))
     return { success: false }
   }
 }

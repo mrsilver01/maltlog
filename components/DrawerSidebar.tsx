@@ -82,13 +82,10 @@ export default function DrawerSidebar() {
                 </div>
               </div>
               <div className="font-bold text-amber-200 hover:text-amber-100 cursor-pointer transition-colors py-1">
-                AMERICA
+                AMERICAN
               </div>
               <div className="font-bold text-amber-200 hover:text-amber-100 cursor-pointer transition-colors py-1">
                 IRISH
-              </div>
-              <div className="font-bold text-amber-200 hover:text-amber-100 cursor-pointer transition-colors py-1">
-                AMERICAN
               </div>
               <div className="font-bold text-amber-200 hover:text-amber-100 cursor-pointer transition-colors py-1">
                 JAPANESE

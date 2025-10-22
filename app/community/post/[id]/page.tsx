@@ -2,6 +2,8 @@ import { supabase } from '@/lib/supabase'
 import { redirect } from 'next/navigation'
 import PostDetailClient from '@/components/PostDetailClient'
 
+export const revalidate = 60;
+
 interface PostDetailPageProps {
   params: {
     id: string
@@ -9,13 +11,21 @@ interface PostDetailPageProps {
 }
 
 export default async function PostDetailPage({ params }: PostDetailPageProps) {
-  const { id: postId } = await params
+  const { id: postId } = params
 
   // 서버에서 게시글 상세 정보 로드
   const { data: post, error: postError } = await supabase
     .from('posts')
     .select(`
-      *,
+      id,
+      user_id,
+      title,
+      content,
+      image_url,
+      likes_count,
+      comments_count,
+      created_at,
+      updated_at,
       profiles (
         nickname,
         avatar_url
@@ -25,12 +35,6 @@ export default async function PostDetailPage({ params }: PostDetailPageProps) {
     .single()
 
   if (postError || !post) {
-    console.error('Supabase 게시글 로드 실패! 상세 오류:', postError)
-    console.error('게시글 오류 코드:', postError?.code)
-    console.error('게시글 오류 메시지:', postError?.message)
-    console.error('게시글 오류 상세:', postError?.details)
-    console.error('게시글 오류 힌트:', postError?.hint)
-    console.error('게시글 쿼리 파라미터 - postId:', postId)
     redirect('/community')
   }
 
@@ -38,7 +42,12 @@ export default async function PostDetailPage({ params }: PostDetailPageProps) {
   const { data: comments, error: commentsError } = await supabase
     .from('comments')
     .select(`
-      *,
+      id,
+      user_id,
+      post_id,
+      content,
+      created_at,
+      updated_at,
       profiles (
         nickname,
         avatar_url
@@ -47,14 +56,7 @@ export default async function PostDetailPage({ params }: PostDetailPageProps) {
     .eq('post_id', postId)
     .order('created_at', { ascending: true })
 
-  if (commentsError) {
-    console.error('Supabase 댓글 로드 실패! 상세 오류:', commentsError)
-    console.error('댓글 오류 코드:', commentsError.code)
-    console.error('댓글 오류 메시지:', commentsError.message)
-    console.error('댓글 오류 상세:', commentsError.details)
-    console.error('댓글 오류 힌트:', commentsError.hint)
-    console.error('댓글 쿼리 파라미터 - postId:', postId)
-  }
+  // 댓글 로드 오류는 치명적이지 않으므로 빈 배열로 처리
 
   // 데이터 변환
   const transformedPost = {
@@ -84,7 +86,7 @@ export default async function PostDetailPage({ params }: PostDetailPageProps) {
     authorImage: comment.profiles?.avatar_url || null
   })) || []
 
-  console.log(`서버에서 게시글 "${post.title}" 데이터 로드 완료: 댓글 ${transformedComments.length}개`)
+  // 서버 로그 제거 (운영 시 Sentry 연결 권장)
 
   return (
     <PostDetailClient

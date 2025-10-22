@@ -111,6 +111,43 @@ export default function ProfilePageClient({
     }
   }
 
+  // 사용자 데이터 로드
+  useEffect(() => {
+    const loadUserData = async () => {
+      if (user && !isLoading) {
+        setIsLoading(true)
+        try {
+          // 통계 데이터 로드
+          const stats = await getUserStats()
+          setUserStats(stats)
+
+          // 사용자 리뷰 로드
+          const userReviews = await getUserWhiskyReviews()
+          const reviewsWithFormat = userReviews.map(review => ({
+            id: review.id,
+            user: profile?.nickname || '익명',
+            whisky: review.whisky_name || '위스키',
+            rating: review.rating,
+            content: review.note || '',
+            likes: 0,
+            comments: [],
+            date: new Date(review.created_at).toLocaleDateString(),
+            whiskyImage: review.whisky_image || '',
+            whiskyId: review.whisky_id,
+            reviewId: review.id
+          }))
+          setNotesData(reviewsWithFormat)
+        } catch (error) {
+          console.error('사용자 데이터 로드 중 오류:', error)
+        } finally {
+          setIsLoading(false)
+        }
+      }
+    }
+
+    loadUserData()
+  }, [user, profile])
+
   const myNotes = showAllNotes ? (notesData || []) : (notesData || []).slice(0, 3)
 
   // 로그아웃 함수
@@ -300,7 +337,7 @@ export default function ProfilePageClient({
         </div>
 
         <div className="flex items-center gap-6">
-          <span className="text-xl font-bold text-red-500 font-[family-name:var(--font-jolly-lodger)]">PROFILE/</span>
+          <span className="text-xl font-bold text-red-500 font-[family-name:var(--font-jolly-lodger)]">PROFILE</span>
           <span className="text-lg font-bold text-amber-800 font-[family-name:var(--font-jolly-lodger)]">내 노트</span>
           <button
             onClick={() => router.push('/')}

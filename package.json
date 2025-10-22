@@ -7,7 +7,10 @@
     "build": "next build --turbopack",
     "start": "next start",
     "lint": "eslint",
-    "migrate": "npx ts-node scripts/migrate-to-supabase.ts"
+    "migrate": "npx ts-node scripts/migrate-to-supabase.ts",
+    "migrate-images": "node scripts/migrateImages.js",
+    "migrate-images-final": "node scripts/migrateImages-final.js",
+    "migrate-whisky-images": "node scripts/migrateWhiskyImages.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.58.0",
