@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import LoadingAnimation from './LoadingAnimation'
 import { usePageTransition } from '../hooks/usePageTransition'
 import DrawerSidebar from './DrawerSidebar'
-import { getUserWhiskyLikes, addWhiskyLike, removeWhiskyLike, isWhiskyLiked } from '../lib/whiskyLikes'
+import { isWhiskyLiked, likeWhisky, unlikeWhisky } from '../lib/likes'
 import { useAuth } from '../app/context/AuthContext'
 import toast from 'react-hot-toast'
 
@@ -492,22 +492,24 @@ function WhiskyCard({ whisky, navigateWithTransition }: { whisky: WhiskyData, ro
 
   // 찜 상태 초기화 및 업데이트 (Supabase 사용)
   useEffect(() => {
+    let canceled = false
     const updateLikeStatus = async () => {
       if (user) {
         // 로그인된 사용자: Supabase에서 찜 상태 확인
         setIsCheckingLikeStatus(true)
         try {
-          const liked = await isWhiskyLiked(whisky.id)
-          setIsLiked(liked)
+          const liked = await isWhiskyLiked(user.id, whisky.id)
+          if (!canceled) setIsLiked(liked)
         } catch (error) {
-          console.error('찜 상태 확인 실패:', error)
-          setIsLiked(false)
+          console.error('찜 상태 확인 실패:', error, { userId: user.id, whiskyId: whisky.id })
+          if (!canceled) setIsLiked(false)
         } finally {
-          setIsCheckingLikeStatus(false)
+          if (!canceled) setIsCheckingLikeStatus(false)
         }
       } else {
         // 로그아웃 상태: 찜 상태 false
         setIsLiked(false)
+        setIsCheckingLikeStatus(false)
       }
 
       // 현재 찜 수 업데이트
@@ -515,6 +517,7 @@ function WhiskyCard({ whisky, navigateWithTransition }: { whisky: WhiskyData, ro
     }
 
     updateLikeStatus()
+    return () => { canceled = true }
   }, [whisky.id, whisky.likes, user])
 
   const handleClick = () => {
@@ -526,7 +529,7 @@ function WhiskyCard({ whisky, navigateWithTransition }: { whisky: WhiskyData, ro
 
     // 로그인 상태 확인
     if (!user) {
-      toast('찜 기능을 사용하려면 로그인해주세요.')
+      toast('로그인이 필요합니다')
       return
     }
 
@@ -535,33 +538,26 @@ function WhiskyCard({ whisky, navigateWithTransition }: { whisky: WhiskyData, ro
     }
 
     setIsCheckingLikeStatus(true)
+    const nextLiked = !isLiked
+
+    // Optimistic UI - 즉시 상태 변경
+    setIsLiked(nextLiked)
+    setCurrentLikes(prev => nextLiked ? prev + 1 : Math.max(0, prev - 1))
 
     try {
-      let success = false
-      if (isLiked) {
-        // 찜 취소
-        success = await removeWhiskyLike(whisky.id)
-        if (success) {
-          setIsLiked(false)
-          setCurrentLikes(prev => Math.max(0, prev - 1))
-          console.log(`${whisky.name}을(를) 찜 목록에서 제거했습니다.`)
-        }
+      if (nextLiked) {
+        await likeWhisky(user.id, whisky.id)
+        console.log(`${whisky.name}을(를) 찜 목록에 추가했습니다.`)
       } else {
-        // 찜 추가
-        success = await addWhiskyLike(whisky.id)
-        if (success) {
-          setIsLiked(true)
-          setCurrentLikes(prev => prev + 1)
-          console.log(`${whisky.name}을(를) 찜 목록에 추가했습니다.`)
-        }
-      }
-
-      if (!success) {
-        toast.error('찜 처리 중 오류가 발생했습니다.')
+        await unlikeWhisky(user.id, whisky.id)
+        console.log(`${whisky.name}을(를) 찜 목록에서 제거했습니다.`)
       }
     } catch (error) {
-      console.error('찜 처리 오류:', error)
-      toast.error('찜 처리 중 오류가 발생했습니다.')
+      console.error('찜 처리 오류:', error, { userId: user.id, whiskyId: whisky.id })
+      // 실패 시 롤백
+      setIsLiked(!nextLiked)
+      setCurrentLikes(prev => nextLiked ? Math.max(0, prev - 1) : prev + 1)
+      toast.error('찜 처리에 실패했습니다')
     } finally {
       setIsCheckingLikeStatus(false)
     }

@@ -6,6 +6,7 @@ import { useAuth } from '@/app/context/AuthContext'
 import { supabase } from '@/lib/supabase'
 import LoadingAnimation from '@/components/LoadingAnimation'
 import { likeReview, unlikeReview, checkMultipleReviewsLiked, getReviewLikesCount, deleteReview } from '@/lib/reviewActions'
+import { isWhiskyLiked, likeWhisky, unlikeWhisky } from '@/lib/likes'
 import { getReviewComments, addComment, getReviewCommentsCount, ReviewComment, updateComment, deleteComment } from '@/lib/commentActions'
 import toast from 'react-hot-toast'
 
@@ -212,6 +213,10 @@ export default function WhiskyDetailClient({ whisky, initialReviews }: WhiskyDet
   const [loadingMoreReviews, setLoadingMoreReviews] = useState(false)
   const [expandedNotes, setExpandedNotes] = useState<{[key: string]: boolean}>({})
 
+  // 위스키 찜 기능 상태
+  const [isWhiskyLikedState, setIsWhiskyLikedState] = useState(false)
+  const [whiskyLikeBusy, setWhiskyLikeBusy] = useState(false)
+
   // 평균 별점 계산
   const avgRating = reviews.length > 0
     ? Number((reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length).toFixed(1))
@@ -298,6 +303,27 @@ export default function WhiskyDetailClient({ whisky, initialReviews }: WhiskyDet
 
     loadCommentCounts()
   }, [reviews])
+
+  // 위스키 찜 상태 초기화
+  useEffect(() => {
+    let canceled = false
+    const loadWhiskyLikeStatus = async () => {
+      if (!user) {
+        setIsWhiskyLikedState(false)
+        return
+      }
+      try {
+        const liked = await isWhiskyLiked(user.id, whisky.id)
+        if (!canceled) setIsWhiskyLikedState(liked)
+      } catch (error) {
+        console.error('위스키 찜 상태 확인 실패:', error, { userId: user.id, whiskyId: whisky.id })
+        if (!canceled) setIsWhiskyLikedState(false)
+      }
+    }
+
+    loadWhiskyLikeStatus()
+    return () => { canceled = true }
+  }, [user, whisky.id])
 
   const refreshReviews = async () => {
     const { data: updatedReviews, error } = await supabase
@@ -453,6 +479,39 @@ export default function WhiskyDetailClient({ whisky, initialReviews }: WhiskyDet
       toast.error('리뷰 저장 중 오류가 발생했습니다.')
     } finally {
       setSubmitting(false)
+    }
+  }
+
+  // 위스키 찜 토글 핸들러
+  const toggleWhiskyLike = async () => {
+    if (!user) {
+      toast('로그인이 필요합니다')
+      return
+    }
+
+    if (whiskyLikeBusy) return
+
+    setWhiskyLikeBusy(true)
+    const nextLiked = !isWhiskyLikedState
+
+    // Optimistic UI - 즉시 상태 변경
+    setIsWhiskyLikedState(nextLiked)
+
+    try {
+      if (nextLiked) {
+        await likeWhisky(user.id, whisky.id)
+        console.log(`${whisky.name}을(를) 찜 목록에 추가했습니다.`)
+      } else {
+        await unlikeWhisky(user.id, whisky.id)
+        console.log(`${whisky.name}을(를) 찜 목록에서 제거했습니다.`)
+      }
+    } catch (error) {
+      console.error('위스키 찜 처리 오류:', error, { userId: user.id, whiskyId: whisky.id })
+      // 실패 시 롤백
+      setIsWhiskyLikedState(!nextLiked)
+      toast.error('찜 처리에 실패했습니다')
+    } finally {
+      setWhiskyLikeBusy(false)
     }
   }
 
@@ -789,8 +848,21 @@ export default function WhiskyDetailClient({ whisky, initialReviews }: WhiskyDet
 
           {/* 오른쪽: 위스키 정보 */}
           <div className="flex-1 max-w-2xl">
-            {/* 위스키 이름 */}
-            <h2 className="text-4xl font-bold text-red-500 mb-3 text-center">{whisky.name}</h2>
+            {/* 위스키 이름 & 찜 버튼 */}
+            <div className="flex items-center justify-center gap-4 mb-3">
+              <h2 className="text-4xl font-bold text-red-500">{whisky.name}</h2>
+              <button
+                aria-label={isWhiskyLikedState ? '찜 취소' : '찜하기'}
+                onClick={toggleWhiskyLike}
+                disabled={whiskyLikeBusy}
+                className={`rounded-full p-3 text-2xl transition-all duration-200 hover:scale-110 transform ${
+                  isWhiskyLikedState ? 'text-red-500 hover:text-red-600' : 'text-gray-400 hover:text-red-400'
+                } ${whiskyLikeBusy ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
+                title={isWhiskyLikedState ? '찜 취소' : '찜하기'}
+              >
+                {isWhiskyLikedState ? '♥' : '♡'}
+              </button>
+            </div>
 
             {/* 안내 문구 */}
             <p className="text-sm text-gray-400 mb-8 text-center">
