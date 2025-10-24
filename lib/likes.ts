@@ -31,3 +31,15 @@ export async function unlikeWhisky(userId: string, whiskyId: string) {
     .is('post_id', null)
   if (error) throw error
 }
+
+// 사용자의 모든 찜한 위스키 ID 목록 가져오기
+export async function getUserWhiskyLikes(userId: string): Promise<string[]> {
+  const { data, error } = await supabase
+    .from('likes')
+    .select('whisky_id')
+    .eq('user_id', userId)
+    .is('post_id', null) // 위스키 찜만 필터링
+
+  if (error) throw error
+  return (data || []).map(like => like.whisky_id)
+}

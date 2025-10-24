@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { updateNickname } from '../lib/userProfiles'
 import { uploadAndSetAvatar } from '../lib/avatarStorage'
 import { getUserWhiskyReviews } from '../lib/whiskyReviews'
-import { getUserWhiskyLikes } from '../lib/whiskyLikes'
+import { getUserWhiskyLikes } from '../lib/likes'
 import { useWhiskyImage } from '../lib/updateWhiskyImages'
 import { useAuth } from '../app/context/AuthContext'
 import LoadingAnimation from './LoadingAnimation'
@@ -89,8 +89,10 @@ export default function ProfilePageClient({
   // 사용자 통계 계산 (Supabase 기반)
   const getUserStats = async () => {
     try {
+      if (!user) return { wishlistCount: 0, reviewCount: 0, noteCount: 0 }
+
       // 찜한 위스키 개수
-      const likedWhiskies = await getUserWhiskyLikes()
+      const likedWhiskies = await getUserWhiskyLikes(user.id)
       const wishlistCount = likedWhiskies.length
 
       // 사용자 리뷰 개수
