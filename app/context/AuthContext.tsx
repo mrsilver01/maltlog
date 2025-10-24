@@ -42,10 +42,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         const { data: { session } } = await supabase.auth.getSession()
         setUser(session?.user ?? null)
+        setLoading(false) // 세션 확인 후 즉시 UI 오픈
 
         if (session?.user) {
-          const userProfile = await getCurrentUserProfile()
-          setProfile(userProfile)
+          // 프로필은 백그라운드에서 로드
+          getCurrentUserProfile()
+            .then(setProfile)
+            .catch((error) => {
+              console.error('프로필 로드 중 에러:', error)
+              setProfile(null)
+            })
         } else {
           setProfile(null)
         }
@@ -53,23 +59,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.error('인증 초기화 중 에러 발생:', error)
         setUser(null)
         setProfile(null)
-      } finally {
         setLoading(false)
       }
     }
 
     initializeAuth()
 
-    const { data: authListener } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null)
       if (session?.user) {
-        try {
-          const userProfile = await getCurrentUserProfile()
-          setProfile(userProfile)
-        } catch (error) {
-          console.error('인증 상태 변경 중 프로필 로드 에러:', error)
-          setProfile(null)
-        }
+        // 프로필은 백그라운드에서 로드 (UI 블로킹 방지)
+        getCurrentUserProfile()
+          .then(setProfile)
+          .catch((error) => {
+            console.error('인증 상태 변경 중 프로필 로드 에러:', error)
+            setProfile(null)
+          })
       } else {
         setProfile(null)
       }

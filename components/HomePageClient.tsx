@@ -669,13 +669,16 @@ function CommunityPreview({ navigateWithTransition }: { navigateWithTransition: 
   const [posts, setPosts] = useState<any[]>([])
 
   useEffect(() => {
-    // Supabase에서 커뮤니티 게시글 로드
+    // API를 통해 안정적으로 커뮤니티 게시글 로드
     const loadCommunityPosts = async () => {
       try {
-        const { getAllCommunityPosts } = await import('../lib/communityPosts')
-        const communityPosts = await getAllCommunityPosts()
-        // 최대 3개만 표시
-        setPosts(communityPosts.slice(0, 3))
+        const response = await fetch('/api/community/latest')
+        if (response.ok) {
+          const communityPosts = await response.json()
+          setPosts(communityPosts)
+        } else {
+          setPosts([])
+        }
       } catch (error) {
         console.error('커뮤니티 게시글 로드 실패:', error)
         setPosts([])
