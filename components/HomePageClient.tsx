@@ -668,28 +668,27 @@ function WhiskyCard({ whisky, navigateWithTransition }: { whisky: WhiskyData, ro
 function CommunityPreview({ navigateWithTransition }: { navigateWithTransition: any }) {
   const [posts, setPosts] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  const load = React.useCallback(async (signal?: AbortSignal) => {
+    setLoading(true); setError(null)
+    try {
+      const res = await fetch('/api/community/latest', { cache: 'no-store', signal })
+      if (!res.ok) throw new Error('bad status: ' + res.status)
+      const data = await res.json()
+      setPosts(Array.isArray(data) ? data : [])
+    } catch (e: any) {
+      setError(e?.message || 'load failed'); setPosts([])
+    } finally {
+      setLoading(false)
+    }
+  }, [])
 
   useEffect(() => {
-    // API를 통해 안정적으로 커뮤니티 게시글 로드
-    const loadCommunityPosts = async () => {
-      try {
-        const response = await fetch('/api/community/latest', { cache: 'no-store' })
-        if (response.ok) {
-          const communityPosts = await response.json()
-          setPosts(communityPosts)
-        } else {
-          setPosts([])
-        }
-      } catch (error) {
-        console.error('커뮤니티 게시글 로드 실패:', error)
-        setPosts([])
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    loadCommunityPosts()
-  }, [])
+    const ctrl = new AbortController()
+    load(ctrl.signal)
+    return () => ctrl.abort()
+  }, [load])
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
@@ -706,9 +705,17 @@ function CommunityPreview({ navigateWithTransition }: { navigateWithTransition: 
   }
 
   if (loading) {
+    return <div className="bg-red-100 border border-gray-400 p-6 rounded-lg text-center">로딩 중…</div>
+  }
+
+  if (error) {
     return (
       <div className="bg-red-100 border border-gray-400 p-6 rounded-lg text-center">
-        <span className="text-sm text-gray-600">로딩 중…</span>
+        <div className="text-sm text-gray-600 mb-2">불러오기에 실패했습니다.</div>
+        <button className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+          onClick={() => load()}>
+          다시 시도 →
+        </button>
       </div>
     )
   }
@@ -763,6 +770,7 @@ function CommunityPreview({ navigateWithTransition }: { navigateWithTransition: 
           </div>
         </div>
       ) : (
+        // ✅ 이제서야 '게시글 없음' 노출
         <div className="text-center py-8">
           <span className="text-sm text-gray-600">아직 게시글이 없습니다.</span>
           <div className="mt-2">
