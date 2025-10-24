@@ -667,12 +667,13 @@ function WhiskyCard({ whisky, navigateWithTransition }: { whisky: WhiskyData, ro
 // 커뮤니티 미리보기 컴포넌트
 function CommunityPreview({ navigateWithTransition }: { navigateWithTransition: any }) {
   const [posts, setPosts] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     // API를 통해 안정적으로 커뮤니티 게시글 로드
     const loadCommunityPosts = async () => {
       try {
-        const response = await fetch('/api/community/latest')
+        const response = await fetch('/api/community/latest', { cache: 'no-store' })
         if (response.ok) {
           const communityPosts = await response.json()
           setPosts(communityPosts)
@@ -682,6 +683,8 @@ function CommunityPreview({ navigateWithTransition }: { navigateWithTransition: 
       } catch (error) {
         console.error('커뮤니티 게시글 로드 실패:', error)
         setPosts([])
+      } finally {
+        setLoading(false)
       }
     }
 
@@ -700,6 +703,14 @@ function CommunityPreview({ navigateWithTransition }: { navigateWithTransition: 
     } else {
       return date.toLocaleDateString('ko-KR')
     }
+  }
+
+  if (loading) {
+    return (
+      <div className="bg-red-100 border border-gray-400 p-6 rounded-lg text-center">
+        <span className="text-sm text-gray-600">로딩 중…</span>
+      </div>
+    )
   }
 
   return (

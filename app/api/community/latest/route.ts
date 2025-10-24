@@ -1,5 +1,8 @@
 import { supabase } from '@/lib/supabase'
 
+// 서버 응답 캐시 방지
+export const revalidate = 0
+
 export async function GET() {
   try {
     const { data, error } = await supabase
@@ -19,23 +22,31 @@ export async function GET() {
       .limit(3)
 
     if (error) {
-      console.error('커뮤니티 프리뷰 로드 오류:', error)
-      return Response.json([])
+      console.error('latest API error:', error)
+      return new Response('[]', {
+        status: 200,
+        headers: { 'Cache-Control': 'no-store' }
+      })
     }
 
     const payload = (data ?? []).map((p: any) => ({
       id: p.id,
       title: p.title,
-      author: Array.isArray(p.profiles) ? (p.profiles[0]?.nickname || '익명') : (p.profiles?.nickname || '익명'),
-      authorImage: Array.isArray(p.profiles) ? (p.profiles[0]?.avatar_url || null) : (p.profiles?.avatar_url || null),
+      author: p.profiles?.nickname ?? '익명',
+      authorImage: p.profiles?.avatar_url ?? null,
       createdAt: p.created_at,
-      likes: p.likes_count || 0,
-      comments: p.comments_count || 0,
+      likes: p.likes_count ?? 0,
+      comments: p.comments_count ?? 0,
     }))
 
-    return Response.json(payload)
-  } catch (error) {
-    console.error('커뮤니티 프리뷰 API 오류:', error)
-    return Response.json([])
+    return Response.json(payload, {
+      headers: { 'Cache-Control': 'no-store' }
+    })
+  } catch (e) {
+    console.error('latest API fatal:', e)
+    return new Response('[]', {
+      status: 200,
+      headers: { 'Cache-Control': 'no-store' }
+    })
   }
 }
