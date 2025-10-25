@@ -217,6 +217,13 @@ export default function WhiskyDetailClient({ whisky, initialReviews }: WhiskyDet
   const [isWhiskyLikedState, setIsWhiskyLikedState] = useState(false)
   const [whiskyLikeBusy, setWhiskyLikeBusy] = useState(false)
 
+  // 별점 수정 모드 상태
+  const [isEditingRating, setIsEditingRating] = useState(false)
+
+  // 간단 리뷰 작성 상태
+  const [quickReviewText, setQuickReviewText] = useState('')
+  const [isSubmittingQuickReview, setIsSubmittingQuickReview] = useState(false)
+
   // 평균 별점 계산
   const avgRating = reviews.length > 0
     ? Number((reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length).toFixed(1))
@@ -404,12 +411,87 @@ export default function WhiskyDetailClient({ whisky, initialReviews }: WhiskyDet
       } else {
         setCurrentRating(rating)
         setHasUserRated(true)
+        setIsEditingRating(false)
         await refreshReviews()
         toast.success('평점이 저장되었습니다!')
       }
     } catch (error) {
       console.error('평점 저장 중 오류:', error)
       toast.error('평점 저장 중 오류가 발생했습니다.')
+    }
+  }
+
+  // 별점 수정 모드 토글
+  const handleEditRating = () => {
+    setIsEditingRating(true)
+  }
+
+  // 별점 수정 취소
+  const handleCancelEditRating = () => {
+    setIsEditingRating(false)
+  }
+
+  // 간단 리뷰 등록 (별점 없이도 가능)
+  const handleQuickReviewSubmit = async () => {
+    if (!user) {
+      toast('로그인이 필요합니다.')
+      router.push('/login')
+      return
+    }
+
+    if (!quickReviewText.trim()) {
+      toast('리뷰 내용을 입력해주세요.')
+      return
+    }
+
+    setIsSubmittingQuickReview(true)
+
+    try {
+      const reviewData = {
+        whisky_id: whisky.id,
+        user_id: user.id,
+        rating: hasUserRated ? currentRating : null, // 기존 별점이 있으면 유지, 없으면 null
+        note: quickReviewText.trim(),
+      }
+
+      const { error } = await supabase
+        .from('reviews')
+        .upsert(reviewData, {
+          onConflict: 'whisky_id,user_id'
+        })
+
+      if (error) {
+        console.error('리뷰 저장 실패:', error)
+        toast.error('리뷰 저장에 실패했습니다: ' + error.message)
+      } else {
+        // 상태 업데이트
+        setHasUserReviewed(true)
+        setQuickReviewText('')
+
+        // 기존 리뷰가 없다면 새로 생성
+        if (!myReview) {
+          const newReview = {
+            id: Date.now().toString(),
+            user_id: user.id,
+            rating: hasUserRated ? currentRating : 0,
+            note: quickReviewText.trim(),
+            created_at: new Date().toISOString(),
+            profiles: {
+              nickname: user.user_metadata?.nickname || '사용자',
+              avatar_url: user.user_metadata?.avatar_url || null
+            }
+          }
+          setMyReview(newReview)
+        }
+
+        await refreshReviews()
+        toast.success('리뷰가 등록되었습니다!')
+      }
+    } catch (error) {
+      console.error('리뷰 저장 중 오류:', error)
+      toast.error('리뷰 저장 중 오류가 발생했습니다.')
+    } finally {
+      setIsSubmittingQuickReview(false)
     }
   }
 
@@ -930,17 +1012,47 @@ export default function WhiskyDetailClient({ whisky, initialReviews }: WhiskyDet
                     </button>
                   </div>
                 ) : hasUserRated ? (
-                  <div>
-                    <RatingSystem
-                      currentRating={currentRating}
-                      onRatingChange={() => {}}
-                      size="lg"
-                      showLabels={true}
-                      readOnly={true}
-                    />
-                    {myReview && (
-                      <div className="mt-2 text-center text-sm text-amber-700">
-                        별점을 남겼습니다.
+                  <div className="text-center">
+                    {isEditingRating ? (
+                      <div>
+                        <RatingSystem
+                          currentRating={currentRating}
+                          onRatingChange={handleRatingOnlySubmit}
+                          size="lg"
+                          showLabels={true}
+                          readOnly={false}
+                        />
+                        <div className="flex justify-center gap-2 mt-3">
+                          <button
+                            onClick={handleCancelEditRating}
+                            className="px-3 py-1 text-sm text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                          >
+                            취소
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div>
+                        <div className="flex items-center justify-center gap-3">
+                          <RatingSystem
+                            currentRating={currentRating}
+                            onRatingChange={() => {}}
+                            size="lg"
+                            showLabels={true}
+                            readOnly={true}
+                          />
+                          <button
+                            onClick={handleEditRating}
+                            className="px-3 py-1 text-sm text-amber-600 bg-amber-50 border border-amber-200 rounded-lg hover:bg-amber-100 transition-colors"
+                          >
+                            수정
+                          </button>
+                        </div>
+                        {myReview && (
+                          <div className="mt-2 text-center text-sm text-amber-700">
+                            별점을 남겼습니다.
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
@@ -1061,36 +1173,82 @@ export default function WhiskyDetailClient({ whisky, initialReviews }: WhiskyDet
 
               {/* 새 리뷰 작성 영역 */}
               {user && (
-                <div className="bg-gray-50 border border-gray-200 p-4 rounded-xl mb-6">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-8 h-8 rounded-full border border-gray-300 bg-gray-100 overflow-hidden flex-shrink-0">
-                      {user.user_metadata?.avatar_url ? (
-                        <img
-                          src={user.user_metadata.avatar_url}
-                          alt="내 프로필"
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">
-                          👤
-                        </div>
-                      )}
+                hasUserReviewed && myReview ? (
+                  // 이미 리뷰를 작성한 경우 - 내 리뷰 표시
+                  <div className="bg-blue-50 border border-blue-200 p-4 rounded-xl mb-6">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-8 h-8 rounded-full border border-gray-300 bg-gray-100 overflow-hidden flex-shrink-0">
+                        {user.user_metadata?.avatar_url ? (
+                          <img
+                            src={user.user_metadata.avatar_url}
+                            alt="내 프로필"
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">
+                            👤
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium text-gray-800">내가 남긴 리뷰</span>
+                        {myReview.rating > 0 && (
+                          <div className="flex items-center gap-1">
+                            <span className="text-amber-500">★</span>
+                            <span className="text-sm font-medium text-gray-700">{myReview.rating}</span>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                    <span className="text-sm font-medium text-gray-800">새 리뷰 작성</span>
+                    <div className="bg-white p-3 rounded-lg border border-gray-200">
+                      <p className="text-gray-800 text-sm leading-relaxed whitespace-pre-wrap">
+                        {myReview.note}
+                      </p>
+                    </div>
+                    <div className="mt-3 text-xs text-gray-500 text-center">
+                      리뷰를 수정하려면 아래 "노트 작성" 버튼을 이용해주세요.
+                    </div>
                   </div>
-                  <textarea
-                    placeholder="노즈:
+                ) : (
+                  // 아직 리뷰를 작성하지 않은 경우 - 새 리뷰 작성 영역
+                  <div className="bg-gray-50 border border-gray-200 p-4 rounded-xl mb-6">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-8 h-8 rounded-full border border-gray-300 bg-gray-100 overflow-hidden flex-shrink-0">
+                        {user.user_metadata?.avatar_url ? (
+                          <img
+                            src={user.user_metadata.avatar_url}
+                            alt="내 프로필"
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">
+                            👤
+                          </div>
+                        )}
+                      </div>
+                      <span className="text-sm font-medium text-gray-800">새 리뷰 작성</span>
+                    </div>
+                    <textarea
+                      value={quickReviewText}
+                      onChange={(e) => setQuickReviewText(e.target.value)}
+                      placeholder="노즈:
 팔레트:
 피니쉬: "
-                    className="w-full h-24 p-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-800 placeholder-gray-400"
-                    rows={4}
-                  />
-                  <div className="flex justify-end mt-3">
-                    <button className="bg-amber-700 text-white px-4 py-2 rounded-lg hover:bg-amber-800 transition-colors text-sm">
-                      리뷰 등록
-                    </button>
+                      className="w-full h-24 p-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-800 placeholder-gray-400"
+                      rows={4}
+                      disabled={isSubmittingQuickReview}
+                    />
+                    <div className="flex justify-end mt-3">
+                      <button
+                        onClick={handleQuickReviewSubmit}
+                        disabled={isSubmittingQuickReview || !quickReviewText.trim()}
+                        className="bg-amber-700 text-white px-4 py-2 rounded-lg hover:bg-amber-800 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {isSubmittingQuickReview ? '등록 중...' : '리뷰 등록'}
+                      </button>
+                    </div>
                   </div>
-                </div>
+                )
               )}
 
               {reviews.length > 0 ? (
