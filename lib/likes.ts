@@ -111,10 +111,10 @@ async function updateWhiskyLikesCountDirect(whiskyId: string, increment: number)
 
   const actualLikesCount = likesData?.length ?? 0
 
-  // whiskies 테이블 업데이트
+  // whiskies 테이블 업데이트 (likes 컬럼 사용)
   const { error: updateError } = await supabase
     .from('whiskies')
-    .update({ likes_count: actualLikesCount })
+    .update({ likes: actualLikesCount })
     .eq('id', whiskyId)
 
   if (updateError) {
