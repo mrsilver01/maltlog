@@ -5,6 +5,8 @@ export const revalidate = 0
 
 export async function GET() {
   try {
+    console.log('🔍 [API] /api/community/latest called')
+
     const { data, error } = await supabase
       .from('posts')
       .select(`
@@ -21,8 +23,14 @@ export async function GET() {
       .order('created_at', { ascending: false })
       .limit(3)
 
+    console.log('🔍 [API] Query result:', {
+      dataLength: data?.length ?? 0,
+      error: error?.message ?? null,
+      rawData: data
+    })
+
     if (error) {
-      console.error('latest API error:', error)
+      console.error('❌ [API] latest API error:', error)
       return new Response('[]', {
         status: 200,
         headers: { 'Cache-Control': 'no-store' }
@@ -39,11 +47,16 @@ export async function GET() {
       comments: p.comments_count ?? 0,
     }))
 
+    console.log('✅ [API] Final payload:', {
+      payloadLength: payload.length,
+      payload: payload.slice(0, 1) // 첫 번째 항목만 로그
+    })
+
     return Response.json(payload, {
       headers: { 'Cache-Control': 'no-store' }
     })
   } catch (e) {
-    console.error('latest API fatal:', e)
+    console.error('💥 [API] latest API fatal:', e)
     return new Response('[]', {
       status: 200,
       headers: { 'Cache-Control': 'no-store' }

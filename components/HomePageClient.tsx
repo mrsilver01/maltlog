@@ -667,13 +667,25 @@ function CommunityPreview({ navigateWithTransition }: { navigateWithTransition: 
   const [error, setError] = useState<string | null>(null)
 
   const load = React.useCallback(async (signal?: AbortSignal) => {
+    console.log('🔄 [CommunityPreview] Starting to load community posts')
     setLoading(true); setError(null)
     try {
       const res = await fetch('/api/community/latest', { cache: 'no-store', signal })
+      console.log('🌐 [CommunityPreview] Response status:', res.status, res.statusText)
+
       if (!res.ok) throw new Error('bad status: ' + res.status)
+
       const data = await res.json()
+      console.log('📦 [CommunityPreview] Received data:', {
+        isArray: Array.isArray(data),
+        length: data?.length ?? 0,
+        data: data
+      })
+
       setPosts(Array.isArray(data) ? data : [])
+      console.log('✅ [CommunityPreview] Posts set successfully:', Array.isArray(data) ? data.length : 0, 'items')
     } catch (e: any) {
+      console.error('❌ [CommunityPreview] Load failed:', e)
       setError(e?.message || 'load failed'); setPosts([])
     } finally {
       setLoading(false)
