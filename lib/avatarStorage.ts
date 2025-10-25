@@ -77,14 +77,11 @@ export async function uploadAvatarImage(file: File): Promise<{ success: boolean;
       return { success: false, error: validation.error }
     }
 
-    // 파일명 생성 (사용자 ID + 타임스탬프 + 랜덤값)
+    // 파일 경로 생성 (RLS 정책 준수: user_id/avatar.extension)
     const fileExt = file.name.split('.').pop()
-    const timestamp = Date.now()
-    const randomId = Math.random().toString(36).substring(2, 15)
-    const fileName = `${user.id}_${timestamp}_${randomId}.${fileExt}`
-    const filePath = fileName
+    const filePath = `${user.id}/avatar.${fileExt}`
 
-    console.log('아바타 이미지 업로드 시작:', fileName)
+    console.log('아바타 이미지 업로드 시작:', filePath)
 
     // 버킷 존재 확인 및 생성
     const bucketReady = await ensureBucketExists()
@@ -134,13 +131,14 @@ export async function deleteAvatarImage(avatarUrl: string): Promise<boolean> {
       return false
     }
 
-    // URL에서 파일 경로 추출
+    // URL에서 파일 경로 추출 (user_id/avatar.ext 형태)
     const urlParts = avatarUrl.split('/')
-    const fileName = urlParts[urlParts.length - 1]
-    const filePath = fileName // avatars/ 접두사 제거
+    const fileName = urlParts[urlParts.length - 1] // avatar.ext
+    const userIdFromUrl = urlParts[urlParts.length - 2] // user_id
+    const filePath = `${userIdFromUrl}/${fileName}`
 
-    // 파일이 현재 사용자의 것인지 확인 (파일명에 사용자 ID 포함)
-    if (!fileName.startsWith(user.id)) {
+    // 파일이 현재 사용자의 것인지 확인
+    if (userIdFromUrl !== user.id) {
       console.error('다른 사용자의 파일은 삭제할 수 없습니다')
       return false
     }
@@ -171,9 +169,10 @@ export async function getUserAvatarImages(): Promise<string[]> {
       return []
     }
 
+    // 사용자 폴더 내의 파일 목록 가져오기
     const { data: files, error } = await supabase.storage
       .from(AVATAR_BUCKET)
-      .list('', {
+      .list(user.id, {
         limit: 100,
         offset: 0
       })
@@ -183,18 +182,14 @@ export async function getUserAvatarImages(): Promise<string[]> {
       return []
     }
 
-    // 현재 사용자의 파일만 필터링
-    const userFiles = files?.filter(file =>
-      file.name.startsWith(user.id)
-    ) || []
-
     // 공개 URL 생성
-    const urls = userFiles.map(file => {
+    const urls = files?.map(file => {
+      const filePath = `${user.id}/${file.name}`
       const { data } = supabase.storage
         .from(AVATAR_BUCKET)
-        .getPublicUrl(file.name)
+        .getPublicUrl(filePath)
       return data.publicUrl
-    }).filter(Boolean)
+    }).filter(Boolean) || []
 
     return urls
   } catch (error) {

@@ -68,6 +68,7 @@ export default function ProfilePageClient({
   const [nickname, setNickname] = useState(profile?.nickname || 'MrSilverr')
   const [profileImage, setProfileImage] = useState<string | null>(profile?.avatar_url || null)
   const [isDragging, setIsDragging] = useState(false)
+  const [isUploadingImage, setIsUploadingImage] = useState(false)
   const [reviewedWhiskies, setReviewedWhiskies] = useState<WhiskyData[]>(initialWhiskies)
   const [showAllNotes, setShowAllNotes] = useState(false)
   const [expandedComments, setExpandedComments] = useState<{[key: string]: boolean}>({})
@@ -186,36 +187,45 @@ export default function ProfilePageClient({
   }
 
   const handleImageClick = () => {
-    fileInputRef.current?.click()
+    if (!isUploadingImage) {
+      fileInputRef.current?.click()
+    }
   }
 
   const handleImageChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (file) {
+      setIsUploadingImage(true)
       try {
         console.log('이미지 업로드 시작...')
+        toast.loading('이미지를 업로드하고 있습니다...', { id: 'image-upload' })
+
         const result = await uploadAndSetAvatar(file)
 
         if (result.success && result.url) {
           setProfileImage(result.url)
           console.log('✅ 프로필 이미지 업로드 성공:', result.url)
-          toast.success('프로필 이미지가 업데이트되었습니다.')
+          toast.success('프로필 이미지가 업데이트되었습니다.', { id: 'image-upload' })
           // AuthContext의 프로필 정보 새로고침
           await updateProfile()
         } else {
           console.error('이미지 업로드 실패:', result.error)
-          toast.error(result.error || '이미지 업로드에 실패했습니다.')
+          toast.error(result.error || '이미지 업로드에 실패했습니다.', { id: 'image-upload' })
         }
       } catch (error) {
         console.error('이미지 업로드 중 오류:', error)
-        toast.error('이미지 업로드 중 오류가 발생했습니다.')
+        toast.error('이미지 업로드 중 오류가 발생했습니다.', { id: 'image-upload' })
+      } finally {
+        setIsUploadingImage(false)
       }
     }
   }
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault()
-    setIsDragging(true)
+    if (!isUploadingImage) {
+      setIsDragging(true)
+    }
   }
 
   const handleDragLeave = (e: React.DragEvent) => {
@@ -227,25 +237,32 @@ export default function ProfilePageClient({
     e.preventDefault()
     setIsDragging(false)
 
+    if (isUploadingImage) return
+
     const file = e.dataTransfer.files[0]
     if (file && file.type.startsWith('image/')) {
+      setIsUploadingImage(true)
       try {
         console.log('드래그 앤 드롭 이미지 업로드 시작...')
+        toast.loading('이미지를 업로드하고 있습니다...', { id: 'image-upload' })
+
         const result = await uploadAndSetAvatar(file)
 
         if (result.success && result.url) {
           setProfileImage(result.url)
           console.log('✅ 프로필 이미지 업로드 성공 (드래그 앤 드롭):', result.url)
-          toast.success('프로필 이미지가 업데이트되었습니다.')
+          toast.success('프로필 이미지가 업데이트되었습니다.', { id: 'image-upload' })
           // AuthContext의 프로필 정보 새로고침
           await updateProfile()
         } else {
           console.error('이미지 업로드 실패:', result.error)
-          toast.error(result.error || '이미지 업로드에 실패했습니다.')
+          toast.error(result.error || '이미지 업로드에 실패했습니다.', { id: 'image-upload' })
         }
       } catch (error) {
         console.error('이미지 업로드 중 오류:', error)
-        toast.error('이미지 업로드 중 오류가 발생했습니다.')
+        toast.error('이미지 업로드 중 오류가 발생했습니다.', { id: 'image-upload' })
+      } finally {
+        setIsUploadingImage(false)
       }
     }
   }
@@ -400,10 +417,25 @@ export default function ProfilePageClient({
                   </div>
                 )}
 
-                {/* 호버 오버레이 */}
-                <div className="absolute inset-0 bg-amber-900 bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300 flex items-center justify-center rounded-full">
-                  <div className="text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-sm font-bold shadow-lg">
-                    {profileImage ? '📸 변경' : '📷 추가'}
+                {/* 호버 오버레이 / 업로드 중 오버레이 */}
+                <div className={`absolute inset-0 transition-all duration-300 flex items-center justify-center rounded-full ${
+                  isUploadingImage
+                    ? 'bg-amber-900 bg-opacity-60'
+                    : 'bg-amber-900 bg-opacity-0 group-hover:bg-opacity-30'
+                }`}>
+                  <div className={`text-white transition-opacity duration-300 text-sm font-bold shadow-lg ${
+                    isUploadingImage
+                      ? 'opacity-100'
+                      : 'opacity-0 group-hover:opacity-100'
+                  }`}>
+                    {isUploadingImage ? (
+                      <div className="flex flex-col items-center">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mb-2"></div>
+                        <div>업로드 중...</div>
+                      </div>
+                    ) : (
+                      profileImage ? '📸 변경' : '📷 추가'
+                    )}
                   </div>
                 </div>
               </div>
