@@ -7,87 +7,47 @@ export async function GET() {
   try {
     console.log('🔍 [API] /api/community/latest called')
 
-    // 양방향 호환: community_posts 테이블 먼저 시도, 실패시 posts 테이블 시도
-    let data = null
-    let error = null
-    let tableName = ''
-
-    // 1차 시도: community_posts 테이블
-    try {
-      console.log('🔍 [API] Trying community_posts table...')
-      const result = await supabase
-        .from('community_posts')
-        .select(`
-          id,
-          title,
-          created_at,
-          likes_count,
-          comments_count,
-          profiles (
-            nickname,
-            avatar_url
-          )
-        `)
-        .order('created_at', { ascending: false })
-        .limit(3)
-
-      if (!result.error && result.data) {
-        data = result.data
-        tableName = 'community_posts'
-        console.log('✅ [API] community_posts table found and used')
-      } else {
-        throw new Error(result.error?.message || 'community_posts table query failed')
-      }
-    } catch (e) {
-      console.log('⚠️ [API] community_posts failed, trying posts table...')
-
-      // 2차 시도: posts 테이블
-      try {
-        const result = await supabase
-          .from('posts')
-          .select(`
-            id,
-            title,
-            created_at,
-            likes_count,
-            comments_count,
-            profiles (
-              nickname,
-              avatar_url
-            )
-          `)
-          .order('created_at', { ascending: false })
-          .limit(3)
-
-        if (!result.error && result.data) {
-          data = result.data
-          tableName = 'posts'
-          console.log('✅ [API] posts table found and used')
-        } else {
-          throw new Error(result.error?.message || 'posts table query failed')
-        }
-      } catch (e2) {
-        console.error('❌ [API] Both table attempts failed')
-        error = e2
-      }
-    }
+    // 직접 posts 테이블 사용 (Supabase에서 데이터 존재 확인됨)
+    console.log('🔍 [API] Querying posts table directly...')
+    const { data, error } = await supabase
+      .from('posts')
+      .select(`
+        id,
+        title,
+        created_at,
+        likes_count,
+        comments_count,
+        profiles (
+          nickname,
+          avatar_url
+        )
+      `)
+      .order('created_at', { ascending: false })
+      .limit(3)
 
     console.log('🔍 [API] Query result:', {
-      tableName,
       dataLength: data?.length ?? 0,
-      error: error ? (error as Error).message : null,
+      error: error?.message ?? null,
       rawData: data
     })
 
-    if (error || !data) {
-      console.error('❌ [API] No valid data found, returning empty array')
+    if (error) {
+      console.error('❌ [API] posts table query error:', error)
       return new Response('[]', {
         status: 200,
         headers: { 'Cache-Control': 'no-store' }
       })
     }
 
-    const payload = (data ?? []).map((p: any) => ({
+    if (!data || data.length === 0) {
+      console.log('⚠️ [API] No posts found in database')
+      return new Response('[]', {
+        status: 200,
+        headers: { 'Cache-Control': 'no-store' }
+      })
+    }
+
+    const payload = data.map((p: any) => ({
       id: p.id,
       title: p.title,
       author: p.profiles?.nickname ?? '익명',
@@ -98,9 +58,8 @@ export async function GET() {
     }))
 
     console.log('✅ [API] Final payload:', {
-      tableName,
       payloadLength: payload.length,
-      payload: payload.slice(0, 1) // 첫 번째 항목만 로그
+      payload: payload
     })
 
     return Response.json(payload, {
