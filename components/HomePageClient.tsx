@@ -8,6 +8,7 @@ import DrawerSidebar from './DrawerSidebar'
 import { isWhiskyLiked, likeWhisky, unlikeWhisky } from '../lib/likes'
 import { useAuth } from '../app/context/AuthContext'
 import toast from 'react-hot-toast'
+import { MainPageSkeleton, WhiskyCardSkeleton, CommunityPreviewSkeleton } from './SkeletonUI'
 
 export interface WhiskyData {
   id: string
@@ -38,6 +39,7 @@ export default function HomePageClient({ initialWhiskies }: HomePageClientProps)
   const [showAllWhiskies, setShowAllWhiskies] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [isInitialLoading, setIsInitialLoading] = useState(false)
   const itemsPerPage = 12
   const router = useRouter()
   const { isTransitioning, transitionMessage, navigateWithTransition } = usePageTransition()
@@ -55,6 +57,19 @@ export default function HomePageClient({ initialWhiskies }: HomePageClientProps)
       whisky.price.toLowerCase().includes(query)
     )
   })
+
+  // 초기 로딩 상태 관리
+  useEffect(() => {
+    // 초기 위스키 데이터가 없으면 로딩 상태 표시
+    if (initialWhiskies.length === 0) {
+      setIsInitialLoading(true)
+      // 실제 데이터가 로드되면 로딩 상태 해제
+      const timer = setTimeout(() => {
+        setIsInitialLoading(false)
+      }, 1000)
+      return () => clearTimeout(timer)
+    }
+  }, [initialWhiskies.length])
 
   // 모바일 메뉴 외부 클릭 시 닫기
   useEffect(() => {
@@ -111,9 +126,14 @@ export default function HomePageClient({ initialWhiskies }: HomePageClientProps)
     }
   };
 
+  // 페이지 전환 중이거나 초기 로딩 중일 때 스켈레톤 UI 표시
+  if (isTransitioning || isInitialLoading) {
+    return <MainPageSkeleton />
+  }
+
   return (
     <div className="min-h-screen bg-rose-50 p-3 sm:p-6">
-      {/* 페이지 전환 애니메이션 */}
+      {/* 페이지 전환 애니메이션 (백업) */}
       {isTransitioning && (
         <LoadingAnimation message={transitionMessage} />
       )}
@@ -371,6 +391,15 @@ export default function HomePageClient({ initialWhiskies }: HomePageClientProps)
                       <WhiskyCard key={whisky.id} whisky={whisky} router={router} navigateWithTransition={navigateWithTransition} />
                     ))
                   })()}
+
+                  {/* 더보기 로딩 중일 때 스켈레톤 추가 */}
+                  {isLoadingMore && (
+                    <>
+                      {Array.from({ length: 8 }).map((_, i) => (
+                        <WhiskyCardSkeleton key={`loading-${i}`} />
+                      ))}
+                    </>
+                  )}
                 </div>
 
                 {/* 페이지네이션 - 모든 위스키 모드일 때만 표시 */}
@@ -713,7 +742,7 @@ function CommunityPreview({ navigateWithTransition }: { navigateWithTransition: 
   }
 
   if (loading) {
-    return <div className="bg-red-100 border border-gray-400 p-6 rounded-lg text-center">로딩 중…</div>
+    return <CommunityPreviewSkeleton />
   }
 
   if (error) {
