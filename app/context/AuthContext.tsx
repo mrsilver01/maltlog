@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect, useState, useCallback, useMemo } 
 import { supabase } from '@/lib/supabase'
 import { Session, User } from '@supabase/supabase-js'
 import { getCurrentUserProfile, UserProfile, saveUserProfile } from '@/lib/userProfiles'
+import toast from 'react-hot-toast'
 
 export interface AuthCredentials {
   email?: string
@@ -87,35 +88,89 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signIn = useCallback(async (credentials: AuthCredentials) => {
     if (!credentials.email || !credentials.password) throw new Error('이메일과 비밀번호를 입력해주세요.')
-    const { error } = await supabase.auth.signInWithPassword({
-      email: credentials.email,
-      password: credentials.password,
-    })
-    if (error) throw error
+
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email: credentials.email,
+        password: credentials.password,
+      })
+
+      if (error) {
+        toast.error(`로그인 실패: ${error.message}`)
+        throw error
+      }
+
+      toast.success('로그인 성공!')
+    } catch (error) {
+      if (error instanceof Error && !error.message.includes('로그인 실패:')) {
+        toast.error(`로그인 실패: ${error.message}`)
+      }
+      throw error
+    }
   }, [])
 
   const signUp = useCallback(async (credentials: AuthCredentials) => {
     if (!credentials.email || !credentials.password || !credentials.nickname) throw new Error('이메일, 비밀번호, 닉네임을 모두 입력해주세요.')
-    const { error } = await supabase.auth.signUp({
-      email: credentials.email,
-      password: credentials.password,
-      options: { data: { nickname: credentials.nickname } },
-    })
-    if (error) throw error
-    // DB 트리거(handle_new_user)가 자동으로 프로필 생성
+
+    try {
+      const { error } = await supabase.auth.signUp({
+        email: credentials.email,
+        password: credentials.password,
+        options: { data: { nickname: credentials.nickname } },
+      })
+
+      if (error) {
+        toast.error(`회원가입 실패: ${error.message}`)
+        throw error
+      }
+
+      toast.success('회원가입 완료! 이메일을 확인해주세요.')
+      // DB 트리거(handle_new_user)가 자동으로 프로필 생성
+    } catch (error) {
+      if (error instanceof Error && !error.message.includes('회원가입 실패:')) {
+        toast.error(`회원가입 실패: ${error.message}`)
+      }
+      throw error
+    }
   }, [])
 
   const signOut = useCallback(async () => {
-    const { error } = await supabase.auth.signOut()
-    if (error) throw error
+    try {
+      const { error } = await supabase.auth.signOut()
+
+      if (error) {
+        toast.error(`로그아웃 실패: ${error.message}`)
+        throw error
+      }
+
+      toast.success('로그아웃 완료')
+    } catch (error) {
+      if (error instanceof Error && !error.message.includes('로그아웃 실패:')) {
+        toast.error(`로그아웃 실패: ${error.message}`)
+      }
+      throw error
+    }
   }, [])
 
   const signInWithKakao = useCallback(async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'kakao',
-      options: { redirectTo: `${window.location.origin}/auth/callback` },
-    })
-    if (error) throw error
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'kakao',
+        options: { redirectTo: `${window.location.origin}/auth/callback` },
+      })
+
+      if (error) {
+        toast.error(`카카오 로그인 실패: ${error.message}`)
+        throw error
+      }
+
+      toast.loading('카카오로 로그인 중...')
+    } catch (error) {
+      if (error instanceof Error && !error.message.includes('카카오 로그인 실패:')) {
+        toast.error(`카카오 로그인 실패: ${error.message}`)
+      }
+      throw error
+    }
   }, [])
 
   const updateProfile = useCallback(async () => {

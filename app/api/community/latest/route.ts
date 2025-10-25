@@ -8,7 +8,7 @@ export async function GET() {
     console.log('🔍 [API] /api/community/latest called')
 
     const { data, error } = await supabase
-      .from('posts')
+      .from('community_posts')
       .select(`
         id,
         title,
