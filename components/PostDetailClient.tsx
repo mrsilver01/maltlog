@@ -53,6 +53,13 @@ export default function PostDetailClient({ post, initialComments }: PostDetailCl
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null)
   const [editCommentContent, setEditCommentContent] = useState('')
 
+  // 대댓글 관련 상태
+  const [replies, setReplies] = useState<{[key: string]: Comment[]}>({})
+  const [showReplies, setShowReplies] = useState<{[key: string]: boolean}>({})
+  const [replyForms, setReplyForms] = useState<{[key: string]: boolean}>({})
+  const [replyContents, setReplyContents] = useState<{[key: string]: string}>({})
+  const [replySubmitting, setReplySubmitting] = useState<{[key: string]: boolean}>({})
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
     const now = new Date()
@@ -62,8 +69,9 @@ export default function PostDetailClient({ post, initialComments }: PostDetailCl
     return date.toLocaleDateString('ko-KR')
   }
 
-  // 댓글 새로고침
+  // 댓글 새로고침 (대댓글 포함)
   const refreshComments = async () => {
+    // 최상위 댓글들만 가져오기 (parent_comment_id가 null인 것들)
     const { data: commentsData, error } = await supabase
       .from('comments')
       .select(`
@@ -72,12 +80,14 @@ export default function PostDetailClient({ post, initialComments }: PostDetailCl
         content,
         created_at,
         post_id,
+        parent_comment_id,
         profiles (
           nickname,
           avatar_url
         )
       `)
       .eq('post_id', post.id)
+      .is('parent_comment_id', null)
       .order('created_at', { ascending: true })
 
     if (!error && commentsData) {
@@ -92,7 +102,51 @@ export default function PostDetailClient({ post, initialComments }: PostDetailCl
         authorImage: comment.profiles?.avatar_url || null
       }))
       setComments(transformedComments)
+
+      // 각 댓글의 대댓글 수 가져오기
+      const newReplies: {[key: string]: Comment[]} = {}
+      for (const comment of transformedComments) {
+        const repliesData = await loadReplies(comment.id)
+        if (repliesData.length > 0) {
+          newReplies[comment.id] = repliesData
+        }
+      }
+      setReplies(newReplies)
     }
+  }
+
+  // 대댓글 로드
+  const loadReplies = async (parentCommentId: string): Promise<Comment[]> => {
+    const { data: repliesData, error } = await supabase
+      .from('comments')
+      .select(`
+        id,
+        user_id,
+        content,
+        created_at,
+        post_id,
+        parent_comment_id,
+        profiles (
+          nickname,
+          avatar_url
+        )
+      `)
+      .eq('parent_comment_id', parentCommentId)
+      .order('created_at', { ascending: true })
+
+    if (!error && repliesData) {
+      return repliesData.map((reply: any) => ({
+        id: reply.id,
+        user_id: reply.user_id,
+        post_id: reply.post_id,
+        content: reply.content,
+        created_at: reply.created_at,
+        profiles: reply.profiles,
+        author: reply.profiles?.nickname || '익명 사용자',
+        authorImage: reply.profiles?.avatar_url || null
+      }))
+    }
+    return []
   }
 
   // 댓글 작성
@@ -185,6 +239,134 @@ export default function PostDetailClient({ post, initialComments }: PostDetailCl
     } catch (error) {
       console.error('댓글 삭제 중 오류:', error)
       toast.error('댓글 삭제 중 오류가 발생했습니다.')
+    }
+  }
+
+  // 대댓글 토글
+  const toggleReplies = async (commentId: string) => {
+    const isCurrentlyShown = showReplies[commentId]
+
+    setShowReplies(prev => ({
+      ...prev,
+      [commentId]: !isCurrentlyShown
+    }))
+
+    // 대댓글을 처음 보여줄 때만 로드
+    if (!isCurrentlyShown && !replies[commentId]) {
+      const repliesData = await loadReplies(commentId)
+      setReplies(prev => ({
+        ...prev,
+        [commentId]: repliesData
+      }))
+    }
+  }
+
+  // 대댓글 폼 토글
+  const toggleReplyForm = (commentId: string) => {
+    setReplyForms(prev => ({
+      ...prev,
+      [commentId]: !prev[commentId]
+    }))
+
+    // 폼을 닫을 때 내용 초기화
+    if (replyForms[commentId]) {
+      setReplyContents(prev => ({
+        ...prev,
+        [commentId]: ''
+      }))
+    }
+  }
+
+  // 대댓글 작성
+  const handleSubmitReply = async (parentCommentId: string) => {
+    if (!user) {
+      toast('대댓글을 작성하려면 로그인해주세요.')
+      router.push('/login')
+      return
+    }
+
+    const content = replyContents[parentCommentId]?.trim()
+    if (!content) {
+      toast('대댓글 내용을 입력해주세요.')
+      return
+    }
+
+    setReplySubmitting(prev => ({ ...prev, [parentCommentId]: true }))
+
+    try {
+      const { error } = await supabase
+        .from('comments')
+        .insert([{
+          post_id: post.id,
+          user_id: user.id,
+          content: content,
+          parent_comment_id: parentCommentId
+        }])
+
+      if (error) {
+        console.error('대댓글 작성 실패:', error)
+        toast.error('대댓글 작성에 실패했습니다.')
+      } else {
+        // 대댓글 목록 새로고침
+        const updatedReplies = await loadReplies(parentCommentId)
+        setReplies(prev => ({
+          ...prev,
+          [parentCommentId]: updatedReplies
+        }))
+
+        // 대댓글 보기 상태 활성화
+        setShowReplies(prev => ({
+          ...prev,
+          [parentCommentId]: true
+        }))
+
+        // 폼 초기화
+        setReplyContents(prev => ({
+          ...prev,
+          [parentCommentId]: ''
+        }))
+        setReplyForms(prev => ({
+          ...prev,
+          [parentCommentId]: false
+        }))
+
+        toast.success('대댓글이 작성되었습니다.')
+      }
+    } catch (error) {
+      console.error('대댓글 작성 중 오류:', error)
+      toast.error('대댓글 작성 중 오류가 발생했습니다.')
+    } finally {
+      setReplySubmitting(prev => ({ ...prev, [parentCommentId]: false }))
+    }
+  }
+
+  // 대댓글 삭제
+  const handleDeleteReply = async (replyId: string, parentCommentId: string) => {
+    if (!confirm('정말로 이 대댓글을 삭제하시겠습니까?')) return
+
+    try {
+      const { error } = await supabase
+        .from('comments')
+        .delete()
+        .eq('id', replyId)
+        .eq('user_id', user?.id)
+
+      if (error) {
+        console.error('대댓글 삭제 실패:', error)
+        toast.error('대댓글 삭제에 실패했습니다.')
+      } else {
+        // 해당 댓글의 대댓글 목록 새로고침
+        const updatedReplies = await loadReplies(parentCommentId)
+        setReplies(prev => ({
+          ...prev,
+          [parentCommentId]: updatedReplies
+        }))
+
+        toast.success('대댓글이 삭제되었습니다.')
+      }
+    } catch (error) {
+      console.error('대댓글 삭제 중 오류:', error)
+      toast.error('대댓글 삭제 중 오류가 발생했습니다.')
     }
   }
 
@@ -394,6 +576,110 @@ export default function PostDetailClient({ post, initialComments }: PostDetailCl
                         </div>
                       ) : (
                         <p className="text-gray-700 whitespace-pre-wrap">{comment.content}</p>
+                      )}
+
+                      {/* 대댓글 버튼들 */}
+                      <div className="mt-2 flex items-center gap-3 text-xs">
+                        <button
+                          onClick={() => toggleReplyForm(comment.id)}
+                          className="text-blue-500 hover:text-blue-600 transition-colors"
+                        >
+                          대댓글 달기
+                        </button>
+                        {replies[comment.id] && replies[comment.id].length > 0 && (
+                          <button
+                            onClick={() => toggleReplies(comment.id)}
+                            className="text-gray-500 hover:text-gray-600 transition-colors"
+                          >
+                            {showReplies[comment.id] ? '대댓글 숨기기' : `대댓글 ${replies[comment.id].length}개 보기`}
+                          </button>
+                        )}
+                      </div>
+
+                      {/* 대댓글 작성 폼 */}
+                      {replyForms[comment.id] && (
+                        <div className="mt-3 ml-6 p-3 bg-gray-50 rounded-lg">
+                          <textarea
+                            value={replyContents[comment.id] || ''}
+                            onChange={(e) => setReplyContents(prev => ({
+                              ...prev,
+                              [comment.id]: e.target.value
+                            }))}
+                            placeholder="대댓글을 입력하세요..."
+                            className="w-full p-2 text-sm border border-gray-200 rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            rows={2}
+                            maxLength={300}
+                            disabled={replySubmitting[comment.id]}
+                          />
+                          <div className="flex justify-between items-center mt-2">
+                            <div className="text-xs text-gray-500">
+                              {(replyContents[comment.id] || '').length}/300
+                            </div>
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => toggleReplyForm(comment.id)}
+                                className="text-xs bg-gray-500 text-white px-2 py-1 rounded hover:bg-gray-600 transition-colors"
+                              >
+                                취소
+                              </button>
+                              <button
+                                onClick={() => handleSubmitReply(comment.id)}
+                                disabled={replySubmitting[comment.id] || !replyContents[comment.id]?.trim()}
+                                className={`text-xs px-2 py-1 rounded transition-colors ${
+                                  replySubmitting[comment.id] || !replyContents[comment.id]?.trim()
+                                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                    : 'bg-blue-500 text-white hover:bg-blue-600'
+                                }`}
+                              >
+                                {replySubmitting[comment.id] ? '작성 중...' : '대댓글 작성'}
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* 대댓글 목록 */}
+                      {showReplies[comment.id] && replies[comment.id] && (
+                        <div className="mt-3 ml-6 space-y-3">
+                          {replies[comment.id].map((reply) => (
+                            <div key={reply.id} className="bg-gray-50 p-3 rounded-lg border-l-2 border-blue-200">
+                              <div className="flex items-start gap-2">
+                                {reply.authorImage ? (
+                                  <img
+                                    src={reply.authorImage}
+                                    alt={reply.author}
+                                    className="w-6 h-6 rounded-full object-cover border border-gray-200"
+                                  />
+                                ) : (
+                                  <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white text-xs font-bold">
+                                    {reply.author.charAt(0)}
+                                  </div>
+                                )}
+                                <div className="flex-1">
+                                  <div className="flex items-center justify-between mb-1">
+                                    <span className="text-sm font-medium text-gray-700">
+                                      {reply.author}
+                                    </span>
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-xs text-gray-500">
+                                        {formatDate(reply.created_at)}
+                                      </span>
+                                      {user && reply.user_id === user.id && (
+                                        <button
+                                          onClick={() => handleDeleteReply(reply.id, comment.id)}
+                                          className="text-xs text-red-500 hover:text-red-600 transition-colors"
+                                        >
+                                          삭제
+                                        </button>
+                                      )}
+                                    </div>
+                                  </div>
+                                  <p className="text-sm text-gray-700 leading-relaxed">{reply.content}</p>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
                       )}
                     </div>
                   </div>
