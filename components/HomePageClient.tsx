@@ -239,6 +239,32 @@ export default function HomePageClient({ initialWhiskies }: HomePageClientProps)
             </div>
           </header>
 
+          {/* 추천 섹션 - 검색이나 모든 위스키 모드에서 숨김 */}
+          {!searchQuery.trim() && !showAllWhiskies && (
+            <section className="mb-8 sm:mb-12">
+              <h2 className="text-lg font-bold text-gray-800 mb-6">추천</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
+                {(() => {
+                  // 이미지가 있는 위스키들을 우선적으로 표시
+                  const whiskiesWithImages = whiskies.filter(whisky =>
+                    whisky.image &&
+                    !whisky.image.includes('no.pic') &&
+                    whisky.image.trim() !== ''
+                  );
+
+                  // 이미지가 있는 위스키가 4개 미만이면 나머지로 채움
+                  const recommendedWhiskies = whiskiesWithImages.length >= 4
+                    ? whiskiesWithImages.slice(0, 4)
+                    : [...whiskiesWithImages, ...whiskies.filter(w => !whiskiesWithImages.includes(w))].slice(0, 4);
+
+                  return recommendedWhiskies.map((whisky) => (
+                    <WhiskyCard key={whisky.id} whisky={whisky} router={router} navigateWithTransition={navigateWithTransition} />
+                  ));
+                })()}
+              </div>
+            </section>
+          )}
+
           {/* 메인 위스키 섹션 */}
           <section className="mb-8 sm:mb-12">
             {/* 모바일: 세로 레이아웃 */}
@@ -264,7 +290,13 @@ export default function HomePageClient({ initialWhiskies }: HomePageClientProps)
                   type="text"
                   placeholder="위스키 검색..."
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value)
+                    // 검색어가 입력되면 자동으로 더보기 모드 활성화
+                    if (e.target.value.trim() && !showAllWhiskies) {
+                      handleToggleShowAll()
+                    }
+                  }}
                   className="border border-rose-400 px-4 py-3 pr-10 text-sm bg-rose-50 rounded-lg w-full focus:outline-none focus:border-rose-600 focus:bg-white placeholder-rose-500 text-rose-800 transition-all duration-200"
                 />
                 <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-rose-500">
@@ -339,7 +371,13 @@ export default function HomePageClient({ initialWhiskies }: HomePageClientProps)
                   type="text"
                   placeholder="위스키 이름, 지역, 캐스크 등..."
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value)
+                    // 검색어가 입력되면 자동으로 더보기 모드 활성화
+                    if (e.target.value.trim() && !showAllWhiskies) {
+                      handleToggleShowAll()
+                    }
+                  }}
                   className="border border-rose-400 px-4 py-2 pr-10 text-sm bg-rose-50 rounded-lg w-64 focus:outline-none focus:border-rose-600 focus:bg-white placeholder-rose-500 text-rose-800 transition-all duration-200"
                 />
                 <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-rose-500">
@@ -383,8 +421,8 @@ export default function HomePageClient({ initialWhiskies }: HomePageClientProps)
                       const endIndex = startIndex + itemsPerPage
                       whiskiesToShow = filteredWhiskies.slice(startIndex, endIndex)
                     } else {
-                      // 초기 모드: 처음 위스키들만 표시
-                      whiskiesToShow = filteredWhiskies.slice(0, 12)
+                      // 초기 모드: 처음 위스키들만 표시 (8개로 변경)
+                      whiskiesToShow = filteredWhiskies.slice(0, 8)
                     }
 
                     return whiskiesToShow.map((whisky) => (
@@ -454,31 +492,6 @@ export default function HomePageClient({ initialWhiskies }: HomePageClientProps)
             )}
           </section>
 
-          {/* 추천 섹션 - 검색이나 모든 위스키 모드에서 숨김 */}
-          {!searchQuery.trim() && !showAllWhiskies && (
-            <section className="mb-12">
-              <h2 className="text-lg font-bold text-gray-800 mb-6">추천</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
-                {(() => {
-                  // 이미지가 있는 위스키들을 우선적으로 표시
-                  const whiskiesWithImages = whiskies.filter(whisky =>
-                    whisky.image &&
-                    !whisky.image.includes('no.pic') &&
-                    whisky.image.trim() !== ''
-                  );
-
-                  // 이미지가 있는 위스키가 4개 미만이면 나머지로 채움
-                  const recommendedWhiskies = whiskiesWithImages.length >= 4
-                    ? whiskiesWithImages.slice(0, 4)
-                    : [...whiskiesWithImages, ...whiskies.filter(w => !whiskiesWithImages.includes(w))].slice(0, 4);
-
-                  return recommendedWhiskies.map((whisky) => (
-                    <WhiskyCard key={whisky.id} whisky={whisky} router={router} navigateWithTransition={navigateWithTransition} />
-                  ));
-                })()}
-              </div>
-            </section>
-          )}
 
           {/* 커뮤니티 섹션 - 검색이나 모든 위스키 모드에서 숨김 */}
           {!searchQuery.trim() && !showAllWhiskies && (
