@@ -22,10 +22,7 @@ export default async function PostDetailPage({ params }: PostDetailPageProps) {
       title,
       content,
       image_url,
-      likes_count,
-      comments_count,
       created_at,
-      updated_at,
       profiles (
         nickname,
         avatar_url
@@ -38,25 +35,33 @@ export default async function PostDetailPage({ params }: PostDetailPageProps) {
     redirect('/community')
   }
 
-  // 서버에서 댓글 데이터 로드
-  const { data: comments, error: commentsError } = await supabase
-    .from('comments')
-    .select(`
-      id,
-      user_id,
-      post_id,
-      content,
-      created_at,
-      updated_at,
-      profiles (
-        nickname,
-        avatar_url
-      )
-    `)
-    .eq('post_id', postId)
-    .order('created_at', { ascending: true })
+  // 서버에서 댓글 데이터 로드 (comments 테이블이 존재하지 않을 수 있으므로 안전하게 처리)
+  let comments: any[] = []
+  try {
+    const { data: commentsData, error: commentsError } = await supabase
+      .from('comments')
+      .select(`
+        id,
+        user_id,
+        post_id,
+        content,
+        created_at,
+        profiles (
+          nickname,
+          avatar_url
+        )
+      `)
+      .eq('post_id', postId)
+      .order('created_at', { ascending: true })
 
-  // 댓글 로드 오류는 치명적이지 않으므로 빈 배열로 처리
+    if (!commentsError && commentsData) {
+      comments = commentsData
+    }
+  } catch (error) {
+    // comments 테이블이 존재하지 않으면 빈 배열로 처리
+    console.log('Comments table does not exist, using empty array')
+    comments = []
+  }
 
   // 데이터 변환
   const transformedPost = {
@@ -65,10 +70,9 @@ export default async function PostDetailPage({ params }: PostDetailPageProps) {
     title: post.title,
     content: post.content,
     image_url: post.image_url,
-    likes_count: post.likes_count || 0,
-    comments_count: post.comments_count || 0,
+    likes_count: 0, // Default to 0 since likes_count doesn't exist yet
+    comments_count: comments?.length || 0, // Count comments array length
     created_at: post.created_at,
-    updated_at: post.updated_at,
     profiles: Array.isArray(post.profiles) ? post.profiles[0] : post.profiles,
     author: Array.isArray(post.profiles) ? (post.profiles[0]?.nickname || '익명 사용자') : ((post.profiles as any)?.nickname || '익명 사용자'),
     authorImage: Array.isArray(post.profiles) ? (post.profiles[0]?.avatar_url || null) : ((post.profiles as any)?.avatar_url || null)
@@ -80,7 +84,6 @@ export default async function PostDetailPage({ params }: PostDetailPageProps) {
     post_id: comment.post_id,
     content: comment.content,
     created_at: comment.created_at,
-    updated_at: comment.updated_at,
     profiles: Array.isArray(comment.profiles) ? comment.profiles[0] : comment.profiles,
     author: Array.isArray(comment.profiles) ? (comment.profiles[0]?.nickname || '익명 사용자') : ((comment.profiles as any)?.nickname || '익명 사용자'),
     authorImage: Array.isArray(comment.profiles) ? (comment.profiles[0]?.avatar_url || null) : ((comment.profiles as any)?.avatar_url || null)
