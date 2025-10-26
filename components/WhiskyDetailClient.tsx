@@ -1083,35 +1083,6 @@ export default function WhiskyDetailClient({ whisky, initialReviews }: WhiskyDet
                   {myReview ? '내 노트 수정하기' : '내 노트 작성하기'}
                 </button>
               )}
-              {myReview && myReview.note && (
-                <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                  <div className="flex items-center justify-between mb-2">
-                    <h4 className="font-medium text-gray-800">내 리뷰</h4>
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={handleReviewEdit}
-                        className="text-xs bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600 transition-colors"
-                      >
-                        수정하기
-                      </button>
-                      <button
-                        onClick={handleReviewDelete}
-                        className="text-xs bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600 transition-colors"
-                      >
-                        삭제하기
-                      </button>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-yellow-400">★</span>
-                    <span className="font-bold">{myReview.rating}점</span>
-                  </div>
-                  <p className="text-gray-700 text-sm">{myReview.note}</p>
-                  <div className="mt-2 text-xs text-gray-500">
-                    {new Date(myReview.created_at).toLocaleDateString('ko-KR')}
-                  </div>
-                </div>
-              )}
             </div>
 
             {/* 노트 작성 폼 */}
@@ -1190,14 +1161,30 @@ export default function WhiskyDetailClient({ whisky, initialReviews }: WhiskyDet
                           </div>
                         )}
                       </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium text-gray-800">내가 남긴 리뷰</span>
-                        {myReview.rating > 0 && (
-                          <div className="flex items-center gap-1">
-                            <span className="text-amber-500">★</span>
-                            <span className="text-sm font-medium text-gray-700">{myReview.rating}</span>
-                          </div>
-                        )}
+                      <div className="flex items-center justify-between flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium text-gray-800">내가 남긴 리뷰</span>
+                          {myReview.rating > 0 && (
+                            <div className="flex items-center gap-1">
+                              <span className="text-amber-500">★</span>
+                              <span className="text-sm font-medium text-gray-700">{myReview.rating}</span>
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={handleReviewEdit}
+                            className="text-xs bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600 transition-colors"
+                          >
+                            수정
+                          </button>
+                          <button
+                            onClick={handleReviewDelete}
+                            className="text-xs bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600 transition-colors"
+                          >
+                            삭제
+                          </button>
+                        </div>
                       </div>
                     </div>
                     <div className="bg-white p-3 rounded-lg border border-gray-200">
@@ -1206,7 +1193,7 @@ export default function WhiskyDetailClient({ whisky, initialReviews }: WhiskyDet
                       </p>
                     </div>
                     <div className="mt-3 text-xs text-gray-500 text-center">
-                      리뷰를 수정하려면 아래 "노트 작성" 버튼을 이용해주세요.
+                      {new Date(myReview.created_at).toLocaleDateString('ko-KR')}
                     </div>
                   </div>
                 ) : (

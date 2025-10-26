@@ -1,8 +1,10 @@
 'use client'
 
-import React from 'react'
+import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/app/context/AuthContext'
+import { supabase } from '@/lib/supabase'
+import toast from 'react-hot-toast'
 
 interface Post {
   id: string
@@ -44,6 +46,13 @@ export default function PostDetailClient({ post, initialComments }: PostDetailCl
   const router = useRouter()
   const { user } = useAuth()
 
+  // 댓글 관련 상태
+  const [comments, setComments] = useState<Comment[]>(initialComments)
+  const [newComment, setNewComment] = useState('')
+  const [isSubmittingComment, setIsSubmittingComment] = useState(false)
+  const [editingCommentId, setEditingCommentId] = useState<string | null>(null)
+  const [editCommentContent, setEditCommentContent] = useState('')
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
     const now = new Date()
@@ -51,6 +60,132 @@ export default function PostDetailClient({ post, initialComments }: PostDetailCl
     if (diffInHours < 1) return '방금 전'
     if (diffInHours < 24) return `${diffInHours}시간 전`
     return date.toLocaleDateString('ko-KR')
+  }
+
+  // 댓글 새로고침
+  const refreshComments = async () => {
+    const { data: commentsData, error } = await supabase
+      .from('comments')
+      .select(`
+        id,
+        user_id,
+        content,
+        created_at,
+        post_id,
+        profiles (
+          nickname,
+          avatar_url
+        )
+      `)
+      .eq('post_id', post.id)
+      .order('created_at', { ascending: true })
+
+    if (!error && commentsData) {
+      const transformedComments = commentsData.map((comment: any) => ({
+        id: comment.id,
+        user_id: comment.user_id,
+        post_id: comment.post_id,
+        content: comment.content,
+        created_at: comment.created_at,
+        profiles: comment.profiles,
+        author: comment.profiles?.nickname || '익명 사용자',
+        authorImage: comment.profiles?.avatar_url || null
+      }))
+      setComments(transformedComments)
+    }
+  }
+
+  // 댓글 작성
+  const handleAddComment = async () => {
+    if (!user) {
+      toast('로그인이 필요합니다.')
+      router.push('/login')
+      return
+    }
+
+    if (!newComment.trim()) {
+      toast('댓글 내용을 입력해주세요.')
+      return
+    }
+
+    setIsSubmittingComment(true)
+
+    try {
+      const { error } = await supabase
+        .from('comments')
+        .insert([{
+          post_id: post.id,
+          user_id: user.id,
+          content: newComment.trim()
+        }])
+
+      if (error) {
+        console.error('댓글 작성 실패:', error)
+        toast.error('댓글 작성에 실패했습니다.')
+      } else {
+        setNewComment('')
+        await refreshComments()
+        toast.success('댓글이 작성되었습니다.')
+      }
+    } catch (error) {
+      console.error('댓글 작성 중 오류:', error)
+      toast.error('댓글 작성 중 오류가 발생했습니다.')
+    } finally {
+      setIsSubmittingComment(false)
+    }
+  }
+
+  // 댓글 수정
+  const handleEditComment = async (commentId: string) => {
+    if (!editCommentContent.trim()) {
+      toast('댓글 내용을 입력해주세요.')
+      return
+    }
+
+    try {
+      const { error } = await supabase
+        .from('comments')
+        .update({ content: editCommentContent.trim() })
+        .eq('id', commentId)
+        .eq('user_id', user?.id)
+
+      if (error) {
+        console.error('댓글 수정 실패:', error)
+        toast.error('댓글 수정에 실패했습니다.')
+      } else {
+        setEditingCommentId(null)
+        setEditCommentContent('')
+        await refreshComments()
+        toast.success('댓글이 수정되었습니다.')
+      }
+    } catch (error) {
+      console.error('댓글 수정 중 오류:', error)
+      toast.error('댓글 수정 중 오류가 발생했습니다.')
+    }
+  }
+
+  // 댓글 삭제
+  const handleDeleteComment = async (commentId: string) => {
+    if (!confirm('정말로 이 댓글을 삭제하시겠습니까?')) return
+
+    try {
+      const { error } = await supabase
+        .from('comments')
+        .delete()
+        .eq('id', commentId)
+        .eq('user_id', user?.id)
+
+      if (error) {
+        console.error('댓글 삭제 실패:', error)
+        toast.error('댓글 삭제에 실패했습니다.')
+      } else {
+        await refreshComments()
+        toast.success('댓글이 삭제되었습니다.')
+      }
+    } catch (error) {
+      console.error('댓글 삭제 중 오류:', error)
+      toast.error('댓글 삭제 중 오류가 발생했습니다.')
+    }
   }
 
   return (
@@ -147,26 +282,51 @@ export default function PostDetailClient({ post, initialComments }: PostDetailCl
         {/* 댓글 섹션 */}
         <div className="bg-white rounded-xl p-8 shadow-sm border border-gray-100">
           <h3 className="text-xl font-bold text-gray-800 mb-6">
-            댓글 ({initialComments.length})
+            댓글 ({comments.length})
           </h3>
 
-          {initialComments.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              아직 댓글이 없습니다.
-              {!user && (
-                <div className="mt-2">
-                  <button
-                    onClick={() => router.push('/login')}
-                    className="text-blue-500 hover:text-blue-600 underline"
-                  >
-                    로그인하고 첫 댓글을 작성해보세요!
-                  </button>
-                </div>
-              )}
+          {/* 댓글 작성 */}
+          {user && (
+            <div className="mb-8 p-4 bg-gray-50 rounded-lg">
+              <textarea
+                value={newComment}
+                onChange={(e) => setNewComment(e.target.value)}
+                placeholder="댓글을 입력하세요..."
+                className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                rows={3}
+                maxLength={500}
+              />
+              <div className="flex items-center justify-between mt-3">
+                <div className="text-xs text-gray-500">{newComment.length}/500</div>
+                <button
+                  onClick={handleAddComment}
+                  disabled={!newComment.trim() || isSubmittingComment}
+                  className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isSubmittingComment ? '작성 중...' : '댓글 작성'}
+                </button>
+              </div>
             </div>
-          ) : (
-            <div className="space-y-4">
-              {initialComments.map((comment) => (
+          )}
+
+          {/* 댓글 목록 */}
+          <div className="space-y-4">
+            {comments.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                아직 댓글이 없습니다.
+                {!user && (
+                  <div className="mt-2">
+                    <button
+                      onClick={() => router.push('/login')}
+                      className="text-blue-500 hover:text-blue-600 underline"
+                    >
+                      로그인하고 첫 댓글을 작성해보세요!
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              comments.map((comment) => (
                 <div key={comment.id} className="border-b border-gray-100 pb-4 last:border-b-0">
                   <div className="flex items-start gap-3 mb-2">
                     {comment.authorImage ? (
@@ -183,23 +343,64 @@ export default function PostDetailClient({ post, initialComments }: PostDetailCl
                     <div className="flex-1">
                       <div className="flex items-center justify-between mb-1">
                         <span className="font-medium text-gray-800">{comment.author}</span>
-                        <span className="text-sm text-gray-500">{formatDate(comment.created_at)}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm text-gray-500">{formatDate(comment.created_at)}</span>
+                          {user && comment.user_id === user.id && (
+                            <div className="flex gap-1">
+                              <button
+                                onClick={() => {
+                                  setEditingCommentId(comment.id)
+                                  setEditCommentContent(comment.content)
+                                }}
+                                className="text-xs text-blue-500 hover:text-blue-600"
+                              >
+                                수정
+                              </button>
+                              <button
+                                onClick={() => handleDeleteComment(comment.id)}
+                                className="text-xs text-red-500 hover:text-red-600"
+                              >
+                                삭제
+                              </button>
+                            </div>
+                          )}
+                        </div>
                       </div>
-                      <p className="text-gray-700 whitespace-pre-wrap">{comment.content}</p>
+                      {editingCommentId === comment.id ? (
+                        <div className="space-y-2">
+                          <textarea
+                            value={editCommentContent}
+                            onChange={(e) => setEditCommentContent(e.target.value)}
+                            className="w-full p-2 border border-gray-300 rounded text-sm resize-none"
+                            rows={2}
+                          />
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => handleEditComment(comment.id)}
+                              className="bg-green-500 text-white px-2 py-1 rounded text-xs hover:bg-green-600"
+                            >
+                              저장
+                            </button>
+                            <button
+                              onClick={() => {
+                                setEditingCommentId(null)
+                                setEditCommentContent('')
+                              }}
+                              className="bg-gray-500 text-white px-2 py-1 rounded text-xs hover:bg-gray-600"
+                            >
+                              취소
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <p className="text-gray-700 whitespace-pre-wrap">{comment.content}</p>
+                      )}
                     </div>
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
-
-          {user && (
-            <div className="mt-8 p-4 bg-gray-50 rounded-lg">
-              <p className="text-gray-600 text-center">
-                댓글 기능은 현재 개발 중입니다.
-              </p>
-            </div>
-          )}
+              ))
+            )}
+          </div>
         </div>
       </div>
     </div>
