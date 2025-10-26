@@ -7,25 +7,19 @@ export async function POST() {
   try {
     console.log('🔧 [API] Creating test community data...')
 
-    // 샘플 데이터 생성
+    // 샘플 데이터 생성 (최소한의 필드만)
     const samplePosts = [
       {
         title: '위스키 입문자를 위한 추천 목록',
-        content: '처음 위스키를 시작하는 분들을 위한 추천 목록을 정리해봤습니다.',
-        likes_count: 15,
-        comments_count: 8
+        content: '처음 위스키를 시작하는 분들을 위한 추천 목록을 정리해봤습니다.'
       },
       {
         title: '스코틀랜드 여행 후기',
-        content: '스코틀랜드 위스키 증류소 투어를 다녀온 후기입니다.',
-        likes_count: 23,
-        comments_count: 12
+        content: '스코틀랜드 위스키 증류소 투어를 다녀온 후기입니다.'
       },
       {
         title: '일본 위스키 vs 스코틀랜드 위스키',
-        content: '두 위스키의 특징과 차이점에 대해 이야기해보겠습니다.',
-        likes_count: 31,
-        comments_count: 19
+        content: '두 위스키의 특징과 차이점에 대해 이야기해보겠습니다.'
       }
     ]
 

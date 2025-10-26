@@ -15,8 +15,6 @@ export async function GET() {
         id,
         title,
         created_at,
-        likes_count,
-        comments_count,
         profiles (
           nickname,
           avatar_url
@@ -53,8 +51,8 @@ export async function GET() {
       author: p.profiles?.nickname ?? '익명',
       authorImage: p.profiles?.avatar_url ?? null,
       createdAt: p.created_at,
-      likes: p.likes_count ?? 0,
-      comments: p.comments_count ?? 0,
+      likes: 0, // Default to 0 since likes_count doesn't exist yet
+      comments: 0, // Default to 0 since comments_count doesn't exist yet
     }))
 
     console.log('✅ [API] Final payload:', {

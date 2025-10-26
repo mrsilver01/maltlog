@@ -8,24 +8,18 @@ const AVATAR_BUCKET = 'avatars'
 const MAX_FILE_SIZE = 2 * 1024 * 1024 // 2MB
 const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
 
-// 버킷이 존재하지 않으면 생성
+// 버킷이 존재하지 않으면 생성 (간소화된 버전)
 async function ensureBucketExists(): Promise<boolean> {
   try {
-    // 버킷 목록 확인
-    const { data: buckets, error: listError } = await supabase.storage.listBuckets()
+    // 단순히 버킷에 접근을 시도해보기
+    const { data: testData, error: testError } = await supabase.storage
+      .from(AVATAR_BUCKET)
+      .list('', { limit: 1 })
 
-    if (listError) {
-      console.error('버킷 목록 확인 실패:', listError)
-      return false
-    }
-
-    // avatars 버킷이 존재하는지 확인
-    const avatarBucket = buckets?.find(bucket => bucket.name === AVATAR_BUCKET)
-
-    if (!avatarBucket) {
+    // 버킷이 존재하지 않는 경우에만 생성 시도
+    if (testError && testError.message?.includes('not found')) {
       console.log('avatars 버킷이 없습니다. 생성 중...')
 
-      // 버킷 생성
       const { error: createError } = await supabase.storage.createBucket(AVATAR_BUCKET, {
         public: true,
         allowedMimeTypes: ALLOWED_TYPES,
@@ -38,12 +32,16 @@ async function ensureBucketExists(): Promise<boolean> {
       }
 
       console.log('✅ avatars 버킷 생성 완료')
+    } else if (testError) {
+      console.warn('버킷 접근 테스트 중 오류 (계속 진행):', testError.message)
+      // 다른 오류는 무시하고 계속 진행 (권한 문제일 수 있지만 업로드는 시도)
     }
 
     return true
   } catch (error) {
-    console.error('버킷 확인/생성 중 오류:', error)
-    return false
+    console.error('버킷 확인 중 오류 (계속 진행):', error)
+    // 에러가 있어도 true를 반환해서 업로드 시도는 하도록 함
+    return true
   }
 }
 
