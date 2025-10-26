@@ -263,7 +263,10 @@ export default function HomePageClient({ initialWhiskies }: HomePageClientProps)
                     );
 
                     while (recommendedWhiskies.length < 4 && whiskiesWithImages.length > 0) {
-                      recommendedWhiskies.push(whiskiesWithImages.shift());
+                      const whisky = whiskiesWithImages.shift();
+                      if (whisky) {
+                        recommendedWhiskies.push(whisky);
+                      }
                     }
                   }
 
