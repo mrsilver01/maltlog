@@ -8,7 +8,7 @@ export default function AgeGate() {
   useEffect(() => {
     // 쿠키에서 연령 확인 여부 체크
     const hasAgeConfirmed = typeof window !== 'undefined' &&
-      document.cookie.includes('age_confirmed=true')
+      document.cookie.includes('age_ok=1')
 
     if (!hasAgeConfirmed) {
       setOpen(true)
@@ -18,7 +18,7 @@ export default function AgeGate() {
   const handleConfirmAge = () => {
     // 1년간 유지되는 쿠키 설정
     const oneYear = 60 * 60 * 24 * 365
-    document.cookie = `age_confirmed=true; Max-Age=${oneYear}; Path=/; SameSite=Lax`
+    document.cookie = `age_ok=1; Max-Age=${oneYear}; Path=/; SameSite=Lax`
     setOpen(false)
   }
 
