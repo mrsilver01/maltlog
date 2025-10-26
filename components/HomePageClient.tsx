@@ -245,19 +245,29 @@ export default function HomePageClient({ initialWhiskies }: HomePageClientProps)
               <h2 className="text-lg font-bold text-gray-800 mb-6">추천</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
                 {(() => {
-                  // 이미지가 있는 위스키들을 우선적으로 표시
-                  const whiskiesWithImages = whiskies.filter(whisky =>
-                    whisky.image &&
-                    !whisky.image.includes('no.pic') &&
-                    whisky.image.trim() !== ''
-                  );
+                  // 특정 추천 위스키 ID들
+                  const recommendedIds = ['mortlach-16', 'bowmore-18', 'wild-turkey-rare-breed', 'springbank-10'];
 
-                  // 이미지가 있는 위스키가 4개 미만이면 나머지로 채움
-                  const recommendedWhiskies = whiskiesWithImages.length >= 4
-                    ? whiskiesWithImages.slice(0, 4)
-                    : [...whiskiesWithImages, ...whiskies.filter(w => !whiskiesWithImages.includes(w))].slice(0, 4);
+                  // 추천 위스키들을 찾아서 표시
+                  const recommendedWhiskies = recommendedIds
+                    .map(id => whiskies.find(whisky => whisky.id === id))
+                    .filter(whisky => whisky !== undefined);
 
-                  return recommendedWhiskies.map((whisky) => (
+                  // 만약 추천 위스키가 4개 미만이면 이미지가 있는 위스키로 채움
+                  if (recommendedWhiskies.length < 4) {
+                    const whiskiesWithImages = whiskies.filter(whisky =>
+                      whisky.image &&
+                      !whisky.image.includes('no.pic') &&
+                      whisky.image.trim() !== '' &&
+                      !recommendedWhiskies.includes(whisky)
+                    );
+
+                    while (recommendedWhiskies.length < 4 && whiskiesWithImages.length > 0) {
+                      recommendedWhiskies.push(whiskiesWithImages.shift());
+                    }
+                  }
+
+                  return recommendedWhiskies.slice(0, 4).map((whisky) => (
                     <WhiskyCard key={whisky.id} whisky={whisky} router={router} navigateWithTransition={navigateWithTransition} />
                   ));
                 })()}

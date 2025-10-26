@@ -259,6 +259,17 @@ export default function LoginPage() {
               홈으로 돌아가기
             </button>
           </div>
+
+          {/* 청소년보호법 고지 */}
+          <div className="mt-6 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+            <p className="text-xs text-gray-600 text-center leading-relaxed">
+              <strong>청소년보호법 제28조</strong>에 따라 몰트로그는 주류 정보를 포함하므로<br />
+              <strong>만 19세 미만의 청소년은 이용할 수 없습니다.</strong>
+            </p>
+            <p className="text-xs text-gray-500 text-center mt-1">
+              과도한 음주는 건강에 해롭습니다.
+            </p>
+          </div>
         </div>
       </div>
     </div>

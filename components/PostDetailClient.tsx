@@ -370,6 +370,30 @@ export default function PostDetailClient({ post, initialComments }: PostDetailCl
     }
   }
 
+  // 게시글 삭제
+  const handleDeletePost = async () => {
+    if (!confirm('정말로 이 게시글을 삭제하시겠습니까?')) return
+
+    try {
+      const { error } = await supabase
+        .from('posts')
+        .delete()
+        .eq('id', post.id)
+        .eq('user_id', user?.id)
+
+      if (error) {
+        console.error('게시글 삭제 실패:', error)
+        toast.error('게시글 삭제에 실패했습니다.')
+      } else {
+        toast.success('게시글이 삭제되었습니다.')
+        router.push('/community')
+      }
+    } catch (error) {
+      console.error('게시글 삭제 중 오류:', error)
+      toast.error('게시글 삭제 중 오류가 발생했습니다.')
+    }
+  }
+
   return (
     <div className="min-h-screen bg-rose-50 p-6">
       {/* Header */}
@@ -438,6 +462,14 @@ export default function PostDetailClient({ post, initialComments }: PostDetailCl
                   <span className="text-gray-400">💬</span>
                   <span className="text-gray-600">{post.comments_count}</span>
                 </span>
+                {user && post.user_id === user.id && (
+                  <button
+                    onClick={handleDeletePost}
+                    className="text-sm text-red-500 hover:text-red-600 transition-colors bg-red-50 hover:bg-red-100 px-3 py-1 rounded-full"
+                  >
+                    삭제
+                  </button>
+                )}
               </div>
             </div>
           </div>

@@ -3,6 +3,8 @@ import { Geist, Geist_Mono, Jolly_Lodger } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from './context/AuthContext';
 import { Toaster } from 'react-hot-toast';
+import AgeGate from '@/components/AgeGate';
+import AnnouncementBanner from '@/components/AnnouncementBanner';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -36,7 +38,14 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} ${jollyLodger.variable} antialiased`}
       >
         <AuthProvider>
+          {/* 연령 게이트 - 최초 방문시 표시 */}
+          <AgeGate />
+
+          {/* 공지사항 배너 - 헤더 바로 아래 */}
+          <AnnouncementBanner />
+
           {children}
+
           <Toaster
             position="top-center"
             toastOptions={{
