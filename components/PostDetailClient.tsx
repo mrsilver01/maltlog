@@ -13,7 +13,7 @@ interface Post {
   title: string
   content: string
   image_url?: string
-  likes_count: number
+  likes_count?: number
   comments_count: number
   created_at: string
   profiles?: {
@@ -63,7 +63,7 @@ export default function PostDetailClient({ post, initialComments }: PostDetailCl
 
   // 좋아요 관련 상태
   const [isLiked, setIsLiked] = useState<boolean>(false)
-  const [likesCount, setLikesCount] = useState<number>(post.likes_count)
+  const [likesCount, setLikesCount] = useState<number>(post.likes_count || 0)
   const [likesLoading, setLikesLoading] = useState<boolean>(true)
 
   const formatDate = (dateString: string) => {

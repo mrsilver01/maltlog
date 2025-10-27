@@ -670,48 +670,48 @@ function WhiskyCard({ whisky, navigateWithTransition }: { whisky: WhiskyData, ro
 
       {/* 평점 */}
       <div className="flex items-center justify-center gap-1 text-xs text-gray-500">
-        {whisky.avgRating > 0 ? (
+        {whisky.avgRating && whisky.avgRating > 0 ? (
           // 별점이 있는 경우: 실제 점수에 맞는 별 표시
           <div className="flex items-center gap-0.5">
             {[1, 2, 3, 4, 5].map((starIndex) => {
-              const rating = whisky.avgRating;
+              const rating = Number(whisky.avgRating);
               const fullStars = Math.floor(rating);
               const hasHalfStar = rating % 1 >= 0.5;
 
               if (starIndex <= fullStars) {
                 // 채워진 노란 별
                 return (
-                  <span key={starIndex} className="text-yellow-400">
+                  <span key={starIndex} className="text-yellow-500 text-sm">
                     ★
                   </span>
                 );
               } else if (starIndex === fullStars + 1 && hasHalfStar) {
-                // 반별: 노란색으로 표시하되 시각적으로 구분
+                // 반별: 약간 어두운 노란색
                 return (
-                  <span key={starIndex} className="text-yellow-400" style={{ filter: 'brightness(0.7)' }}>
+                  <span key={starIndex} className="text-yellow-400 text-sm">
                     ★
                   </span>
                 );
               } else {
-                // 투명한 별
+                // 빈 별 (투명)
                 return (
-                  <span key={starIndex} className="text-gray-300">
+                  <span key={starIndex} className="text-gray-300 text-sm">
                     ☆
                   </span>
                 );
               }
             })}
-            <span className="ml-1 text-gray-600">{whisky.avgRating.toFixed(1)}</span>
+            <span className="ml-1 text-gray-600 text-xs">{Number(whisky.avgRating).toFixed(1)}</span>
           </div>
         ) : (
-          // 별점이 없는 경우: 투명한 별 5개
+          // 별점이 없는 경우: 투명한 별 5개와 "-"
           <div className="flex items-center gap-0.5">
             {[1, 2, 3, 4, 5].map((starIndex) => (
-              <span key={starIndex} className="text-gray-300">
+              <span key={starIndex} className="text-gray-300 text-sm">
                 ☆
               </span>
             ))}
-            <span className="ml-1 text-gray-500">-</span>
+            <span className="ml-1 text-gray-500 text-xs">-</span>
           </div>
         )}
       </div>
