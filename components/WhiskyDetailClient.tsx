@@ -113,8 +113,8 @@ const RatingChart = ({ reviews }: RatingChartProps) => {
   };
 
   return (
-    <div className="flex-1 max-w-xs">
-      <div className="flex items-end justify-center gap-1 h-20 relative">
+    <div className="flex-1 max-w-xs mx-auto">
+      <div className="flex items-end justify-center gap-1 h-16 sm:h-20 relative">
         {ratingCounts.map((count, index) => {
           const rating = index + 1;
           return (
@@ -125,7 +125,7 @@ const RatingChart = ({ reviews }: RatingChartProps) => {
               onMouseLeave={() => setHoveredRating(null)}
             >
               <div
-                className={`w-6 rounded-t transition-all duration-200 ${getBarColor(count, rating)} hover:scale-110 cursor-default`}
+                className={`w-5 sm:w-6 rounded-t transition-all duration-200 ${getBarColor(count, rating)} hover:scale-110 cursor-default`}
                 style={{ height: `${getBarHeight(count)}px` }}
               />
               {hoveredRating === rating && (
@@ -139,12 +139,12 @@ const RatingChart = ({ reviews }: RatingChartProps) => {
       </div>
       <div className="flex justify-center gap-1 mt-2">
         {[1, 2, 3, 4, 5].map(rating => (
-          <div key={rating} className="w-6 text-xs text-gray-500 text-center">
+          <div key={rating} className="w-5 sm:w-6 text-xs text-gray-500 text-center">
             {rating}
           </div>
         ))}
       </div>
-      <div className="text-xs text-gray-500 mt-3 text-center">
+      <div className="text-xs text-gray-500 mt-2 sm:mt-3 text-center">
         {totalReviews}명
       </div>
     </div>
@@ -856,36 +856,36 @@ export default function WhiskyDetailClient({ whisky, initialReviews }: WhiskyDet
   }
 
   return (
-    <div className="min-h-screen bg-rose-50 p-6">
+    <div className="min-h-screen bg-rose-50 p-3 sm:p-6">
       {/* 헤더 - maltlog notes 스타일 */}
-      <header className="flex items-center justify-between mb-8">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-16 flex items-center justify-center">
+      <header className="flex flex-col sm:flex-row items-center justify-between mb-6 sm:mb-8 gap-4 sm:gap-0">
+        <div className="flex items-center gap-2 sm:gap-4">
+          <div className="w-10 sm:w-12 h-12 sm:h-16 flex items-center justify-center">
             <img
               src="/LOGO.png"
               alt="Maltlog Logo"
-              className="w-12 h-12 object-contain"
+              className="w-10 sm:w-12 h-10 sm:h-12 object-contain"
             />
           </div>
-          <h1 className="text-4xl font-bold text-amber-800 font-[family-name:var(--font-jolly-lodger)]">Maltlog</h1>
-          <span className="text-4xl font-bold text-red-500 ml-2 font-[family-name:var(--font-jolly-lodger)]">Notes</span>
+          <h1 className="text-2xl sm:text-4xl font-bold text-amber-800 font-[family-name:var(--font-jolly-lodger)]">Maltlog</h1>
+          <span className="text-2xl sm:text-4xl font-bold text-red-500 ml-1 sm:ml-2 font-[family-name:var(--font-jolly-lodger)]">Notes</span>
         </div>
 
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-3 sm:gap-6">
           <button
             onClick={() => router.push('/')}
-            className="text-xl font-bold text-gray-600 hover:text-red-500 transition-all duration-200 hover:scale-110 transform font-[family-name:var(--font-jolly-lodger)]"
+            className="text-lg sm:text-xl font-bold text-gray-600 hover:text-red-500 transition-all duration-200 hover:scale-110 transform font-[family-name:var(--font-jolly-lodger)]"
           >
             HOME
           </button>
           {user ? (
-            <div className="flex items-center gap-4">
-              <span className="text-sm text-gray-600">
+            <div className="flex items-center gap-2 sm:gap-4">
+              <span className="text-xs sm:text-sm text-gray-600 hidden sm:block">
                 {user.user_metadata?.nickname || '사용자'}님
               </span>
               <button
                 onClick={() => router.push('/profile')}
-                className="bg-gray-600 text-white px-5 py-2 rounded-full text-sm hover:bg-gray-700 transition-all duration-200 hover:scale-110 transform shadow-md hover:shadow-lg"
+                className="bg-gray-600 text-white px-3 sm:px-5 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm hover:bg-gray-700 transition-all duration-200 hover:scale-110 transform shadow-md hover:shadow-lg"
               >
                 프로필
               </button>
@@ -893,7 +893,7 @@ export default function WhiskyDetailClient({ whisky, initialReviews }: WhiskyDet
           ) : (
             <button
               onClick={() => router.push('/login')}
-              className="bg-amber-900 text-white px-5 py-2 rounded-full text-sm hover:bg-amber-800 transition-all duration-200 hover:scale-110 transform shadow-md hover:shadow-lg"
+              className="bg-amber-900 text-white px-3 sm:px-5 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm hover:bg-amber-800 transition-all duration-200 hover:scale-110 transform shadow-md hover:shadow-lg"
             >
               로그인
             </button>
@@ -902,7 +902,7 @@ export default function WhiskyDetailClient({ whisky, initialReviews }: WhiskyDet
       </header>
 
       {/* 뒤로가기 버튼 */}
-      <div className="mb-8 ml-8">
+      <div className="mb-6 sm:mb-8 ml-2 sm:ml-8">
         <button
           onClick={() => router.back()}
           className="bg-rose-100 border border-rose-200 rounded-lg px-3 py-2 hover:bg-rose-150 transition-all duration-200 shadow-sm text-gray-700 hover:text-gray-800 text-sm font-medium hover:scale-105 transform hover:shadow-md hover:border-rose-300"
@@ -912,11 +912,11 @@ export default function WhiskyDetailClient({ whisky, initialReviews }: WhiskyDet
       </div>
 
       {/* 메인 컨텐츠 중앙 정렬 */}
-      <div className="max-w-6xl mx-auto">
-        <div className="flex gap-16 items-start">
-          {/* 왼쪽: 위스키 이미지 */}
-          <div className="flex-shrink-0">
-            <div className="w-72 h-[500px] bg-white border border-gray-200 rounded-xl p-6 flex items-center justify-center shadow-sm">
+      <div className="max-w-6xl mx-auto px-2 sm:px-0">
+        <div className="flex flex-col lg:flex-row gap-6 lg:gap-16 items-start">
+          {/* 위스키 이미지 */}
+          <div className="flex-shrink-0 w-full lg:w-auto flex justify-center lg:block">
+            <div className="w-64 sm:w-72 h-[400px] sm:h-[500px] bg-white border border-gray-200 rounded-xl p-4 sm:p-6 flex items-center justify-center shadow-sm">
               <img
                 src={whisky.image}
                 alt={whisky.name}
@@ -928,16 +928,16 @@ export default function WhiskyDetailClient({ whisky, initialReviews }: WhiskyDet
             </div>
           </div>
 
-          {/* 오른쪽: 위스키 정보 */}
-          <div className="flex-1 max-w-2xl">
+          {/* 위스키 정보 */}
+          <div className="flex-1 w-full lg:max-w-2xl">
             {/* 위스키 이름 & 찜 버튼 */}
-            <div className="flex items-center justify-center gap-4 mb-3">
-              <h2 className="text-4xl font-bold text-red-500">{whisky.name}</h2>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 mb-3">
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-red-500 text-center">{whisky.name}</h2>
               <button
                 aria-label={isWhiskyLikedState ? '찜 취소' : '찜하기'}
                 onClick={toggleWhiskyLike}
                 disabled={whiskyLikeBusy}
-                className={`rounded-full p-3 text-2xl transition-all duration-200 hover:scale-110 transform ${
+                className={`rounded-full p-2 sm:p-3 text-xl sm:text-2xl transition-all duration-200 hover:scale-110 transform ${
                   isWhiskyLikedState ? 'text-red-500 hover:text-red-600' : 'text-gray-400 hover:text-red-400'
                 } ${whiskyLikeBusy ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
                 title={isWhiskyLikedState ? '찜 취소' : '찜하기'}
@@ -947,44 +947,44 @@ export default function WhiskyDetailClient({ whisky, initialReviews }: WhiskyDet
             </div>
 
             {/* 안내 문구 */}
-            <p className="text-sm text-gray-400 mb-8 text-center">
+            <p className="text-xs sm:text-sm text-gray-400 mb-6 sm:mb-8 text-center">
               술 관련 설명이 실제와 다를 수 있습니다.
             </p>
 
             {/* 위스키 상세 정보 */}
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 mb-10">
-              <div className="grid grid-cols-2 gap-y-6 gap-x-12">
+            <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-100 mb-8 sm:mb-10">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-4 sm:gap-y-6 gap-x-4 sm:gap-x-12">
                 <div className="flex justify-between items-center">
-                  <span className="text-lg font-medium text-amber-800">도수</span>
-                  <span className="text-lg font-bold text-amber-900">{whisky.abv}</span>
+                  <span className="text-base sm:text-lg font-medium text-amber-800">도수</span>
+                  <span className="text-base sm:text-lg font-bold text-amber-900">{whisky.abv}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-lg font-medium text-amber-800">지역</span>
-                  <span className="text-lg font-semibold text-amber-900">{whisky.region}</span>
+                  <span className="text-base sm:text-lg font-medium text-amber-800">지역</span>
+                  <span className="text-base sm:text-lg font-semibold text-amber-900">{whisky.region}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-lg font-medium text-amber-800">가격</span>
-                  <span className="text-lg font-semibold text-amber-900">{whisky.price}</span>
+                  <span className="text-base sm:text-lg font-medium text-amber-800">가격</span>
+                  <span className="text-base sm:text-lg font-semibold text-amber-900">{whisky.price}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-lg font-medium text-amber-800">캐스크</span>
-                  <span className="text-lg font-semibold text-amber-900">{whisky.cask}</span>
+                  <span className="text-base sm:text-lg font-medium text-amber-800">캐스크</span>
+                  <span className="text-base sm:text-lg font-semibold text-amber-900">{whisky.cask}</span>
                 </div>
               </div>
             </div>
 
             {/* 평점 섹션 */}
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 mb-8">
-              <h3 className="text-xl font-bold text-gray-800 mb-6 text-center">이 위스키의 평균 별점은?</h3>
-              <div className="flex items-center justify-center gap-12">
+            <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-100 mb-6 sm:mb-8">
+              <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-4 sm:mb-6 text-center">이 위스키의 평균 별점은?</h3>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-6 sm:gap-12">
                 {/* 별점 차트 */}
                 <RatingChart reviews={reviews} />
 
                 {/* 평균 별점 */}
                 <div className="text-center">
                   <div className="flex items-center gap-2 justify-center">
-                    <span className="text-amber-500 text-4xl">★</span>
-                    <span className="text-4xl font-bold text-gray-800">
+                    <span className="text-amber-500 text-3xl sm:text-4xl">★</span>
+                    <span className="text-3xl sm:text-4xl font-bold text-gray-800">
                       {avgRating > 0 ? avgRating : '0.0'}
                     </span>
                   </div>
@@ -996,8 +996,8 @@ export default function WhiskyDetailClient({ whisky, initialReviews }: WhiskyDet
             </div>
 
             {/* 빠른 별점 매기기 섹션 */}
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 mb-8">
-              <h3 className="text-lg font-bold text-amber-800 mb-4 text-center">
+            <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-100 mb-6 sm:mb-8">
+              <h3 className="text-base sm:text-lg font-bold text-amber-800 mb-4 text-center">
                 {!user ? '로그인 후 평가 가능' : hasUserRated ? '내가 매긴 별점' : '이 위스키를 평가해보세요'}
               </h3>
               <div className="flex justify-center">
@@ -1068,7 +1068,7 @@ export default function WhiskyDetailClient({ whisky, initialReviews }: WhiskyDet
             </div>
 
             {/* 노트 작성 버튼 */}
-            <div className="mb-8 text-center">
+            <div className="mb-6 sm:mb-8 text-center">
               {!hasUserReviewed && user && (
                 <button
                   onClick={() => {
@@ -1078,7 +1078,7 @@ export default function WhiskyDetailClient({ whisky, initialReviews }: WhiskyDet
                     }
                     setShowNoteForm(true)
                   }}
-                  className="bg-red-500 text-white px-10 py-3 rounded-xl font-bold hover:bg-red-600 transition-all duration-200 shadow-md hover:shadow-lg hover:scale-110 transform"
+                  className="bg-red-500 text-white px-6 sm:px-10 py-2.5 sm:py-3 rounded-xl font-bold hover:bg-red-600 transition-all duration-200 shadow-md hover:shadow-lg hover:scale-110 transform text-sm sm:text-base"
                 >
                   {myReview ? '내 노트 수정하기' : '내 노트 작성하기'}
                 </button>
@@ -1087,11 +1087,11 @@ export default function WhiskyDetailClient({ whisky, initialReviews }: WhiskyDet
 
             {/* 노트 작성 폼 */}
             {showNoteForm && (
-              <div className="bg-white p-8 rounded-xl border border-gray-200 mb-8 shadow-lg">
-                <h4 className="text-xl font-bold mb-6 text-center text-gray-800">노트 작성하기</h4>
+              <div className="bg-white p-4 sm:p-8 rounded-xl border border-gray-200 mb-6 sm:mb-8 shadow-lg">
+                <h4 className="text-lg sm:text-xl font-bold mb-4 sm:mb-6 text-center text-gray-800">노트 작성하기</h4>
 
                 {/* 별점 선택 */}
-                <div className="mb-6">
+                <div className="mb-4 sm:mb-6">
                   <label className="block text-sm font-medium mb-3 text-center text-amber-800">별점</label>
                   <div className="flex justify-center">
                     <RatingSystem
@@ -1104,7 +1104,7 @@ export default function WhiskyDetailClient({ whisky, initialReviews }: WhiskyDet
                 </div>
 
                 {/* 노트 텍스트 */}
-                <div className="mb-6">
+                <div className="mb-4 sm:mb-6">
                   <label className="block text-sm font-medium mb-3 text-center text-gray-700">노트</label>
                   <textarea
                     value={currentNote}
@@ -1112,23 +1112,23 @@ export default function WhiskyDetailClient({ whisky, initialReviews }: WhiskyDet
                     placeholder="노즈:
 팔레트:
 피니쉬:"
-                    className="w-full h-28 p-4 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-gray-800 placeholder-gray-500"
+                    className="w-full h-24 sm:h-28 p-3 sm:p-4 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-gray-800 placeholder-gray-500 text-sm sm:text-base"
                     disabled={submitting}
                   />
                 </div>
 
-                <div className="flex gap-4 justify-center">
+                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
                   <button
                     onClick={handleReviewSubmit}
                     disabled={submitting}
-                    className="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition-all duration-200 font-medium hover:scale-110 transform shadow-md hover:shadow-lg disabled:opacity-50"
+                    className="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition-all duration-200 font-medium hover:scale-110 transform shadow-md hover:shadow-lg disabled:opacity-50 text-sm sm:text-base"
                   >
                     {submitting ? '저장 중...' : '저장'}
                   </button>
                   <button
                     onClick={() => setShowNoteForm(false)}
                     disabled={submitting}
-                    className="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition-all duration-200 font-medium hover:scale-110 transform shadow-md hover:shadow-lg disabled:opacity-50"
+                    className="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition-all duration-200 font-medium hover:scale-110 transform shadow-md hover:shadow-lg disabled:opacity-50 text-sm sm:text-base"
                   >
                     취소
                   </button>
@@ -1138,8 +1138,8 @@ export default function WhiskyDetailClient({ whisky, initialReviews }: WhiskyDet
 
             {/* 위스키 노트/리뷰 섹션 */}
             <div>
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-xl font-bold text-red-500">위스키 노트/리뷰</h3>
+              <div className="flex items-center justify-between mb-4 sm:mb-6">
+                <h3 className="text-lg sm:text-xl font-bold text-red-500">위스키 노트/리뷰</h3>
               </div>
 
               {/* 새 리뷰 작성 영역 */}
@@ -1491,11 +1491,11 @@ export default function WhiskyDetailClient({ whisky, initialReviews }: WhiskyDet
 
                   {/* 더보기 버튼 */}
                   {hasMoreReviews && (
-                    <div className="text-center mt-8">
+                    <div className="text-center mt-6 sm:mt-8">
                       <button
                         onClick={loadMoreReviews}
                         disabled={loadingMoreReviews}
-                        className="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="bg-blue-500 text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg hover:bg-blue-600 transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
                       >
                         {loadingMoreReviews ? (
                           <div className="flex items-center gap-2">

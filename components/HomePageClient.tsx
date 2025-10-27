@@ -671,7 +671,7 @@ function WhiskyCard({ whisky, navigateWithTransition }: { whisky: WhiskyData, ro
       {/* 평점 */}
       <div className="flex items-center justify-center gap-1 text-xs text-gray-500">
         {whisky.avgRating > 0 ? (
-          // 별점이 있는 경우: 0.5점 단위로 별 표시
+          // 별점이 있는 경우: 실제 점수에 맞는 별 표시
           <div className="flex items-center gap-0.5">
             {[1, 2, 3, 4, 5].map((starIndex) => {
               const rating = whisky.avgRating;
@@ -679,35 +679,39 @@ function WhiskyCard({ whisky, navigateWithTransition }: { whisky: WhiskyData, ro
               const hasHalfStar = rating % 1 >= 0.5;
 
               if (starIndex <= fullStars) {
-                // 채워진 별
+                // 채워진 노란 별
                 return (
-                  <span key={starIndex} className="text-sm text-yellow-400">
-                    ⭐
+                  <span key={starIndex} className="text-yellow-400">
+                    ★
                   </span>
                 );
               } else if (starIndex === fullStars + 1 && hasHalfStar) {
-                // 반별 (0.5점)
+                // 반별: 노란색으로 표시하되 시각적으로 구분
                 return (
-                  <span key={starIndex} className="text-sm text-yellow-400 opacity-50">
-                    ⭐
+                  <span key={starIndex} className="text-yellow-400" style={{ filter: 'brightness(0.7)' }}>
+                    ★
                   </span>
                 );
               } else {
-                // 빈 별
+                // 투명한 별
                 return (
-                  <span key={starIndex} className="text-sm text-gray-300">
-                    ⭐
+                  <span key={starIndex} className="text-gray-300">
+                    ☆
                   </span>
                 );
               }
             })}
-            <span className="ml-1">{whisky.avgRating.toFixed(1)}</span>
+            <span className="ml-1 text-gray-600">{whisky.avgRating.toFixed(1)}</span>
           </div>
         ) : (
-          // 별점이 없는 경우: 투명한 별 1개만
-          <div className="flex items-center gap-1">
-            <span className="text-sm text-gray-300">⭐</span>
-            <span>-</span>
+          // 별점이 없는 경우: 투명한 별 5개
+          <div className="flex items-center gap-0.5">
+            {[1, 2, 3, 4, 5].map((starIndex) => (
+              <span key={starIndex} className="text-gray-300">
+                ☆
+              </span>
+            ))}
+            <span className="ml-1 text-gray-500">-</span>
           </div>
         )}
       </div>

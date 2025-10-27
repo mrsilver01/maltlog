@@ -1,9 +1,10 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/app/context/AuthContext'
 import { supabase } from '@/lib/supabase'
+import { likePost, unlikePost, checkIfPostLiked, getPostLikesCount } from '@/lib/postActions'
 import toast from 'react-hot-toast'
 
 interface Post {
@@ -60,6 +61,11 @@ export default function PostDetailClient({ post, initialComments }: PostDetailCl
   const [replyContents, setReplyContents] = useState<{[key: string]: string}>({})
   const [replySubmitting, setReplySubmitting] = useState<{[key: string]: boolean}>({})
 
+  // 좋아요 관련 상태
+  const [isLiked, setIsLiked] = useState<boolean>(false)
+  const [likesCount, setLikesCount] = useState<number>(post.likes_count)
+  const [likesLoading, setLikesLoading] = useState<boolean>(true)
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
     const now = new Date()
@@ -68,6 +74,68 @@ export default function PostDetailClient({ post, initialComments }: PostDetailCl
     if (diffInHours < 24) return `${diffInHours}시간 전`
     return date.toLocaleDateString('ko-KR')
   }
+
+  // 좋아요 상태 초기화
+  useEffect(() => {
+    const initializeLikes = async () => {
+      if (!user) {
+        setLikesLoading(false)
+        return
+      }
+
+      try {
+        const [likeStatus, likeCount] = await Promise.all([
+          checkIfPostLiked(post.id, user.id),
+          getPostLikesCount(post.id)
+        ])
+
+        setIsLiked(likeStatus)
+        setLikesCount(likeCount)
+      } catch (error) {
+        console.error('좋아요 상태 초기화 실패:', error)
+      } finally {
+        setLikesLoading(false)
+      }
+    }
+
+    initializeLikes()
+  }, [user, post.id])
+
+  // 좋아요 처리 함수 (옵티미스틱 업데이트)
+  const handlePostLike = useCallback(async () => {
+    if (!user) {
+      toast('로그인이 필요합니다.')
+      router.push('/login')
+      return
+    }
+
+    const newIsLiked = !isLiked
+    const newCount = newIsLiked ? likesCount + 1 : likesCount - 1
+
+    // 옵티미스틱 업데이트 (즉시 UI 변경)
+    setIsLiked(newIsLiked)
+    setLikesCount(Math.max(0, newCount)) // 음수 방지
+
+    try {
+      // 서버 상태 업데이트
+      const success = newIsLiked
+        ? await likePost(post.id, user.id)
+        : await unlikePost(post.id, user.id)
+
+      if (!success) {
+        // 실패 시 롤백
+        setIsLiked(isLiked)
+        setLikesCount(likesCount)
+        toast.error('좋아요 처리 중 오류가 발생했습니다.')
+      }
+    } catch (error) {
+      console.error('좋아요 처리 오류:', error)
+      // 에러 시 롤백
+      setIsLiked(isLiked)
+      setLikesCount(likesCount)
+      toast.error('좋아요 처리 중 오류가 발생했습니다.')
+    }
+  }, [user, isLiked, likesCount, post.id, router])
 
   // 댓글 새로고침 (대댓글 포함)
   const refreshComments = async () => {
@@ -454,10 +522,24 @@ export default function PostDetailClient({ post, initialComments }: PostDetailCl
                 </div>
               </div>
               <div className="flex items-center gap-4">
-                <span className="flex items-center gap-1">
-                  <span className="text-gray-400">❤️</span>
-                  <span className="text-gray-600">{post.likes_count}</span>
-                </span>
+                <button
+                  onClick={handlePostLike}
+                  className="flex items-center gap-1.5 group"
+                  disabled={likesLoading}
+                >
+                  {/* 채워진 하트 (좋아요 누른 상태) */}
+                  {isLiked ? (
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 text-red-500">
+                      <path d="m11.645 20.91-.007-.003-.022-.012a15.247 15.247 0 0 1-.383-.218 25.18 25.18 0 0 1-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0 1 12 5.052 5.5 5.5 0 0 1 16.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 0 1-4.244 3.17 15.247 15.247 0 0 1-.383.219l-.022.012-.007.004-.003.001a.752.752 0 0 1-.704 0l-.003-.001Z" />
+                    </svg>
+                  ) : (
+                    /* 텅 빈 하트 (기본 상태) */
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 group-hover:text-red-500 transition-colors text-gray-400">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
+                    </svg>
+                  )}
+                  <span className="text-sm font-medium text-gray-600">{likesCount}</span>
+                </button>
                 <span className="flex items-center gap-1">
                   <span className="text-gray-400">💬</span>
                   <span className="text-gray-600">{post.comments_count}</span>
