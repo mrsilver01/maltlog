@@ -5,6 +5,9 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/app/context/AuthContext'
 import { supabase } from '@/lib/supabase'
 import { likePost, unlikePost, checkIfPostLiked, getPostLikesCount } from '@/lib/postActions'
+import AdminBadge from '@/components/AdminBadge'
+import { ReportDialog } from '@/components/ReportDialog'
+import { isAdmin } from '@/lib/isAdmin'
 import toast from 'react-hot-toast'
 
 interface Post {
@@ -65,6 +68,9 @@ export default function PostDetailClient({ post, initialComments }: PostDetailCl
   const [isLiked, setIsLiked] = useState<boolean>(false)
   const [likesCount, setLikesCount] = useState<number>(post.likes_count || 0)
   const [likesLoading, setLikesLoading] = useState<boolean>(true)
+
+  // 신고 관련 상태
+  const [reportDialog, setReportDialog] = useState<{ isOpen: boolean; targetType: 'post' | 'comment' | 'review'; targetId: string }>({ isOpen: false, targetType: 'post', targetId: '' })
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
@@ -501,7 +507,20 @@ export default function PostDetailClient({ post, initialComments }: PostDetailCl
         <div className="bg-white rounded-xl p-8 shadow-sm border border-gray-100 mb-8">
           {/* 게시글 헤더 */}
           <div className="mb-6">
-            <h1 className="text-3xl font-bold text-gray-800 mb-4">{post.title}</h1>
+            <div className="flex items-start justify-between mb-4">
+              <h1 className="text-3xl font-bold text-gray-800 flex-1">{post.title}</h1>
+              {user && post.user_id !== user.id && (
+                <button
+                  onClick={() => setReportDialog({ isOpen: true, targetType: 'post', targetId: post.id })}
+                  className="text-gray-400 hover:text-red-500 transition-colors ml-4"
+                  title="신고하기"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+                  </svg>
+                </button>
+              )}
+            </div>
 
             <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
               <div className="flex items-center gap-3">
@@ -517,7 +536,10 @@ export default function PostDetailClient({ post, initialComments }: PostDetailCl
                   </div>
                 )}
                 <div className="flex flex-col">
-                  <span className="font-medium text-lg text-gray-700">{post.author}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium text-lg text-gray-700">{post.author}</span>
+                    {post.profiles && isAdmin(post.profiles) && <AdminBadge />}
+                  </div>
                   <span className="text-xs">{formatDate(post.created_at)}</span>
                 </div>
               </div>
@@ -638,28 +660,42 @@ export default function PostDetailClient({ post, initialComments }: PostDetailCl
                     )}
                     <div className="flex-1">
                       <div className="flex items-center justify-between mb-1">
-                        <span className="font-medium text-gray-800">{comment.author}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-gray-800">{comment.author}</span>
+                          {comment.profiles && isAdmin(comment.profiles) && <AdminBadge />}
+                        </div>
                         <div className="flex items-center gap-2">
                           <span className="text-sm text-gray-500">{formatDate(comment.created_at)}</span>
-                          {user && comment.user_id === user.id && (
-                            <div className="flex gap-1">
+                          <div className="flex gap-1">
+                            {user && comment.user_id === user.id && (
+                              <>
+                                <button
+                                  onClick={() => {
+                                    setEditingCommentId(comment.id)
+                                    setEditCommentContent(comment.content)
+                                  }}
+                                  className="text-xs text-blue-500 hover:text-blue-600"
+                                >
+                                  수정
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteComment(comment.id)}
+                                  className="text-xs text-red-500 hover:text-red-600"
+                                >
+                                  삭제
+                                </button>
+                              </>
+                            )}
+                            {user && comment.user_id !== user.id && (
                               <button
-                                onClick={() => {
-                                  setEditingCommentId(comment.id)
-                                  setEditCommentContent(comment.content)
-                                }}
-                                className="text-xs text-blue-500 hover:text-blue-600"
+                                onClick={() => setReportDialog({ isOpen: true, targetType: 'comment', targetId: comment.id })}
+                                className="text-xs text-gray-400 hover:text-red-500 transition-colors"
+                                title="신고하기"
                               >
-                                수정
+                                신고
                               </button>
-                              <button
-                                onClick={() => handleDeleteComment(comment.id)}
-                                className="text-xs text-red-500 hover:text-red-600"
-                              >
-                                삭제
-                              </button>
-                            </div>
-                          )}
+                            )}
+                          </div>
                         </div>
                       </div>
                       {editingCommentId === comment.id ? (
@@ -771,21 +807,35 @@ export default function PostDetailClient({ post, initialComments }: PostDetailCl
                                 )}
                                 <div className="flex-1">
                                   <div className="flex items-center justify-between mb-1">
-                                    <span className="text-sm font-medium text-gray-700">
-                                      {reply.author}
-                                    </span>
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-sm font-medium text-gray-700">
+                                        {reply.author}
+                                      </span>
+                                      {reply.profiles && isAdmin(reply.profiles) && <AdminBadge />}
+                                    </div>
                                     <div className="flex items-center gap-2">
                                       <span className="text-xs text-gray-500">
                                         {formatDate(reply.created_at)}
                                       </span>
-                                      {user && reply.user_id === user.id && (
-                                        <button
-                                          onClick={() => handleDeleteReply(reply.id, comment.id)}
-                                          className="text-xs text-red-500 hover:text-red-600 transition-colors"
-                                        >
-                                          삭제
-                                        </button>
-                                      )}
+                                      <div className="flex gap-1">
+                                        {user && reply.user_id === user.id && (
+                                          <button
+                                            onClick={() => handleDeleteReply(reply.id, comment.id)}
+                                            className="text-xs text-red-500 hover:text-red-600 transition-colors"
+                                          >
+                                            삭제
+                                          </button>
+                                        )}
+                                        {user && reply.user_id !== user.id && (
+                                          <button
+                                            onClick={() => setReportDialog({ isOpen: true, targetType: 'comment', targetId: reply.id })}
+                                            className="text-xs text-gray-400 hover:text-red-500 transition-colors"
+                                            title="신고하기"
+                                          >
+                                            신고
+                                          </button>
+                                        )}
+                                      </div>
                                     </div>
                                   </div>
                                   <p className="text-sm text-gray-700 leading-relaxed">{reply.content}</p>
@@ -803,6 +853,15 @@ export default function PostDetailClient({ post, initialComments }: PostDetailCl
           </div>
         </div>
       </div>
+
+      {/* 신고 다이얼로그 */}
+      {reportDialog.isOpen && (
+        <ReportDialog
+          targetType={reportDialog.targetType}
+          targetId={reportDialog.targetId}
+          onClose={() => setReportDialog({ isOpen: false, targetType: 'post', targetId: '' })}
+        />
+      )}
     </div>
   )
 }

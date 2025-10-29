@@ -6,6 +6,9 @@ import { useAuth } from '@/app/context/AuthContext';
 import type { CommunityPostWithProfile } from '@/lib/communityPosts';
 import { likePost, unlikePost, checkMultiplePostsLiked, getPostLikesCount } from '@/lib/postActions';
 import LoadingAnimation from '@/components/LoadingAnimation';
+import AdminBadge from '@/components/AdminBadge';
+import { ReportDialog } from '@/components/ReportDialog';
+import { isAdmin } from '@/lib/isAdmin';
 import toast from 'react-hot-toast';
 
 interface CommunityClientProps {
@@ -38,6 +41,9 @@ export default function CommunityClient({
   // 좋아요 상태 관리
   const [postLikes, setPostLikes] = useState<{ [key: string]: { isLiked: boolean; count: number } }>({});
   const [likesLoading, setLikesLoading] = useState<boolean>(true);
+
+  // 신고 관련 상태
+  const [reportDialog, setReportDialog] = useState<{ isOpen: boolean; targetType: 'post' | 'comment' | 'review'; targetId: string }>({ isOpen: false, targetType: 'post', targetId: '' });
 
   // 페이지 로드 시 좋아요 상태 초기화
   useEffect(() => {
@@ -322,7 +328,23 @@ export default function CommunityClient({
                       </div>
                     )}
                     <div className="flex-1">
-                      <h3 className="text-xl font-bold text-gray-800 mb-2">{post.title}</h3>
+                      <div className="flex items-start justify-between mb-2">
+                        <h3 className="text-xl font-bold text-gray-800 flex-1">{post.title}</h3>
+                        {user && post.user_id !== user.id && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setReportDialog({ isOpen: true, targetType: 'post', targetId: post.id! });
+                            }}
+                            className="text-gray-400 hover:text-red-500 transition-colors ml-2"
+                            title="신고하기"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+                            </svg>
+                          </button>
+                        )}
+                      </div>
                       <p className="text-gray-600 mb-3 line-clamp-2">{post.content}</p>
                       <div className="flex items-center justify-between text-sm text-gray-500 mt-4">
                         <div className="flex items-center gap-3">
@@ -338,7 +360,10 @@ export default function CommunityClient({
                             </div>
                           )}
                           <div className="flex flex-col">
-                            <span className="font-medium text-gray-700">{post.author}</span>
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium text-gray-700">{post.author}</span>
+                              {post.authorProfile && isAdmin(post.authorProfile) && <AdminBadge />}
+                            </div>
                             <span className="text-xs">{formatDate(post.created_at)}</span>
                           </div>
                         </div>
@@ -447,6 +472,15 @@ export default function CommunityClient({
           )}
         </div>
       </div>
+
+      {/* 신고 다이얼로그 */}
+      {reportDialog.isOpen && (
+        <ReportDialog
+          targetType={reportDialog.targetType}
+          targetId={reportDialog.targetId}
+          onClose={() => setReportDialog({ isOpen: false, targetType: 'post', targetId: '' })}
+        />
+      )}
     </div>
   );
 }
