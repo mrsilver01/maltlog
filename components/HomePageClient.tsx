@@ -5,8 +5,8 @@ import { useRouter } from 'next/navigation'
 import LoadingAnimation from './LoadingAnimation'
 import { usePageTransition } from '../hooks/usePageTransition'
 import DrawerSidebar from './DrawerSidebar'
-import { isWhiskyLiked, likeWhisky, unlikeWhisky } from '../lib/likes'
 import { useAuth } from '../app/context/AuthContext'
+import { LikesProvider, useLikes } from './LikesProvider'
 import toast from 'react-hot-toast'
 import { MainPageSkeleton, WhiskyCardSkeleton, CommunityPreviewSkeleton } from './SkeletonUI'
 
@@ -28,9 +28,10 @@ export interface WhiskyData {
 
 interface HomePageClientProps {
   initialWhiskies: WhiskyData[]
+  initialLikedIds: string[]
 }
 
-export default function HomePageClient({ initialWhiskies }: HomePageClientProps) {
+export default function HomePageClient({ initialWhiskies, initialLikedIds }: HomePageClientProps) {
   const { user, profile, signOut } = useAuth()
   const [searchQuery, setSearchQuery] = useState('')
   const [whiskies, setWhiskies] = useState<WhiskyData[]>(initialWhiskies)
@@ -132,7 +133,8 @@ export default function HomePageClient({ initialWhiskies }: HomePageClientProps)
   }
 
   return (
-    <div className="min-h-screen bg-rose-50 p-3 sm:p-6">
+    <LikesProvider userId={user?.id} initialLikedIds={initialLikedIds}>
+      <div className="min-h-screen bg-rose-50 p-3 sm:p-6">
       {/* 페이지 전환 애니메이션 (백업) */}
       {isTransitioning && (
         <LoadingAnimation message={transitionMessage} />
@@ -535,45 +537,22 @@ export default function HomePageClient({ initialWhiskies }: HomePageClientProps)
         </div>
       </div>
     </div>
+    </LikesProvider>
   )
 }
 
 function WhiskyCard({ whisky, navigateWithTransition }: { whisky: WhiskyData, router: unknown, navigateWithTransition: (path: string, message: string) => void }) {
   const { user } = useAuth()
+  const { isLiked, toggle, isLoading } = useLikes()
   const [currentLikes, setCurrentLikes] = useState(whisky.likes)
   const [isLikeHovered, setIsLikeHovered] = useState(false)
-  const [isLiked, setIsLiked] = useState(false)
-  const [isCheckingLikeStatus, setIsCheckingLikeStatus] = useState(false)
 
-  // 찜 상태 초기화 및 업데이트 (Supabase 사용)
+  // 현재 찜 수 업데이트
   useEffect(() => {
-    let canceled = false
-    const updateLikeStatus = async () => {
-      if (user) {
-        // 로그인된 사용자: Supabase에서 찜 상태 확인
-        setIsCheckingLikeStatus(true)
-        try {
-          const liked = await isWhiskyLiked(user.id, whisky.id)
-          if (!canceled) setIsLiked(liked)
-        } catch (error) {
-          console.error('찜 상태 확인 실패:', error, { userId: user.id, whiskyId: whisky.id })
-          if (!canceled) setIsLiked(false)
-        } finally {
-          if (!canceled) setIsCheckingLikeStatus(false)
-        }
-      } else {
-        // 로그아웃 상태: 찜 상태 false
-        setIsLiked(false)
-        setIsCheckingLikeStatus(false)
-      }
+    setCurrentLikes(whisky.likes)
+  }, [whisky.likes])
 
-      // 현재 찜 수 업데이트
-      setCurrentLikes(whisky.likes)
-    }
-
-    updateLikeStatus()
-    return () => { canceled = true }
-  }, [whisky.id, whisky.likes, user])
+  const isWhiskyLiked = isLiked(whisky.id)
 
   const handleClick = () => {
     navigateWithTransition(`/whisky/${whisky.id}`, `${whisky.name} 상세 정보를 불러오는 중...`)
@@ -582,39 +561,22 @@ function WhiskyCard({ whisky, navigateWithTransition }: { whisky: WhiskyData, ro
   const handleLikeClick = async (e: React.MouseEvent) => {
     e.stopPropagation()
 
-    // 로그인 상태 확인
-    if (!user) {
-      toast('로그인이 필요합니다')
-      return
-    }
-
-    if (isCheckingLikeStatus) {
+    if (isLoading) {
       return // 이미 처리 중이면 무시
     }
 
-    setIsCheckingLikeStatus(true)
-    const nextLiked = !isLiked
+    const wasLiked = isWhiskyLiked
 
     // Optimistic UI - 즉시 상태 변경
-    setIsLiked(nextLiked)
-    setCurrentLikes(prev => nextLiked ? prev + 1 : Math.max(0, prev - 1))
+    setCurrentLikes(prev => wasLiked ? Math.max(0, prev - 1) : prev + 1)
 
     try {
-      if (nextLiked) {
-        await likeWhisky(user.id, whisky.id)
-        console.log(`${whisky.name}을(를) 찜 목록에 추가했습니다.`)
-      } else {
-        await unlikeWhisky(user.id, whisky.id)
-        console.log(`${whisky.name}을(를) 찜 목록에서 제거했습니다.`)
-      }
+      await toggle(whisky.id)
+      console.log(`${whisky.name}을(를) 찜 ${wasLiked ? '제거' : '추가'}했습니다.`)
     } catch (error) {
-      console.error('찜 처리 오류:', error, { userId: user.id, whiskyId: whisky.id })
+      console.error('찜 처리 오류:', error)
       // 실패 시 롤백
-      setIsLiked(!nextLiked)
-      setCurrentLikes(prev => nextLiked ? Math.max(0, prev - 1) : prev + 1)
-      toast.error('찜 처리에 실패했습니다')
-    } finally {
-      setIsCheckingLikeStatus(false)
+      setCurrentLikes(prev => wasLiked ? prev + 1 : Math.max(0, prev - 1))
     }
   }
 
@@ -642,7 +604,7 @@ function WhiskyCard({ whisky, navigateWithTransition }: { whisky: WhiskyData, ro
         {/* 추천해요 버튼 */}
         <button
           className={`absolute bottom-0 left-0 right-0 py-1 px-2 flex items-center justify-between text-xs transition-all duration-200 ${
-            isLiked
+            isWhiskyLiked
               ? 'bg-red-500 text-white'
               : isLikeHovered
               ? 'bg-black text-white'

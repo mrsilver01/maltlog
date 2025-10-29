@@ -1,3 +1,6 @@
+// 찜 상태 포함한 사용자별 페이지이므로 동적 렌더링 필요
+export const dynamic = 'force-dynamic'
+
 import { supabase } from '@/lib/supabase'
 import { redirect } from 'next/navigation'
 import WhiskyDetailClient from '../../../components/WhiskyDetailClient'
