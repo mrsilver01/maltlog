@@ -8,7 +8,7 @@ import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
  */
 export async function getLikedWhiskyIdsServer(): Promise<string[]> {
   try {
-    const cookieStore = await cookies()
+    const cookieStore = cookies()
     const supabase = createServerComponentClient({ cookies: () => cookieStore })
 
     const { data: { user }, error: userError } = await supabase.auth.getUser()
