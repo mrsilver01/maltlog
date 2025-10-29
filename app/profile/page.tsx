@@ -24,7 +24,7 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen text-gray-500">
+      <div className="min-h-screen grid place-items-center bg-rose-50 text-neutral-700">
         로그인 상태 확인 중...
       </div>
     )
@@ -32,7 +32,7 @@ export default function ProfilePage() {
 
   if (!user) {
     return (
-      <div className="flex items-center justify-center min-h-screen text-gray-500">
+      <div className="min-h-screen grid place-items-center bg-rose-50 text-neutral-700">
         로그인 페이지로 이동 중...
       </div>
     )

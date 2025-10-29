@@ -33,9 +33,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="ko" className="light">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${jollyLodger.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${jollyLodger.variable} antialiased bg-rose-50 text-neutral-900`}
       >
         <AuthProvider>
           {/* 연령 게이트 - 최초 방문시 표시 */}
@@ -49,25 +49,9 @@ export default function RootLayout({
           <Toaster
             position="top-center"
             toastOptions={{
-              duration: 3000,
-              style: {
-                background: '#363636',
-                color: '#fff',
-              },
-              success: {
-                duration: 2000,
-                iconTheme: {
-                  primary: '#10B981',
-                  secondary: '#fff',
-                },
-              },
-              error: {
-                duration: 4000,
-                iconTheme: {
-                  primary: '#EF4444',
-                  secondary: '#fff',
-                },
-              },
+              style: { background: '#6A3A1A', color: '#fff', borderRadius: 8 }, // 갈색
+              success: { iconTheme: { primary: '#6A3A1A', secondary: '#fff' } },
+              error: { style: { background: '#7B2D5C', color: '#fff' } }     // 자주색
             }}
           />
         </AuthProvider>
