@@ -4,6 +4,16 @@ import { supabase } from './supabase'
  * 커뮤니티 게시글 기능을 위한 Supabase 헬퍼 함수들
  */
 
+// Storage 설정 상수
+const STORAGE_BUCKET = 'community' // 운영 버킷명이 다르면 여기서 변경
+const IMAGE_EXTENSIONS = {
+  'image/jpeg': '.jpg',
+  'image/jpg': '.jpg',
+  'image/png': '.png',
+  'image/webp': '.webp',
+  'image/gif': '.gif'
+} as const
+
 export interface CommunityPost {
   id?: string
   user_id: string
@@ -156,9 +166,16 @@ export async function createCommunityPost(
     if (imageDataUrl) {
       console.log('🖼️ 이미지 업로드 시작...')
       const file = dataUrlToFile(imageDataUrl, 'post.jpg')
-      const path = `${user.id}/${crypto.randomUUID()}.jpg`
 
-      console.log('📁 업로드 경로:', path)
+      // 업로드 경로: userId/randomUUID.jpg (RLS 정책 준수)
+      const fileExtension = IMAGE_EXTENSIONS[file.type as keyof typeof IMAGE_EXTENSIONS] || '.jpg'
+      const path = `${user.id}/${crypto.randomUUID()}${fileExtension}`
+
+      console.log('📁 업로드 설정:', {
+        bucket: STORAGE_BUCKET,
+        path: path,
+        userId: user.id
+      })
       console.log('📊 파일 정보:', {
         name: file.name,
         size: file.size,
@@ -167,7 +184,7 @@ export async function createCommunityPost(
       })
 
       const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('community')
+        .from(STORAGE_BUCKET)
         .upload(path, file, {
           cacheControl: '31536000',
           upsert: false
@@ -177,8 +194,10 @@ export async function createCommunityPost(
         console.error('❌ 이미지 업로드 실패 상세:', {
           error: uploadError,
           message: uploadError.message,
+          bucket: STORAGE_BUCKET,
           path: path,
-          fileSize: file.size
+          fileSize: file.size,
+          fileType: file.type
         })
         throw new Error(`이미지 업로드 실패: ${uploadError.message}`)
       }
@@ -186,7 +205,7 @@ export async function createCommunityPost(
       console.log('✅ 이미지 업로드 성공:', uploadData)
 
       const { data: { publicUrl } } = supabase.storage
-        .from('community')
+        .from(STORAGE_BUCKET)
         .getPublicUrl(path)
 
       console.log('🔗 생성된 public URL:', publicUrl)

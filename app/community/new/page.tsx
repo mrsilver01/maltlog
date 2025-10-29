@@ -83,8 +83,29 @@ export default function NewPostPage() {
 
   const estimateMB = (dataUrl: string) => (dataUrl.length * 0.75) / 1024 / 1024
 
+  // HEIC 변환 헬퍼 함수 (동적 import)
+  const convertHeicIfNeeded = async (file: File): Promise<File> => {
+    if (!/image\/(heic|heif)/i.test(file.type)) return file
+
+    try {
+      console.log('🔄 HEIC 파일 감지, JPEG로 변환 중...')
+      const { default: heic2any } = await import('heic2any')
+      const blob = await heic2any({
+        blob: file,
+        toType: 'image/jpeg',
+        quality: 0.9
+      })
+      const convertedFile = new File([blob as BlobPart], 'post.jpg', { type: 'image/jpeg' })
+      console.log('✅ HEIC → JPEG 변환 완료')
+      return convertedFile
+    } catch (error) {
+      console.error('❌ HEIC 변환 실패:', error)
+      throw new Error('HEIC 파일 변환에 실패했습니다.')
+    }
+  }
+
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
+    let file = event.target.files?.[0]
     if (!file) return
 
     if (file.size > 20 * 1024 * 1024) {
@@ -93,16 +114,19 @@ export default function NewPostPage() {
       return
     }
 
-    // SVG/TIFF/BMP는 캔버스/용량 면에서 비추천: MVP에선 비활성 권장
-    const supported = ['image/jpeg','image/jpg','image/png','image/gif','image/webp']
+    // HEIC 포맷 지원 추가
+    const supported = ['image/jpeg','image/jpg','image/png','image/gif','image/webp','image/heic','image/heif']
     if (!supported.includes(file.type)) {
-      toast('지원 포맷: JPEG, PNG, GIF, WebP')
+      toast('지원 포맷: JPEG, PNG, GIF, WebP, HEIC')
       event.target.value = ''
       return
     }
 
     setUploading(true)
     try {
+      // HEIC 변환 (필요시)
+      file = await convertHeicIfNeeded(file)
+
       let img = await compressImage(file, 600, 0.7)
       let size = estimateMB(img)
       if (size > 1.2) {
@@ -115,7 +139,8 @@ export default function NewPostPage() {
       }
       setNewPost(prev => ({ ...prev, image: img }))
     } catch (error) {
-      toast.error('이미지 처리 중 오류가 발생했습니다.')
+      console.error('이미지 처리 오류:', error)
+      toast.error(error instanceof Error ? error.message : '이미지 처리 중 오류가 발생했습니다.')
       event.target.value = ''
     } finally {
       setUploading(false)
@@ -228,7 +253,7 @@ export default function NewPostPage() {
                   <div>
                     <input
                       type="file"
-                      accept="image/*"
+                      accept="image/*,.heic,.heif"
                       onChange={handleImageUpload}
                       className="hidden"
                       id="image-upload"
@@ -240,7 +265,7 @@ export default function NewPostPage() {
                     >
                       {uploading ? '업로드 중...' : '📷 이미지 선택'}
                     </label>
-                    <p className="text-sm text-gray-500 mt-2">JPEG, PNG, GIF 등 (20MB 이하, 자동 압축)</p>
+                    <p className="text-sm text-gray-500 mt-2">JPEG, PNG, GIF, WebP, HEIC 등 (20MB 이하, 자동 압축)</p>
                   </div>
                 )}
               </div>
