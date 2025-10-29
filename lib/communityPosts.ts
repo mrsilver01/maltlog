@@ -177,7 +177,6 @@ export async function createCommunityPost(
         console.error('❌ 이미지 업로드 실패 상세:', {
           error: uploadError,
           message: uploadError.message,
-          statusCode: uploadError.statusCode,
           path: path,
           fileSize: file.size
         })
