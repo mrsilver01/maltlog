@@ -561,6 +561,11 @@ function WhiskyCard({ whisky, navigateWithTransition }: { whisky: WhiskyData, ro
   const handleLikeClick = async (e: React.MouseEvent) => {
     e.stopPropagation()
 
+    if (!user) {
+      toast('로그인이 필요합니다')
+      return
+    }
+
     if (isLoading) {
       return // 이미 처리 중이면 무시
     }
@@ -603,16 +608,21 @@ function WhiskyCard({ whisky, navigateWithTransition }: { whisky: WhiskyData, ro
 
         {/* 추천해요 버튼 */}
         <button
+          disabled={!user}
+          aria-disabled={!user}
+          title={!user ? '로그인 후 사용 가능' : isWhiskyLiked ? '찜 취소' : '찜하기'}
           className={`absolute bottom-0 left-0 right-0 py-1 px-2 flex items-center justify-between text-xs transition-all duration-200 ${
-            isWhiskyLiked
+            !user
+              ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+              : isWhiskyLiked
               ? 'bg-red-500 text-white'
               : isLikeHovered
               ? 'bg-black text-white'
               : 'bg-gray-300 text-white hover:bg-gray-400'
           }`}
-          onMouseEnter={() => setIsLikeHovered(true)}
+          onMouseEnter={() => user && setIsLikeHovered(true)}
           onMouseLeave={() => setIsLikeHovered(false)}
-          onClick={handleLikeClick}
+          onClick={!user ? undefined : handleLikeClick}
         >
           <div className="flex items-center gap-1">
             <span className="text-xs">🥃</span>

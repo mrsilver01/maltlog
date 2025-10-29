@@ -17,10 +17,12 @@ export default function LoginPage() {
     nickname: ''
   })
 
-  // 이미 로그인된 사용자는 홈으로 리다이렉트
+  // 이미 로그인된 사용자는 next 파라미터 또는 홈으로 리다이렉트
   useEffect(() => {
     if (user && !authLoading) {
-      router.push('/')
+      const params = new URLSearchParams(window.location.search)
+      const next = params.get('next') || '/'
+      router.replace(next)
     }
   }, [user, authLoading, router])
 
@@ -40,7 +42,9 @@ export default function LoginPage() {
         // 로그인
         await signIn({ email: formData.email, password: formData.password })
         toast.success('로그인 성공!')
-        router.push('/')
+        const params = new URLSearchParams(window.location.search)
+        const next = params.get('next') || '/'
+        router.replace(next)
       } else {
         // 회원가입
         if (formData.password !== formData.confirmPassword) {

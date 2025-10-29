@@ -1,13 +1,14 @@
 'use client'
 
 import { useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import { useAuth } from '@/app/context/AuthContext'
 import ProfilePageClient from '@/components/ProfilePageClient'
 
 export default function ProfilePage() {
   const { user, loading } = useAuth()
   const router = useRouter()
+  const pathname = usePathname()
 
   useEffect(() => {
     // 로딩 중이면 아무것도 하지 않음
@@ -16,10 +17,10 @@ export default function ProfilePage() {
     // 유저가 없을 때 로그인 페이지로 안전하게 리다이렉트
     if (!user) {
       console.log('❌ 비로그인 상태 감지 → 로그인 페이지로 이동')
-      router.replace('/login') // push 대신 replace (뒤로가기 방지)
+      router.replace(`/login?next=${encodeURIComponent(pathname)}`) // 돌아올 위치 보존
       return
     }
-  }, [user, loading, router])
+  }, [user, loading, router, pathname])
 
   if (loading) {
     return (
