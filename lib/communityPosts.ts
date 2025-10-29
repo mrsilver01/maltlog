@@ -154,10 +154,19 @@ export async function createCommunityPost(
 
     // 이미지가 있으면 Storage에 업로드
     if (imageDataUrl) {
+      console.log('🖼️ 이미지 업로드 시작...')
       const file = dataUrlToFile(imageDataUrl, 'post.jpg')
       const path = `${user.id}/${crypto.randomUUID()}.jpg`
 
-      const { error: uploadError } = await supabase.storage
+      console.log('📁 업로드 경로:', path)
+      console.log('📊 파일 정보:', {
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        sizeInMB: (file.size / 1024 / 1024).toFixed(2)
+      })
+
+      const { data: uploadData, error: uploadError } = await supabase.storage
         .from('community')
         .upload(path, file, {
           cacheControl: '31536000',
@@ -165,14 +174,23 @@ export async function createCommunityPost(
         })
 
       if (uploadError) {
-        console.error('이미지 업로드 실패:', uploadError)
-        throw uploadError
+        console.error('❌ 이미지 업로드 실패 상세:', {
+          error: uploadError,
+          message: uploadError.message,
+          statusCode: uploadError.statusCode,
+          path: path,
+          fileSize: file.size
+        })
+        throw new Error(`이미지 업로드 실패: ${uploadError.message}`)
       }
+
+      console.log('✅ 이미지 업로드 성공:', uploadData)
 
       const { data: { publicUrl } } = supabase.storage
         .from('community')
         .getPublicUrl(path)
 
+      console.log('🔗 생성된 public URL:', publicUrl)
       image_url = publicUrl
     }
 
