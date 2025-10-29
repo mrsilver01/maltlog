@@ -362,7 +362,7 @@ export default function CommunityClient({
                           <div className="flex flex-col">
                             <div className="flex items-center gap-2">
                               <span className="font-medium text-gray-700">{post.author}</span>
-                              {post.authorProfile && isAdmin(post.authorProfile) && <AdminBadge />}
+                              {post.profiles && isAdmin(post.profiles) && <AdminBadge />}
                             </div>
                             <span className="text-xs">{formatDate(post.created_at)}</span>
                           </div>

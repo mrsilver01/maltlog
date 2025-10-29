@@ -19,6 +19,11 @@ async function assertAdmin() {
     }
   )
 
+  // DB 기반 관리자 권한 확인 (최종 판정)
+  const { data: ok } = await supabase.rpc('is_admin')
+  if (!ok) throw new Error('FORBIDDEN')
+
+  // 기존 체크는 보조로 유지
   const { data: { user } } = await supabase.auth.getUser()
   const role = (user as any)?.raw_app_meta_data?.role || (user as any)?.role
 

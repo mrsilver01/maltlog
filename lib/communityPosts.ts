@@ -37,6 +37,11 @@ export interface CommunityPostWithProfile extends CommunityPost {
   likes: number  // 좋아요 수
   comments: number  // 댓글 수
   createdAt?: string  // 생성 일시 (변환된 형태)
+  // profiles 속성을 상속해서 관리자 체크에 사용
+  profiles?: {
+    nickname: string
+    avatar_url?: string
+  }
 }
 
 // 모든 커뮤니티 게시글 가져오기 (프로필 정보 포함)
@@ -69,6 +74,7 @@ export async function getAllCommunityPosts(): Promise<CommunityPostWithProfile[]
       comments_count: post.comments_count || 0,
       created_at: post.created_at,
       updated_at: post.updated_at,
+      profiles: post.profiles,  // profiles 정보 유지
       // 추가 필드
       author: post.profiles?.nickname || '익명 사용자',
       authorImage: post.profiles?.avatar_url || null,
@@ -115,6 +121,7 @@ export async function getUserCommunityPosts(userId: string): Promise<CommunityPo
       comments_count: post.comments_count || 0,
       created_at: post.created_at,
       updated_at: post.updated_at,
+      profiles: post.profiles,  // profiles 정보 유지
       author: post.profiles?.nickname || '익명 사용자',
       authorImage: post.profiles?.avatar_url || null,
       likes: post.likes_count || 0,
@@ -339,6 +346,7 @@ export async function getCommunityPost(postId: string): Promise<CommunityPostWit
       comments_count: post.comments_count || 0,
       created_at: post.created_at,
       updated_at: post.updated_at,
+      profiles: post.profiles,  // profiles 정보 유지
       author: post.profiles?.nickname || '익명 사용자',
       authorImage: post.profiles?.avatar_url || null,
       likes: post.likes_count || 0,
@@ -466,6 +474,7 @@ export async function getCommunityPosts(
       comments_count: post.comments_count || 0,
       created_at: post.created_at,
       updated_at: post.updated_at,
+      profiles: post.profiles,  // profiles 정보 유지
       // 추가 필드
       author: post.profiles?.nickname || '익명 사용자',
       authorImage: post.profiles?.avatar_url || null,
