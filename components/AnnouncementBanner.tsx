@@ -62,14 +62,20 @@ export default function AnnouncementBanner() {
         if (shouldShow) {
           // 사용자가 이미 해제했는지 확인
           if (user && notice.dismissible) {
-            const { data: dismissal } = await supabase
+            const { data: dismissal, error: dismissalError } = await supabase
               .from('announcement_dismissals')
               .select('id')
               .eq('notice_id', notice.id)
               .eq('user_id', user.id)
-              .single()
+              .maybeSingle()
 
-            if (!dismissal) {
+            if (dismissalError) {
+              // 다른 에러만 로깅 (406은 더 이상 발생하지 않음)
+              console.error('dismiss check failed:', dismissalError)
+            }
+
+            const isDismissed = !!dismissal
+            if (!isDismissed) {
               setAnnouncement(notice)
             }
           } else if (!user) {
@@ -98,16 +104,22 @@ export default function AnnouncementBanner() {
 
     try {
       if (user) {
-        // 로그인된 사용자: DB에 해제 기록 저장
-        const { error } = await supabase
+        // 로그인된 사용자: DB에 해제 기록 저장 (멱등/중복 안전)
+        const { error: upErr } = await supabase
           .from('announcement_dismissals')
-          .insert({
-            notice_id: announcement.id,
-            user_id: user.id
-          })
+          .upsert(
+            {
+              notice_id: announcement.id,
+              user_id: user.id
+            },
+            {
+              onConflict: 'notice_id,user_id',
+              ignoreDuplicates: true
+            }
+          )
 
-        if (error) {
-          console.error('공지사항 해제 실패:', error)
+        if (upErr) {
+          console.error('dismiss upsert failed:', upErr)
           return
         }
       } else {

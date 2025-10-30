@@ -8,6 +8,7 @@ import LoadingAnimation from '@/components/LoadingAnimation'
 import { likeReview, unlikeReview, checkMultipleReviewsLiked, getReviewLikesCount, deleteReview } from '@/lib/reviewActions'
 import { isWhiskyLiked, likeWhisky, unlikeWhisky } from '@/lib/likes'
 import { getReviewComments, addComment, getReviewCommentsCount, ReviewComment, updateComment, deleteComment } from '@/lib/commentActions'
+import { formatLikeCount } from '@/lib/formatLikes'
 import toast from 'react-hot-toast'
 
 // RatingSystem 컴포넌트 - 원본 디자인 적용
@@ -1328,7 +1329,7 @@ export default function WhiskyDetailClient({ whisky, initialReviews }: WhiskyDet
                               {reviewLikes[review.id]?.isLiked ? '❤️' : '🤍'}
                             </span>
                             <span className="text-gray-600">
-                              {reviewLikes[review.id]?.count || 0}
+                              {formatLikeCount(reviewLikes[review.id]?.count || 0)}
                             </span>
                           </button>
                         </div>
