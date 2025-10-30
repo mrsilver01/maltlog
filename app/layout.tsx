@@ -26,8 +26,11 @@ export const metadata: Metadata = {
   title: "몰트로그, 위스키의 모든 기록",
   description: "위스키를 사랑하는 모든 이들을 위한 완벽한 기록 공간",
   icons: {
-    icon: '/Pavicon.png',
-    shortcut: '/Pavicon.png',
+    icon: [
+      { url: '/favicon.ico' },
+      { url: '/Pavicon.png', type: 'image/png' },
+    ],
+    shortcut: '/favicon.ico',
     apple: '/Pavicon.png',
   },
 };
