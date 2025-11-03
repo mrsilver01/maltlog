@@ -337,60 +337,64 @@ export default function ProfilePageClient({
   }
 
   return (
-    <div className="min-h-screen bg-rose-50 px-4 md:px-6 py-6">
+    <div className="min-h-screen bg-rose-50 px-3 sm:px-4 md:px-6 py-4 sm:py-6">
       {/* 헤더 */}
-      <header className="flex items-center justify-between mb-8 max-w-7xl mx-auto">
-        <div className="flex items-center gap-6">
-          <div className="flex items-center gap-4">
+      <header className="flex flex-col sm:flex-row justify-between items-center mb-6 sm:mb-8 max-w-7xl mx-auto gap-4 sm:gap-6">
+        <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-6">
+          <div className="flex items-center gap-2 sm:gap-4">
             {/* 로고 이미지 */}
-            <div className="w-12 h-16 flex items-center justify-center">
+            <div className="w-8 sm:w-12 h-12 sm:h-16 flex items-center justify-center">
               <img
                 src="/LOGO.png"
                 alt="Maltlog Logo"
-                className="w-12 h-12 object-contain"
+                className="w-8 sm:w-12 h-8 sm:h-12 object-contain"
               />
             </div>
-            <h1 className="text-4xl font-bold text-amber-800 font-[family-name:var(--font-jolly-lodger)]">Maltlog</h1>
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-amber-800 font-[family-name:var(--font-jolly-lodger)]">Maltlog</h1>
           </div>
-          <span className="text-base text-gray-500 ml-4">몰트로그, 위스키의 모든 기록</span>
+          <span className="text-sm sm:text-base text-gray-500">몰트로그, 위스키의 모든 기록</span>
         </div>
 
-        <div className="flex items-center gap-6">
-          <span className="text-xl font-bold text-red-500 font-[family-name:var(--font-jolly-lodger)]">PROFILE</span>
-          <span className="text-lg font-bold text-amber-800 font-[family-name:var(--font-jolly-lodger)]">내 노트</span>
-          <button
-            onClick={() => router.push('/')}
-            className="text-center hover:text-gray-600 transition-all duration-200 hover:scale-110 transform"
-          >
-            <div className="text-lg font-bold text-gray-800 font-[family-name:var(--font-jolly-lodger)]">HOME</div>
-            <div className="text-xs text-gray-600">홈으로 돌아가기</div>
-          </button>
-          <button
-            onClick={handleLogout}
-            className="bg-gray-600 text-white px-5 py-2 rounded-full text-sm hover:bg-gray-500 transition-all duration-200 hover:scale-110 transform shadow-md hover:shadow-lg">
-            로그아웃
-          </button>
+        <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-6">
+          <div className="flex items-center gap-2 sm:gap-4">
+            <span className="text-lg sm:text-xl font-bold text-red-500 font-[family-name:var(--font-jolly-lodger)]">PROFILE</span>
+            <span className="text-base sm:text-lg font-bold text-amber-800 font-[family-name:var(--font-jolly-lodger)]">내 노트</span>
+          </div>
+          <div className="flex items-center gap-3 sm:gap-4">
+            <button
+              onClick={() => router.push('/')}
+              className="text-center hover:text-gray-600 transition-all duration-200 hover:scale-110 transform"
+            >
+              <div className="text-sm sm:text-lg font-bold text-gray-800 font-[family-name:var(--font-jolly-lodger)]">HOME</div>
+              <div className="text-xs text-gray-600">홈으로 돌아가기</div>
+            </button>
+            <button
+              onClick={handleLogout}
+              className="bg-gray-600 text-white px-3 sm:px-5 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm hover:bg-gray-500 transition-all duration-200 hover:scale-110 transform shadow-md hover:shadow-lg">
+              로그아웃
+            </button>
+          </div>
         </div>
       </header>
 
       {/* 뒤로가기 버튼 */}
-      <div className="mb-8 ml-8 max-w-7xl mx-auto">
+      <div className="mb-6 sm:mb-8 ml-2 sm:ml-8 max-w-7xl mx-auto">
         <button
           onClick={() => router.push('/')}
-          className="bg-rose-100 border border-rose-200 rounded-lg px-3 py-2 hover:bg-rose-150 transition-all duration-200 shadow-sm text-gray-700 hover:text-gray-800 text-sm font-medium hover:scale-105 transform hover:shadow-md hover:border-rose-300"
+          className="bg-rose-100 border border-rose-200 rounded-lg px-2 sm:px-3 py-1.5 sm:py-2 hover:bg-rose-150 transition-all duration-200 shadow-sm text-gray-700 hover:text-gray-800 text-xs sm:text-sm font-medium hover:scale-105 transform hover:shadow-md hover:border-rose-300"
         >
           ← 메인으로
         </button>
       </div>
 
       <div className="max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6 sm:gap-8">
           {/* 왼쪽: 프로필 정보 */}
-          <div className="lg:col-span-2">
+          <div className="md:col-span-1 lg:col-span-2">
             {/* 프로필 사진 */}
-            <div className="mb-6">
+            <div className="mb-4 sm:mb-6">
               <div
-                className={`w-32 h-32 border-3 rounded-full mx-auto mb-4 cursor-pointer transition-all duration-300 relative overflow-hidden group ${
+                className={`w-24 sm:w-32 h-24 sm:h-32 border-3 rounded-full mx-auto mb-3 sm:mb-4 cursor-pointer transition-all duration-300 relative overflow-hidden group ${
                   isDragging
                     ? 'border-amber-600 scale-105 shadow-xl'
                     : profileImage
@@ -448,28 +452,28 @@ export default function ProfilePageClient({
                 className="hidden"
               />
 
-              <h2 className="text-xl font-bold text-amber-700 text-center mb-2 hover:text-amber-800 transition-colors cursor-pointer" onClick={handleImageClick}>
+              <h2 className="text-lg sm:text-xl font-bold text-amber-700 text-center mb-2 hover:text-amber-800 transition-colors cursor-pointer" onClick={handleImageClick}>
                 프로필 변경하기
               </h2>
             </div>
 
             {/* 닉네임 */}
-            <div className="mb-8">
-              <div className="flex items-center gap-3">
-                <span className="text-lg font-medium text-gray-800">닉네임 :</span>
+            <div className="mb-6 sm:mb-8">
+              <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3">
+                <span className="text-base sm:text-lg font-medium text-gray-800">닉네임 :</span>
                 {isEditing ? (
                   <input
                     type="text"
                     value={nickname}
                     onChange={(e) => setNickname(e.target.value)}
-                    className="border border-gray-300 px-2 py-1 rounded text-lg text-gray-800 focus:text-amber-800"
+                    className="border border-gray-300 px-2 py-1 rounded text-base sm:text-lg text-gray-800 focus:text-amber-800 w-full sm:w-auto"
                   />
                 ) : (
-                  <span className="text-lg font-bold text-amber-800">{nickname}</span>
+                  <span className="text-base sm:text-lg font-bold text-amber-800">{nickname}</span>
                 )}
                 <button
                   onClick={handleEditProfile}
-                  className="bg-gray-200 text-gray-700 px-3 py-1 rounded text-sm hover:bg-gray-300 hover:scale-110 transition-all duration-200 transform shadow-sm hover:shadow-md"
+                  className="bg-gray-200 text-gray-700 px-2 sm:px-3 py-1 rounded text-xs sm:text-sm hover:bg-gray-300 hover:scale-110 transition-all duration-200 transform shadow-sm hover:shadow-md"
                 >
                   {isEditing ? '저장' : '변경'}
                 </button>
@@ -477,19 +481,19 @@ export default function ProfilePageClient({
             </div>
 
             {/* 통계 */}
-            <div className="border border-rose-300 rounded mb-8 bg-rose-50">
-              <div className="grid grid-cols-3 text-center">
-                <div className="border-r border-rose-300 py-4">
-                  <div className="text-2xl font-bold text-rose-800">{userStats.reviewCount}</div>
-                  <div className="text-sm text-rose-700">내가 평가한 술</div>
+            <div className="border border-rose-300 rounded mb-6 sm:mb-8 bg-rose-50">
+              <div className="grid grid-cols-1 sm:grid-cols-3 text-center">
+                <div className="border-b sm:border-b-0 sm:border-r border-rose-300 py-3 sm:py-4">
+                  <div className="text-xl sm:text-2xl font-bold text-rose-800">{userStats.reviewCount}</div>
+                  <div className="text-xs sm:text-sm text-rose-700">내가 평가한 술</div>
                 </div>
-                <div className="border-r border-rose-300 py-4">
-                  <div className="text-2xl font-bold text-rose-800">{userStats.noteCount}</div>
-                  <div className="text-sm text-rose-700">노트</div>
+                <div className="border-b sm:border-b-0 sm:border-r border-rose-300 py-3 sm:py-4">
+                  <div className="text-xl sm:text-2xl font-bold text-rose-800">{userStats.noteCount}</div>
+                  <div className="text-xs sm:text-sm text-rose-700">노트</div>
                 </div>
-                <div className="py-4">
-                  <div className="text-2xl font-bold text-rose-800">{userStats.wishlistCount}</div>
-                  <div className="text-sm text-rose-700">찜</div>
+                <div className="py-3 sm:py-4">
+                  <div className="text-xl sm:text-2xl font-bold text-rose-800">{userStats.wishlistCount}</div>
+                  <div className="text-xs sm:text-sm text-rose-700">찜</div>
                 </div>
               </div>
             </div>
@@ -512,18 +516,18 @@ export default function ProfilePageClient({
           </div>
 
           {/* 오른쪽: 위스키 컬렉션 및 노트 */}
-          <div className="lg:col-span-3">
+          <div className="md:col-span-2 lg:col-span-3">
             {/* 위스키 컬렉션 박스 */}
-            <div className="mb-8">
-              <div className="bg-amber-900 p-4 md:p-6 rounded-lg">
-                <div className="bg-amber-800 p-3 md:p-4 rounded mb-4">
-                  <h3 className="text-white text-center text-lg font-bold">위스키 컬렉션</h3>
+            <div className="mb-6 sm:mb-8">
+              <div className="bg-amber-900 p-3 sm:p-4 md:p-6 rounded-lg">
+                <div className="bg-amber-800 p-2 sm:p-3 md:p-4 rounded mb-3 sm:mb-4">
+                  <h3 className="text-white text-center text-base sm:text-lg font-bold">위스키 컬렉션</h3>
                 </div>
-                <div className="bg-amber-800 p-6 md:p-8 rounded flex items-center justify-center">
-                  <div className="flex gap-4 md:gap-8">
+                <div className="bg-amber-800 p-4 sm:p-6 md:p-8 rounded flex items-center justify-center">
+                  <div className="flex gap-2 sm:gap-4 md:gap-8">
                     {reviewedWhiskies.length > 0 ? (
                       reviewedWhiskies.slice(0, 3).map((whisky, index) => (
-                        <div key={index} className="w-8 md:w-10 h-16 md:h-20 bg-white bg-opacity-20 rounded overflow-hidden flex items-center justify-center">
+                        <div key={index} className="w-6 sm:w-8 md:w-10 h-12 sm:h-16 md:h-20 bg-white bg-opacity-20 rounded overflow-hidden flex items-center justify-center">
                           <img
                             src={useWhiskyImage(whisky.id, whisky.image)}
                             alt={whisky.name}
@@ -534,9 +538,9 @@ export default function ProfilePageClient({
                       ))
                     ) : (
                       <>
-                        <div className="w-8 md:w-10 h-16 md:h-20 bg-white bg-opacity-30 rounded"></div>
-                        <div className="w-8 md:w-10 h-16 md:h-20 bg-white bg-opacity-30 rounded"></div>
-                        <div className="w-8 md:w-10 h-16 md:h-20 bg-white bg-opacity-30 rounded"></div>
+                        <div className="w-6 sm:w-8 md:w-10 h-12 sm:h-16 md:h-20 bg-white bg-opacity-30 rounded"></div>
+                        <div className="w-6 sm:w-8 md:w-10 h-12 sm:h-16 md:h-20 bg-white bg-opacity-30 rounded"></div>
+                        <div className="w-6 sm:w-8 md:w-10 h-12 sm:h-16 md:h-20 bg-white bg-opacity-30 rounded"></div>
                       </>
                     )}
                   </div>
@@ -544,23 +548,23 @@ export default function ProfilePageClient({
               </div>
             </div>
 
-            <hr className="border-gray-300 mb-8" />
+            <hr className="border-gray-300 mb-6 sm:mb-8" />
 
             {/* 위스키 노트/리뷰 */}
             <div>
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-xl font-bold text-red-500">위스키 노트/리뷰</h3>
-                <button className="text-sm text-gray-600 hover:text-gray-800 hover:scale-110 transition-all duration-200 transform">작성일 가기</button>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-6 gap-2 sm:gap-0">
+                <h3 className="text-lg sm:text-xl font-bold text-red-500">위스키 노트/리뷰</h3>
+                <button className="text-xs sm:text-sm text-gray-600 hover:text-gray-800 hover:scale-110 transition-all duration-200 transform">작성일 가기</button>
               </div>
 
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 {myNotes.map((note) => (
-                  <div key={note.id} className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-lg transition-all duration-300">
+                  <div key={note.id} className="bg-white border border-gray-200 rounded-lg p-3 sm:p-4 hover:shadow-lg transition-all duration-300">
                     {/* 노트 헤더 */}
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-3">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-2 sm:mb-3 gap-2 sm:gap-0">
+                      <div className="flex items-center gap-2 sm:gap-3">
                         {/* 프로필 사진 */}
-                        <div className="w-8 h-8 rounded-full border border-gray-300 bg-gray-100 overflow-hidden flex-shrink-0">
+                        <div className="w-6 sm:w-8 h-6 sm:h-8 rounded-full border border-gray-300 bg-gray-100 overflow-hidden flex-shrink-0">
                           {profileImage ? (
                             <img
                               src={profileImage}
@@ -573,15 +577,15 @@ export default function ProfilePageClient({
                             </div>
                           )}
                         </div>
-                        <span className="font-medium text-gray-800">{note.user}</span>
+                        <span className="font-medium text-gray-800 text-sm sm:text-base">{note.user}</span>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 text-xs sm:text-sm">
                         <span className="text-yellow-400">★</span>
                         <span className="font-medium text-gray-700">{note.rating}</span>
-                        <span className="text-sm text-gray-500">{note.date}</span>
+                        <span className="text-gray-500">{note.date}</span>
                         <button
                           onClick={() => handleDeleteReview(note.id)}
-                          className="text-red-500 text-xs px-2 py-1 hover:bg-red-50 rounded transition-colors"
+                          className="text-red-500 px-2 py-1 hover:bg-red-50 rounded transition-colors"
                         >
                           삭제
                         </button>
@@ -717,10 +721,10 @@ export default function ProfilePageClient({
 
               {/* 더보기/접기 버튼 */}
               {notesData.length > 3 && (
-                <div className="mt-6 text-center">
+                <div className="mt-4 sm:mt-6 text-center">
                   <button
                     onClick={() => setShowAllNotes(!showAllNotes)}
-                    className="bg-red-500 text-white px-6 py-2 rounded-lg hover:bg-red-600 transition-colors"
+                    className="bg-red-500 text-white px-4 sm:px-6 py-2 rounded-lg hover:bg-red-600 transition-colors text-sm sm:text-base"
                   >
                     {showAllNotes ? `접기` : `더보기 (${notesData.length - 3}개 더)`}
                   </button>

@@ -204,36 +204,36 @@ export default function CommunityClient({
   };
 
   return (
-    <div className="min-h-screen bg-rose-50 p-6">
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex justify-between items-center mb-8">
-          <div className="flex items-center gap-4">
+    <div className="min-h-screen bg-rose-50 p-3 sm:p-6">
+      <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-8">
+        <div className="flex flex-col sm:flex-row justify-between items-center mb-6 sm:mb-8 gap-4 sm:gap-0">
+          <div className="flex items-center gap-2 sm:gap-4">
             <button
               onClick={() => router.push('/')}
-              className="flex items-center justify-center w-10 h-10 rounded-full bg-amber-100 hover:bg-amber-200 transition-colors"
+              className="flex items-center justify-center w-8 sm:w-10 h-8 sm:h-10 rounded-full bg-amber-100 hover:bg-amber-200 transition-colors"
               title="메인으로 돌아가기"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-amber-700">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 sm:w-5 h-4 sm:h-5 text-amber-700">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
               </svg>
             </button>
-            <div className="w-12 h-16 flex items-center justify-center">
+            <div className="w-8 sm:w-12 h-12 sm:h-16 flex items-center justify-center">
               <img
                 src="/LOGO.png"
                 alt="Maltlog Logo"
-                className="w-12 h-12 object-contain"
+                className="w-8 sm:w-12 h-8 sm:h-12 object-contain"
               />
             </div>
-            <h1 className="text-4xl font-bold text-amber-800 font-[family-name:var(--font-jolly-lodger)]">Maltlog</h1>
-            <span className="text-4xl font-bold text-purple-700 ml-2 font-[family-name:var(--font-jolly-lodger)]">Community</span>
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-amber-800 font-[family-name:var(--font-jolly-lodger)]">Maltlog</h1>
+            <span className="text-2xl sm:text-3xl lg:text-4xl font-bold text-purple-700 ml-1 sm:ml-2 font-[family-name:var(--font-jolly-lodger)]">Community</span>
           </div>
-          <div className="flex gap-4">
+          <div className="flex gap-2 sm:gap-4">
             {user ? (
               <>
-                <span className="text-sm text-gray-600">안녕하세요, {profile?.nickname || user.email}님!</span>
+                <span className="text-xs sm:text-sm text-gray-600">안녕하세요, {profile?.nickname || user.email}님!</span>
                 <button
                   onClick={handleLogout}
-                  className="text-sm text-red-600 hover:text-red-800"
+                  className="text-xs sm:text-sm text-red-600 hover:text-red-800"
                 >
                   로그아웃
                 </button>
@@ -241,7 +241,7 @@ export default function CommunityClient({
             ) : (
               <button
                 onClick={() => router.push('/login')}
-                className="bg-amber-600 text-white px-4 py-2 rounded-lg hover:bg-amber-700"
+                className="bg-amber-600 text-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg hover:bg-amber-700 text-sm"
               >
                 로그인
               </button>
@@ -251,30 +251,30 @@ export default function CommunityClient({
 
         <div className="max-w-4xl mx-auto">
           {/* 검색 UI */}
-          <div className="mb-8">
-            <form onSubmit={handleSearch} className="flex gap-3 mb-4">
+          <div className="mb-6 sm:mb-8">
+            <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-2 sm:gap-3 mb-4">
               <div className="flex-1">
                 <input
                   type="text"
                   value={searchInput}
                   onChange={(e) => setSearchInput(e.target.value)}
                   placeholder="제목 또는 내용으로 검색... (2글자 이상)"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-purple-600 outline-none"
+                  className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-purple-600 outline-none text-sm sm:text-base"
                 />
               </div>
               <button
                 type="submit"
                 disabled={isSearching}
-                className="bg-purple-700 text-white px-6 py-2 rounded-lg hover:bg-purple-800 disabled:opacity-50 font-medium flex items-center gap-2"
+                className="bg-purple-700 text-white px-4 sm:px-6 py-2 rounded-lg hover:bg-purple-800 disabled:opacity-50 font-medium flex items-center justify-center gap-2 text-sm sm:text-base"
               >
                 {isSearching ? (
                   <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                    검색중...
+                    <div className="animate-spin rounded-full h-3 sm:h-4 w-3 sm:w-4 border-b-2 border-white"></div>
+                    <span className="hidden sm:inline">검색중...</span>
                   </>
                 ) : (
                   <>
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-3 sm:w-4 h-3 sm:h-4">
                       <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
                     </svg>
                     검색
@@ -284,7 +284,7 @@ export default function CommunityClient({
             </form>
 
             {/* 검색 결과 정보 */}
-            <div className="flex justify-between items-center text-sm text-gray-600 mb-4">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center text-xs sm:text-sm text-gray-600 mb-4 gap-2 sm:gap-0">
               <div>
                 {searchQuery ? (
                   <span>검색어 "{searchQuery}" 결과: 총 {totalCount}개</span>
@@ -299,10 +299,10 @@ export default function CommunityClient({
           </div>
 
           {user && (
-            <div className="mb-8">
+            <div className="mb-6 sm:mb-8">
               <button
                 onClick={() => router.push('/community/new')}
-                className="bg-purple-700 text-white px-6 py-3 rounded-lg hover:bg-purple-800 font-medium"
+                className="bg-purple-700 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg hover:bg-purple-800 font-medium text-sm sm:text-base w-full sm:w-auto"
               >
                 새 게시글 작성
               </button>
@@ -310,16 +310,16 @@ export default function CommunityClient({
           )}
 
           {posts.length > 0 ? (
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6">
               {posts.map((post) => (
                 <div
                   key={post.id}
-                  className="bg-white rounded-xl p-6 shadow-sm border hover:shadow-md transition-all cursor-pointer"
+                  className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border hover:shadow-md transition-all cursor-pointer"
                   onClick={() => router.push(`/community/post/${post.id}`)}
                 >
-                  <div className="flex items-start gap-4">
+                  <div className="flex flex-col sm:flex-row items-start gap-3 sm:gap-4">
                     {post.image_url && (
-                      <div className="w-24 h-24 rounded-lg overflow-hidden flex-shrink-0">
+                      <div className="w-full sm:w-20 md:w-24 h-20 sm:h-20 md:h-24 rounded-lg overflow-hidden flex-shrink-0">
                         <img
                           src={post.image_url}
                           alt="게시글 이미지"
@@ -327,48 +327,48 @@ export default function CommunityClient({
                         />
                       </div>
                     )}
-                    <div className="flex-1">
+                    <div className="flex-1 w-full">
                       <div className="flex items-start justify-between mb-2">
-                        <h3 className="text-xl font-bold text-gray-800 flex-1">{post.title}</h3>
+                        <h3 className="text-lg sm:text-xl font-bold text-gray-800 flex-1 leading-tight">{post.title}</h3>
                         {user && post.user_id !== user.id && (
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
                               setReportDialog({ isOpen: true, targetType: 'post', targetId: post.id! });
                             }}
-                            className="text-gray-400 hover:text-red-500 transition-colors ml-2"
+                            className="text-gray-400 hover:text-red-500 transition-colors ml-2 flex-shrink-0"
                             title="신고하기"
                           >
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 sm:w-5 h-4 sm:h-5">
                               <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
                             </svg>
                           </button>
                         )}
                       </div>
-                      <p className="text-gray-600 mb-3 line-clamp-2">{post.content}</p>
-                      <div className="flex items-center justify-between text-sm text-gray-500 mt-4">
-                        <div className="flex items-center gap-3">
+                      <p className="text-sm sm:text-base text-gray-600 mb-3 line-clamp-2">{post.content}</p>
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between text-xs sm:text-sm text-gray-500 mt-3 sm:mt-4 gap-3 sm:gap-0">
+                        <div className="flex items-center gap-2 sm:gap-3">
                           {post.authorImage ? (
                             <img
                               src={post.authorImage}
                               alt={post.author}
-                              className="w-8 h-8 rounded-full object-cover"
+                              className="w-6 sm:w-8 h-6 sm:h-8 rounded-full object-cover"
                             />
                           ) : (
-                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-rose-400 to-pink-500 flex items-center justify-center text-white font-bold">
+                            <div className="w-6 sm:w-8 h-6 sm:h-8 rounded-full bg-gradient-to-br from-rose-400 to-pink-500 flex items-center justify-center text-white font-bold text-xs sm:text-sm">
                               {(post.author || ' ').charAt(0)}
                             </div>
                           )}
                           <div className="flex flex-col">
                             <div className="flex items-center gap-2">
-                              <span className="font-medium text-gray-700">{post.author}</span>
+                              <span className="font-medium text-gray-700 text-xs sm:text-sm">{post.author}</span>
                               {post.profiles && isAdmin(post.profiles) && <AdminBadge />}
                             </div>
                             <span className="text-xs">{formatDate(post.created_at)}</span>
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-4 text-gray-500">
+                        <div className="flex items-center gap-3 sm:gap-4 text-gray-500">
                           <button
                             onClick={(e) => {
                               e.stopPropagation(); // 카드 클릭 이벤트 방지
@@ -379,24 +379,24 @@ export default function CommunityClient({
                           >
                             {/* 채워진 하트 (좋아요 누른 상태) */}
                             {postLikes[post.id!]?.isLiked ? (
-                              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 text-red-500">
+                              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 sm:w-5 h-4 sm:h-5 text-red-500">
                                 <path d="m11.645 20.91-.007-.003-.022-.012a15.247 15.247 0 0 1-.383-.218 25.18 25.18 0 0 1-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0 1 12 5.052 5.5 5.5 0 0 1 16.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 0 1-4.244 3.17 15.247 15.247 0 0 1-.383.219l-.022.012-.007.004-.003.001a.752.752 0 0 1-.704 0l-.003-.001Z" />
                               </svg>
                             ) : (
                               /* 텅 빈 하트 (기본 상태) */
-                              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 group-hover:text-red-500 transition-colors">
+                              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 sm:w-5 h-4 sm:h-5 group-hover:text-red-500 transition-colors">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
                               </svg>
                             )}
-                            <span className="text-sm font-medium">{postLikes[post.id!]?.count ?? 0}</span>
+                            <span className="text-xs sm:text-sm font-medium">{postLikes[post.id!]?.count ?? 0}</span>
                           </button>
 
                           {/* 댓글 아이콘 */}
                           <div className="flex items-center gap-1.5">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 sm:w-5 h-4 sm:h-5">
                               <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12.76c0 1.6 1.123 2.994 2.707 3.227 1.087.16 2.185.283 3.293.369V21l4.076-4.076a1.526 1.526 0 0 1 1.037-.443 48.282 48.282 0 0 0 5.68-.494c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z" />
                             </svg>
-                            <span className="text-sm font-medium">{post.comments_count || 0}</span>
+                            <span className="text-xs sm:text-sm font-medium">{post.comments_count || 0}</span>
                           </div>
                         </div>
                       </div>
@@ -414,38 +414,38 @@ export default function CommunityClient({
 
           {/* 페이지네이션 UI */}
           {totalPages > 1 && (
-            <div className="mt-8 flex justify-center">
-              <nav className="flex items-center gap-2">
+            <div className="mt-6 sm:mt-8 flex justify-center">
+              <nav className="flex items-center gap-1 sm:gap-2">
                 {/* 이전 페이지 버튼 */}
                 <button
                   onClick={() => handlePageChange(currentPage - 1)}
                   disabled={currentPage <= 1}
-                  className="px-3 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                  className="px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1 text-xs sm:text-sm"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-3 sm:w-4 h-3 sm:h-4">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
                   </svg>
-                  이전
+                  <span className="hidden sm:inline">이전</span>
                 </button>
 
                 {/* 페이지 번호들 */}
-                {Array.from({ length: Math.min(5, totalPages) }, (_, index) => {
+                {Array.from({ length: Math.min(totalPages <= 3 ? totalPages : 3, totalPages) }, (_, index) => {
                   let pageNum;
-                  if (totalPages <= 5) {
+                  if (totalPages <= 3) {
                     pageNum = index + 1;
-                  } else if (currentPage <= 3) {
+                  } else if (currentPage <= 2) {
                     pageNum = index + 1;
-                  } else if (currentPage >= totalPages - 2) {
-                    pageNum = totalPages - 4 + index;
+                  } else if (currentPage >= totalPages - 1) {
+                    pageNum = totalPages - 2 + index;
                   } else {
-                    pageNum = currentPage - 2 + index;
+                    pageNum = currentPage - 1 + index;
                   }
 
                   return (
                     <button
                       key={pageNum}
                       onClick={() => handlePageChange(pageNum)}
-                      className={`px-3 py-2 rounded-lg border ${
+                      className={`px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg border text-xs sm:text-sm ${
                         currentPage === pageNum
                           ? 'bg-purple-700 text-white border-purple-700'
                           : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
@@ -460,10 +460,10 @@ export default function CommunityClient({
                 <button
                   onClick={() => handlePageChange(currentPage + 1)}
                   disabled={currentPage >= totalPages}
-                  className="px-3 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                  className="px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1 text-xs sm:text-sm"
                 >
-                  다음
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+                  <span className="hidden sm:inline">다음</span>
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-3 sm:w-4 h-3 sm:h-4">
                     <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
                   </svg>
                 </button>

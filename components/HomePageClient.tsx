@@ -587,7 +587,10 @@ function WhiskyCard({ whisky, navigateWithTransition }: { whisky: WhiskyData, ro
   }
 
   return (
-    <div className="bg-white rounded border border-gray-200 p-2 sm:p-3 text-center hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
+    <div
+      className="bg-white rounded border border-gray-200 p-2 sm:p-3 text-center hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 cursor-pointer"
+      onClick={handleClick}
+    >
       {/* 위스키 이미지/글래스 영역 */}
       <div className="h-32 sm:h-40 mb-2 sm:mb-3 bg-gray-100 rounded flex items-center justify-center relative">
         <img
@@ -634,12 +637,9 @@ function WhiskyCard({ whisky, navigateWithTransition }: { whisky: WhiskyData, ro
       </div>
 
       {/* 위스키 이름 - 모든 위스키에 표시 */}
-      <button
-        className="text-xs sm:text-sm font-bold mb-1 sm:mb-2 hover:scale-110 transition-all duration-200 cursor-pointer block w-full text-gray-600 hover:text-red-600 leading-tight"
-        onClick={handleClick}
-      >
+      <div className="text-xs sm:text-sm font-bold mb-1 sm:mb-2 hover:scale-110 transition-all duration-200 text-gray-600 hover:text-red-600 leading-tight">
         {whisky.name}
-      </button>
+      </div>
 
       {/* 평점 */}
       <div className="flex items-center justify-center gap-1 text-xs text-gray-500">
