@@ -27,11 +27,11 @@ export const metadata: Metadata = {
   description: "위스키를 사랑하는 모든 이들을 위한 완벽한 기록 공간",
   icons: {
     icon: [
-      { url: '/favicon.ico?v=2' },
-      { url: '/Pavicon.png?v=2', type: 'image/png' },
+      { url: '/favicon.ico?v=3' },
+      { url: '/Pavicon.png?v=3', type: 'image/png', sizes: '32x32' },
     ],
-    shortcut: '/favicon.ico?v=2',
-    apple: '/Pavicon.png?v=2',
+    shortcut: '/favicon.ico?v=3',
+    apple: '/Pavicon.png?v=3',
   },
 };
 
@@ -43,9 +43,10 @@ export default function RootLayout({
   return (
     <html lang="ko" className="light">
       <head>
-        <link rel="icon" href="/favicon.ico?v=2" type="image/x-icon" />
-        <link rel="shortcut icon" href="/favicon.ico?v=2" type="image/x-icon" />
-        <link rel="apple-touch-icon" href="/Pavicon.png?v=2" />
+        <link rel="icon" href="/favicon.ico?v=3" type="image/x-icon" />
+        <link rel="shortcut icon" href="/favicon.ico?v=3" type="image/x-icon" />
+        <link rel="apple-touch-icon" href="/Pavicon.png?v=3" />
+        <link rel="icon" href="/Pavicon.png?v=3" type="image/png" sizes="32x32" />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${jollyLodger.variable} antialiased bg-rose-50 text-neutral-900`}
