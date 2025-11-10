@@ -414,6 +414,7 @@ export default function WhiskyDetailClient({ whisky, initialReviews }: WhiskyDet
         setHasUserRated(true)
         setIsEditingRating(false)
         await refreshReviews()
+        router.refresh() // 홈페이지 캐시 갱신
         toast.success('평점이 저장되었습니다!')
       }
     } catch (error) {
@@ -486,6 +487,7 @@ export default function WhiskyDetailClient({ whisky, initialReviews }: WhiskyDet
         }
 
         await refreshReviews()
+        router.refresh() // 홈페이지 캐시 갱신
         toast.success('리뷰가 등록되었습니다!')
       }
     } catch (error) {
@@ -554,6 +556,7 @@ export default function WhiskyDetailClient({ whisky, initialReviews }: WhiskyDet
 
         // 리뷰 목록 새로고침
         await refreshReviews()
+        router.refresh() // 홈페이지 캐시 갱신
 
         toast.success('리뷰가 저장되었습니다!')
       }
@@ -751,6 +754,7 @@ export default function WhiskyDetailClient({ whisky, initialReviews }: WhiskyDet
 
         // 리뷰 목록 새로고침
         await refreshReviews()
+        router.refresh() // 홈페이지 캐시 갱신
 
         toast.success('리뷰가 삭제되었습니다.')
       } else {

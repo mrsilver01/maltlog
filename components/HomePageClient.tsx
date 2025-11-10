@@ -643,8 +643,8 @@ function WhiskyCard({ whisky, navigateWithTransition }: { whisky: WhiskyData, ro
 
       {/* 평점 */}
       <div className="flex items-center justify-center gap-1 text-xs text-gray-500">
-        {whisky.avgRating && whisky.avgRating > 0 ? (
-          // 별점이 있는 경우: 실제 점수에 맞는 별 표시
+        {whisky.totalReviews > 0 ? (
+          // 리뷰가 있는 경우: 실제 점수에 맞는 별 표시
           <div className="flex items-center gap-0.5">
             {[1, 2, 3, 4, 5].map((starIndex) => {
               const rating = Number(whisky.avgRating);
@@ -677,7 +677,7 @@ function WhiskyCard({ whisky, navigateWithTransition }: { whisky: WhiskyData, ro
             <span className="ml-1 text-gray-600 text-xs">{Number(whisky.avgRating).toFixed(1)}</span>
           </div>
         ) : (
-          // 별점이 없는 경우: 투명한 별 5개와 "-"
+          // 리뷰가 0개인 경우: 투명한 별 5개와 "-"
           <div className="flex items-center gap-0.5">
             {[1, 2, 3, 4, 5].map((starIndex) => (
               <span key={starIndex} className="text-gray-300 text-sm">

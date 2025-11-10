@@ -9,10 +9,10 @@ export const dynamic = 'force-dynamic'
 async function getWhiskies(): Promise<WhiskyData[]> {
   console.log('📊 서버에서 위스키 데이터 로드 시작...')
 
-  // [수정] 이미지가 있는 위스키를 우선적으로 표시 (Supabase Storage 이미지 우선)
+  // [수정] whiskies_with_stats 뷰 사용으로 실시간 집계 데이터 조회
   const { data, error } = await supabase
-    .from('whiskies')
-    .select('id, name, image, abv, region, price, cask, avg_rating, likes')
+    .from('whiskies_with_stats')
+    .select('id, name, image, abv, region, price, cask, distillery, avg_rating, reviews_count, likes_count')
     .neq('image', '')
     .not('image', 'is', null)
     .order('image', { ascending: false }) // Supabase Storage URL이 먼저 오도록 (s로 시작)
@@ -27,7 +27,8 @@ async function getWhiskies(): Promise<WhiskyData[]> {
   const transformedData = data.map(whisky => ({
     ...whisky,
     avgRating: whisky.avg_rating || 0,
-    totalReviews: whisky.likes || 0
+    totalReviews: whisky.reviews_count || 0,
+    likes: whisky.likes_count || 0
   })) as WhiskyData[];
 
   console.log('✅ 서버에서 위스키 데이터 로드 완료:', transformedData.length, '개')

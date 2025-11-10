@@ -96,15 +96,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       })
 
       if (error) {
-        toast.error(`로그인 실패: ${error.message}`)
         throw error
       }
-
-      toast.success('로그인 성공!')
     } catch (error) {
-      if (error instanceof Error && !error.message.includes('로그인 실패:')) {
-        toast.error(`로그인 실패: ${error.message}`)
-      }
       throw error
     }
   }, [])
@@ -120,16 +114,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       })
 
       if (error) {
-        toast.error(`회원가입 실패: ${error.message}`)
         throw error
       }
 
-      toast.success('회원가입 완료! 이메일을 확인해주세요.')
       // DB 트리거(handle_new_user)가 자동으로 프로필 생성
     } catch (error) {
-      if (error instanceof Error && !error.message.includes('회원가입 실패:')) {
-        toast.error(`회원가입 실패: ${error.message}`)
-      }
       throw error
     }
   }, [])
@@ -139,15 +128,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { error } = await supabase.auth.signOut()
 
       if (error) {
-        toast.error(`로그아웃 실패: ${error.message}`)
         throw error
       }
-
-      toast.success('로그아웃 완료')
     } catch (error) {
-      if (error instanceof Error && !error.message.includes('로그아웃 실패:')) {
-        toast.error(`로그아웃 실패: ${error.message}`)
-      }
       throw error
     }
   }, [])
@@ -160,15 +143,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       })
 
       if (error) {
-        toast.error(`카카오 로그인 실패: ${error.message}`)
         throw error
       }
-
-      toast.loading('카카오로 로그인 중...')
     } catch (error) {
-      if (error instanceof Error && !error.message.includes('카카오 로그인 실패:')) {
-        toast.error(`카카오 로그인 실패: ${error.message}`)
-      }
       throw error
     }
   }, [])

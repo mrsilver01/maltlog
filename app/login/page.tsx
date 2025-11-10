@@ -68,9 +68,10 @@ export default function LoginPage() {
     } catch (error: unknown) {
       if (!isLogin) {
         console.error('회원가입 또는 자동 로그인 오류:', error)
-        toast.error((error instanceof Error ? error.message : 'Unknown error') || '회원가입 중 오류가 발생했습니다.')
+        toast.error('회원가입 실패: ' + (error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.'))
       } else {
-        toast.error('오류: ' + (error instanceof Error ? error.message : 'Unknown error'))
+        console.error('로그인 오류:', error)
+        toast.error('로그인 실패: ' + (error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.'))
       }
     } finally {
       setLoading(false)
@@ -83,7 +84,8 @@ export default function LoginPage() {
       await signInWithKakao()
       // OAuth 리다이렉트 처리는 callback 페이지에서 진행
     } catch (error: unknown) {
-      toast.error('오류: ' + (error instanceof Error ? error.message : 'Unknown error'))
+      console.error('카카오 로그인 오류:', error)
+      toast.error('카카오 로그인 실패: ' + (error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.'))
       setLoading(false)
     }
   }

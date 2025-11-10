@@ -17,7 +17,7 @@ export default function AuthCallback() {
 
         if (error) {
           console.error('Auth callback error:', error)
-          toast.error('로그인 중 오류가 발생했습니다.')
+          toast.error('카카오 로그인 실패: ' + error.message)
           router.push('/login')
           return
         }
@@ -43,7 +43,7 @@ export default function AuthCallback() {
         }
       } catch (error) {
         console.error('Unexpected error:', error)
-        toast.error('로그인 중 오류가 발생했습니다.')
+        toast.error('카카오 로그인 중 예상치 못한 오류가 발생했습니다.')
         router.push('/login')
       }
     }

@@ -1,4 +1,5 @@
 import { supabase } from './supabase'
+import { revalidatePath } from 'next/cache'
 
 /**
  * 위스키 리뷰(평점 및 노트) 기능을 위한 Supabase 헬퍼 함수들
@@ -111,6 +112,15 @@ export async function saveWhiskyReview(
     }
 
     console.log('✅ 위스키 리뷰 저장 성공:', whiskyName, '평점:', rating)
+
+    // 홈페이지 캐시 즉시 갱신 (별점 변경 즉시 반영)
+    try {
+      revalidatePath('/')
+    } catch (error) {
+      console.error('홈페이지 캐시 갱신 실패:', error)
+      // 캐시 갱신 실패해도 리뷰 저장은 성공이므로 계속 진행
+    }
+
     return true
   } catch (error) {
     console.error('리뷰 저장 중 오류:', error)
@@ -169,6 +179,15 @@ export async function deleteWhiskyReview(whiskyName: string): Promise<boolean> {
     }
 
     console.log('✅ 위스키 리뷰 삭제 성공:', whiskyName)
+
+    // 홈페이지 캐시 즉시 갱신 (별점 변경 즉시 반영)
+    try {
+      revalidatePath('/')
+    } catch (error) {
+      console.error('홈페이지 캐시 갱신 실패:', error)
+      // 캐시 갱신 실패해도 리뷰 삭제는 성공이므로 계속 진행
+    }
+
     return true
   } catch (error) {
     console.error('리뷰 삭제 중 오류:', error)
