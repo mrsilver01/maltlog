@@ -1,4 +1,4 @@
-import { supabaseBrowser()Browser } from '@/lib/supabaseBrowser()/browser'
+import { supabaseBrowser } from '@/lib/supabase/browser'
 
 /**
  * 게시글 좋아요 기능을 위한 Supabase 헬퍼 함수들

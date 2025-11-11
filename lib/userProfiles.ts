@@ -1,4 +1,4 @@
-import { supabaseBrowser()Browser } from '@/lib/supabaseBrowser()/browser'
+import { supabaseBrowser } from '@/lib/supabase/browser'
 
 /**
  * 사용자 프로필 기능을 위한 Supabase 헬퍼 함수들

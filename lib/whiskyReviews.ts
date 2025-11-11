@@ -1,4 +1,4 @@
-import { supabaseBrowser()Browser } from '@/lib/supabaseBrowser()/browser'
+import { supabaseBrowser } from '@/lib/supabase/browser'
 
 /**
  * 위스키 리뷰(평점 및 노트) 기능을 위한 Supabase 헬퍼 함수들

@@ -1,4 +1,4 @@
-import { supabaseBrowser()Browser } from '@/lib/supabaseBrowser()/browser'
+import { supabaseBrowser } from '@/lib/supabase/browser'
 
 /**
  * 리뷰 댓글 기능을 위한 Supabase 헬퍼 함수들

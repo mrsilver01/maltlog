@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/app/context/AuthContext'
-import { supabaseBrowser()Browser } from '@/lib/supabaseBrowser()/browser'
+import { supabaseBrowser } from '@/lib/supabase/browser'
 import { likePost, unlikePost, checkIfPostLiked, getPostLikesCount } from '@/lib/postActions'
 import AdminBadge from '@/components/AdminBadge'
 import { ReportDialog } from '@/components/ReportDialog'

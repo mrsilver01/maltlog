@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/app/context/AuthContext'
-import { supabaseBrowser()Browser } from '@/lib/supabaseBrowser()/browser'
+import { supabaseBrowser } from '@/lib/supabase/browser'
 import LoadingAnimation from '@/components/LoadingAnimation'
 import { likeReview, unlikeReview, checkMultipleReviewsLiked, getReviewLikesCount, deleteReview } from '@/lib/reviewActions'
 import { isWhiskyLiked, likeWhisky, unlikeWhisky } from '@/lib/likes'
