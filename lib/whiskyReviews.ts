@@ -1,4 +1,4 @@
-import { supabase } from './supabase'
+import { supabaseBrowser()Browser } from '@/lib/supabaseBrowser()/browser'
 
 /**
  * 위스키 리뷰(평점 및 노트) 기능을 위한 Supabase 헬퍼 함수들
@@ -17,14 +17,14 @@ export interface WhiskyReview {
 // 현재 사용자의 특정 위스키에 대한 리뷰 가져오기
 export async function getUserWhiskyReview(whiskyName: string): Promise<WhiskyReview | null> {
   try {
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    const { data: { user }, error: userError } = await supabaseBrowser().auth.getUser()
 
     if (userError || !user) {
       console.log('로그인되지 않음 - 리뷰 없음')
       return null
     }
 
-    const { data: review, error } = await supabase
+    const { data: review, error } = await supabaseBrowser()
       .from('reviews')
       .select('*')
       .eq('user_id', user.id)
@@ -46,14 +46,14 @@ export async function getUserWhiskyReview(whiskyName: string): Promise<WhiskyRev
 // 현재 사용자의 모든 위스키 리뷰 가져오기
 export async function getAllUserWhiskyReviews(): Promise<WhiskyReview[]> {
   try {
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    const { data: { user }, error: userError } = await supabaseBrowser().auth.getUser()
 
     if (userError || !user) {
       console.log('로그인되지 않음 - 리뷰 목록 없음')
       return []
     }
 
-    const { data: reviews, error } = await supabase
+    const { data: reviews, error } = await supabaseBrowser()
       .from('reviews')
       .select('*')
       .eq('user_id', user.id)
@@ -78,7 +78,7 @@ export async function saveWhiskyReview(
   note?: string
 ): Promise<boolean> {
   try {
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    const { data: { user }, error: userError } = await supabaseBrowser().auth.getUser()
 
     if (userError || !user) {
       console.log('로그인이 필요합니다')
@@ -98,7 +98,7 @@ export async function saveWhiskyReview(
       note: note || undefined
     }
 
-    const { error } = await supabase
+    const { error } = await supabaseBrowser()
       .from('reviews')
       .upsert(reviewData, {
         onConflict: 'user_id, whisky_name',
@@ -121,14 +121,14 @@ export async function saveWhiskyReview(
 // 사용자의 모든 위스키 리뷰 가져오기
 export async function getUserWhiskyReviews(): Promise<WhiskyReview[]> {
   try {
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    const { data: { user }, error: userError } = await supabaseBrowser().auth.getUser()
 
     if (userError || !user) {
       console.log('로그인이 필요합니다')
       return []
     }
 
-    const { data: reviews, error } = await supabase
+    const { data: reviews, error } = await supabaseBrowser()
       .from('reviews')
       .select('*')
       .eq('user_id', user.id)
@@ -150,14 +150,14 @@ export async function getUserWhiskyReviews(): Promise<WhiskyReview[]> {
 // 위스키 리뷰 삭제
 export async function deleteWhiskyReview(whiskyName: string): Promise<boolean> {
   try {
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    const { data: { user }, error: userError } = await supabaseBrowser().auth.getUser()
 
     if (userError || !user) {
       console.log('로그인이 필요합니다')
       return false
     }
 
-    const { error } = await supabase
+    const { error } = await supabaseBrowser()
       .from('reviews')
       .delete()
       .eq('user_id', user.id)

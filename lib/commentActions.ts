@@ -1,4 +1,4 @@
-import { supabase } from './supabase'
+import { supabaseBrowser()Browser } from '@/lib/supabaseBrowser()/browser'
 
 /**
  * 리뷰 댓글 기능을 위한 Supabase 헬퍼 함수들
@@ -22,7 +22,7 @@ export interface ReviewComment {
 // 특정 리뷰의 모든 댓글 가져오기
 export async function getReviewComments(reviewId: string): Promise<ReviewComment[]> {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseBrowser()
       .from('comments')
       .select(`
         *,
@@ -90,7 +90,7 @@ export async function addComment(
       return false
     }
 
-    const { error } = await supabase
+    const { error } = await supabaseBrowser()
       .from('comments')
       .insert(commentData)
 
@@ -117,7 +117,7 @@ export async function addComment(
 // 댓글 수정
 export async function updateComment(commentId: string, userId: string, content: string): Promise<boolean> {
   try {
-    const { error } = await supabase
+    const { error } = await supabaseBrowser()
       .from('comments')
       .update({
         content: content.trim(),
@@ -142,7 +142,7 @@ export async function updateComment(commentId: string, userId: string, content: 
 // 댓글 삭제
 export async function deleteComment(commentId: string, userId: string): Promise<boolean> {
   try {
-    const { error } = await supabase
+    const { error } = await supabaseBrowser()
       .from('comments')
       .delete()
       .eq('id', commentId)
@@ -164,7 +164,7 @@ export async function deleteComment(commentId: string, userId: string): Promise<
 // 특정 리뷰의 댓글 개수 가져오기
 export async function getReviewCommentsCount(reviewId: string): Promise<number> {
   try {
-    const { count, error } = await supabase
+    const { count, error } = await supabaseBrowser()
       .from('comments')
       .select('*', { count: 'exact', head: true })
       .eq('review_id', reviewId)
@@ -186,7 +186,7 @@ export async function getReviewCommentsCount(reviewId: string): Promise<number> 
 // 게시글의 최상위 댓글만 가져오기 (답글 제외)
 export async function getPostComments(postId: string): Promise<ReviewComment[]> {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseBrowser()
       .from('comments')
       .select(`
         *,
@@ -214,7 +214,7 @@ export async function getPostComments(postId: string): Promise<ReviewComment[]> 
 // 특정 댓글의 답글들 가져오기
 export async function getReplies(commentId: number): Promise<ReviewComment[]> {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseBrowser()
       .from('comments')
       .select(`
         *,
@@ -241,7 +241,7 @@ export async function getReplies(commentId: number): Promise<ReviewComment[]> {
 // 게시글의 전체 댓글 개수 가져오기 (답글 포함)
 export async function getPostCommentsCount(postId: string): Promise<number> {
   try {
-    const { count, error } = await supabase
+    const { count, error } = await supabaseBrowser()
       .from('comments')
       .select('*', { count: 'exact', head: true })
       .eq('post_id', postId)

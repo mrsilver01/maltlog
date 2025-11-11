@@ -1,4 +1,4 @@
-import { supabase } from './supabase'
+import { supabaseBrowser()Browser } from '@/lib/supabaseBrowser()/browser'
 
 /**
  * 리뷰 좋아요 기능을 위한 Supabase 헬퍼 함수들
@@ -7,7 +7,7 @@ import { supabase } from './supabase'
 // 리뷰에 좋아요 추가
 export async function likeReview(reviewId: string, userId: string): Promise<boolean> {
   try {
-    const { error } = await supabase
+    const { error } = await supabaseBrowser()
       .from('review_likes')
       .insert({
         review_id: reviewId,
@@ -30,7 +30,7 @@ export async function likeReview(reviewId: string, userId: string): Promise<bool
 // 리뷰 좋아요 취소
 export async function unlikeReview(reviewId: string, userId: string): Promise<boolean> {
   try {
-    const { error } = await supabase
+    const { error } = await supabaseBrowser()
       .from('review_likes')
       .delete()
       .eq('review_id', reviewId)
@@ -52,7 +52,7 @@ export async function unlikeReview(reviewId: string, userId: string): Promise<bo
 // 리뷰에 좋아요를 눌렀는지 확인
 export async function checkIfLiked(reviewId: string, userId: string): Promise<boolean> {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseBrowser()
       .from('review_likes')
       .select('id')
       .eq('review_id', reviewId)
@@ -74,7 +74,7 @@ export async function checkIfLiked(reviewId: string, userId: string): Promise<bo
 // 특정 리뷰의 총 좋아요 개수 가져오기
 export async function getReviewLikesCount(reviewId: string): Promise<number> {
   try {
-    const { count, error } = await supabase
+    const { count, error } = await supabaseBrowser()
       .from('review_likes')
       .select('*', { count: 'exact', head: true })
       .eq('review_id', reviewId)
@@ -94,7 +94,7 @@ export async function getReviewLikesCount(reviewId: string): Promise<number> {
 // 여러 리뷰의 좋아요 상태를 한번에 확인 (성능 최적화)
 export async function checkMultipleReviewsLiked(reviewIds: string[], userId: string): Promise<{[key: string]: boolean}> {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseBrowser()
       .from('review_likes')
       .select('review_id')
       .eq('user_id', userId)
@@ -125,7 +125,7 @@ export async function checkMultipleReviewsLiked(reviewIds: string[], userId: str
 // 리뷰 삭제 (본인이 작성한 리뷰만)
 export async function deleteReview(reviewId: string, userId: string): Promise<boolean> {
   try {
-    const { error } = await supabase
+    const { error } = await supabaseBrowser()
       .from('reviews')
       .delete()
       .eq('id', reviewId)

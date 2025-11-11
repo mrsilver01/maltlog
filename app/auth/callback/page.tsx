@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { supabase } from '../../../lib/supabase'
+import { supabaseBrowser } from '@/lib/supabase/browser'
 import toast from 'react-hot-toast'
 // Migration functions removed as we now use Supabase only
 
@@ -13,7 +13,7 @@ export default function AuthCallback() {
     const handleAuthCallback = async () => {
       try {
         // URL에서 인증 토큰을 처리합니다
-        const { data, error } = await supabase.auth.getSession()
+        const { data, error } = await supabaseBrowser().auth.getSession()
 
         if (error) {
           console.error('Auth callback error:', error)

@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/app/context/AuthContext'
-import { supabase } from '@/lib/supabase'
+import { supabaseBrowser()Browser } from '@/lib/supabaseBrowser()/browser'
 import { likePost, unlikePost, checkIfPostLiked, getPostLikesCount } from '@/lib/postActions'
 import AdminBadge from '@/components/AdminBadge'
 import { ReportDialog } from '@/components/ReportDialog'
@@ -146,7 +146,7 @@ export default function PostDetailClient({ post, initialComments }: PostDetailCl
   // 댓글 새로고침 (대댓글 포함)
   const refreshComments = async () => {
     // 최상위 댓글들만 가져오기 (parent_comment_id가 null인 것들)
-    const { data: commentsData, error } = await supabase
+    const { data: commentsData, error } = await supabaseBrowser()
       .from('comments')
       .select(`
         id,
@@ -191,7 +191,7 @@ export default function PostDetailClient({ post, initialComments }: PostDetailCl
 
   // 대댓글 로드
   const loadReplies = async (parentCommentId: string): Promise<Comment[]> => {
-    const { data: repliesData, error } = await supabase
+    const { data: repliesData, error } = await supabaseBrowser()
       .from('comments')
       .select(`
         id,
@@ -239,7 +239,7 @@ export default function PostDetailClient({ post, initialComments }: PostDetailCl
     setIsSubmittingComment(true)
 
     try {
-      const { error } = await supabase
+      const { error } = await supabaseBrowser()
         .from('comments')
         .insert([{
           post_id: post.id,
@@ -271,7 +271,7 @@ export default function PostDetailClient({ post, initialComments }: PostDetailCl
     }
 
     try {
-      const { error } = await supabase
+      const { error } = await supabaseBrowser()
         .from('comments')
         .update({ content: editCommentContent.trim() })
         .eq('id', commentId)
@@ -297,7 +297,7 @@ export default function PostDetailClient({ post, initialComments }: PostDetailCl
     if (!confirm('정말로 이 댓글을 삭제하시겠습니까?')) return
 
     try {
-      const { error } = await supabase
+      const { error } = await supabaseBrowser()
         .from('comments')
         .delete()
         .eq('id', commentId)
@@ -368,7 +368,7 @@ export default function PostDetailClient({ post, initialComments }: PostDetailCl
     setReplySubmitting(prev => ({ ...prev, [parentCommentId]: true }))
 
     try {
-      const { error } = await supabase
+      const { error } = await supabaseBrowser()
         .from('comments')
         .insert([{
           post_id: post.id,
@@ -419,7 +419,7 @@ export default function PostDetailClient({ post, initialComments }: PostDetailCl
     if (!confirm('정말로 이 대댓글을 삭제하시겠습니까?')) return
 
     try {
-      const { error } = await supabase
+      const { error } = await supabaseBrowser()
         .from('comments')
         .delete()
         .eq('id', replyId)
@@ -449,7 +449,7 @@ export default function PostDetailClient({ post, initialComments }: PostDetailCl
     if (!confirm('정말로 이 게시글을 삭제하시겠습니까?')) return
 
     try {
-      const { error } = await supabase
+      const { error } = await supabaseBrowser()
         .from('posts')
         .delete()
         .eq('id', post.id)

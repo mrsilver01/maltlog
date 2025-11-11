@@ -1,8 +1,8 @@
 // lib/likes.ts
-import { supabase } from '@/lib/supabase'
+import { supabaseBrowser } from '@/lib/supabase/browser'
 
 export async function isWhiskyLiked(userId: string, whiskyId: string) {
-  const { data, error } = await supabase
+  const { data, error } = await supabaseBrowser()
     .from('likes')
     .select('id')
     .eq('user_id', userId)
@@ -15,7 +15,7 @@ export async function isWhiskyLiked(userId: string, whiskyId: string) {
 
 export async function likeWhisky(userId: string, whiskyId: string) {
   // post_id는 사용하지 않음 → 항상 null
-  const { error } = await supabase
+  const { error } = await supabaseBrowser()
     .from('likes')
     .insert([{ user_id: userId, whisky_id: whiskyId, post_id: null }])
 
@@ -32,7 +32,7 @@ export async function likeWhisky(userId: string, whiskyId: string) {
 }
 
 export async function unlikeWhisky(userId: string, whiskyId: string) {
-  const { error } = await supabase
+  const { error } = await supabaseBrowser()
     .from('likes')
     .delete()
     .eq('user_id', userId)
@@ -47,7 +47,7 @@ export async function unlikeWhisky(userId: string, whiskyId: string) {
 
 // 사용자의 모든 찜한 위스키 ID 목록 가져오기
 export async function getUserWhiskyLikes(userId: string): Promise<string[]> {
-  const { data, error } = await supabase
+  const { data, error } = await supabaseBrowser()
     .from('likes')
     .select('whisky_id')
     .eq('user_id', userId)
@@ -60,7 +60,7 @@ export async function getUserWhiskyLikes(userId: string): Promise<string[]> {
 // 위스키 찜 수 증가
 async function incrementWhiskyLikesCount(whiskyId: string) {
   try {
-    const { error } = await supabase.rpc('increment_whisky_likes', {
+    const { error } = await supabaseBrowser().rpc('increment_whisky_likes', {
       whisky_id: whiskyId
     })
 
@@ -79,7 +79,7 @@ async function incrementWhiskyLikesCount(whiskyId: string) {
 // 위스키 찜 수 감소
 async function decrementWhiskyLikesCount(whiskyId: string) {
   try {
-    const { error } = await supabase.rpc('decrement_whisky_likes', {
+    const { error } = await supabaseBrowser().rpc('decrement_whisky_likes', {
       whisky_id: whiskyId
     })
 
@@ -98,7 +98,7 @@ async function decrementWhiskyLikesCount(whiskyId: string) {
 // 직접 업데이트 (fallback 방법)
 async function updateWhiskyLikesCountDirect(whiskyId: string, increment: number) {
   // 현재 찜 수를 실제로 계산해서 업데이트
-  const { data: likesData, error: likesError } = await supabase
+  const { data: likesData, error: likesError } = await supabaseBrowser()
     .from('likes')
     .select('id')
     .eq('whisky_id', whiskyId)
@@ -112,7 +112,7 @@ async function updateWhiskyLikesCountDirect(whiskyId: string, increment: number)
   const actualLikesCount = likesData?.length ?? 0
 
   // whiskies 테이블 업데이트 (likes 컬럼 사용)
-  const { error: updateError } = await supabase
+  const { error: updateError } = await supabaseBrowser()
     .from('whiskies')
     .update({ likes: actualLikesCount })
     .eq('id', whiskyId)

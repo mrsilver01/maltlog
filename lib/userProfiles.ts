@@ -1,4 +1,4 @@
-import { supabase } from './supabase'
+import { supabaseBrowser()Browser } from '@/lib/supabaseBrowser()/browser'
 
 /**
  * 사용자 프로필 기능을 위한 Supabase 헬퍼 함수들
@@ -15,14 +15,14 @@ export interface UserProfile {
 // 현재 로그인한 사용자의 프로필 정보 가져오기
 export async function getCurrentUserProfile(): Promise<UserProfile | null> {
   try {
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    const { data: { user }, error: userError } = await supabaseBrowser().auth.getUser()
 
     if (userError || !user) {
       console.log('로그인되지 않음 - 프로필 없음')
       return null
     }
 
-    const { data: profile, error } = await supabase
+    const { data: profile, error } = await supabaseBrowser()
       .from('profiles')
       .select('*')
       .eq('id', user.id)
@@ -52,7 +52,7 @@ export async function saveUserProfile(
   avatarUrl?: string
 ): Promise<boolean> {
   try {
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    const { data: { user }, error: userError } = await supabaseBrowser().auth.getUser()
 
     if (userError || !user) {
       console.log('로그인이 필요합니다')
@@ -70,7 +70,7 @@ export async function saveUserProfile(
       avatar_url: avatarUrl || undefined
     }
 
-    const { error } = await supabase
+    const { error } = await supabaseBrowser()
       .from('profiles')
       .upsert(profileData, {
         onConflict: 'id',
@@ -93,7 +93,7 @@ export async function saveUserProfile(
 // 닉네임만 업데이트
 export async function updateNickname(nickname: string): Promise<boolean> {
   try {
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    const { data: { user }, error: userError } = await supabaseBrowser().auth.getUser()
 
     if (userError || !user) {
       console.log('로그인이 필요합니다')
@@ -105,7 +105,7 @@ export async function updateNickname(nickname: string): Promise<boolean> {
       return false
     }
 
-    const { error } = await supabase
+    const { error } = await supabaseBrowser()
       .from('profiles')
       .update({ nickname: nickname.trim() })
       .eq('id', user.id)
@@ -126,14 +126,14 @@ export async function updateNickname(nickname: string): Promise<boolean> {
 // 프로필 이미지 URL만 업데이트
 export async function updateAvatarUrl(avatarUrl: string): Promise<boolean> {
   try {
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    const { data: { user }, error: userError } = await supabaseBrowser().auth.getUser()
 
     if (userError || !user) {
       console.log('로그인이 필요합니다')
       return false
     }
 
-    const { error } = await supabase
+    const { error } = await supabaseBrowser()
       .from('profiles')
       .update({ avatar_url: avatarUrl })
       .eq('id', user.id)
@@ -154,7 +154,7 @@ export async function updateAvatarUrl(avatarUrl: string): Promise<boolean> {
 // 특정 사용자의 프로필 정보 가져오기 (공개용)
 export async function getUserProfile(userId: string): Promise<UserProfile | null> {
   try {
-    const { data: profile, error } = await supabase
+    const { data: profile, error } = await supabaseBrowser()
       .from('profiles')
       .select('*')
       .eq('id', userId)
@@ -179,7 +179,7 @@ export async function checkNicknameAvailable(nickname: string, excludeUserId?: s
       return false
     }
 
-    let query = supabase
+    let query = supabaseBrowser()
       .from('profiles')
       .select('id')
       .eq('nickname', nickname.trim())
@@ -207,14 +207,14 @@ export async function checkNicknameAvailable(nickname: string, excludeUserId?: s
 // 프로필 삭제
 export async function deleteUserProfile(): Promise<boolean> {
   try {
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    const { data: { user }, error: userError } = await supabaseBrowser().auth.getUser()
 
     if (userError || !user) {
       console.log('로그인이 필요합니다')
       return false
     }
 
-    const { error } = await supabase
+    const { error } = await supabaseBrowser()
       .from('profiles')
       .delete()
       .eq('id', user.id)

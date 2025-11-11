@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/app/context/AuthContext'
-import { supabase } from '@/lib/supabase'
+import { supabaseBrowser()Browser } from '@/lib/supabaseBrowser()/browser'
 import LoadingAnimation from '@/components/LoadingAnimation'
 import { likeReview, unlikeReview, checkMultipleReviewsLiked, getReviewLikesCount, deleteReview } from '@/lib/reviewActions'
 import { isWhiskyLiked, likeWhisky, unlikeWhisky } from '@/lib/likes'
@@ -334,7 +334,7 @@ export default function WhiskyDetailClient({ whisky, initialReviews }: WhiskyDet
   }, [user, whisky.id])
 
   const refreshReviews = async () => {
-    const { data: updatedReviews, error } = await supabase
+    const { data: updatedReviews, error } = await supabaseBrowser()
       .from('reviews')
       .select(`*, profiles (nickname, avatar_url)`)
       .eq('whisky_id', whisky.id)
@@ -358,7 +358,7 @@ export default function WhiskyDetailClient({ whisky, initialReviews }: WhiskyDet
       const startIndex = currentPage * REVIEWS_PER_PAGE
       const endIndex = startIndex + REVIEWS_PER_PAGE - 1
 
-      const { data: newReviews, error } = await supabase
+      const { data: newReviews, error } = await supabaseBrowser()
         .from('reviews')
         .select(`*, profiles (nickname, avatar_url)`)
         .eq('whisky_id', whisky.id)
@@ -400,7 +400,7 @@ export default function WhiskyDetailClient({ whisky, initialReviews }: WhiskyDet
         note: null,
       }
 
-      const { error } = await supabase
+      const { error } = await supabaseBrowser()
         .from('reviews')
         .upsert(reviewData, {
           onConflict: 'whisky_id,user_id'
@@ -456,7 +456,7 @@ export default function WhiskyDetailClient({ whisky, initialReviews }: WhiskyDet
         note: quickReviewText.trim(),
       }
 
-      const { error } = await supabase
+      const { error } = await supabaseBrowser()
         .from('reviews')
         .upsert(reviewData, {
           onConflict: 'whisky_id,user_id'
@@ -526,7 +526,7 @@ export default function WhiskyDetailClient({ whisky, initialReviews }: WhiskyDet
         note: currentNote.trim(),
       }
 
-      const { error } = await supabase
+      const { error } = await supabaseBrowser()
         .from('reviews')
         .upsert(reviewData, {
           onConflict: 'whisky_id,user_id'

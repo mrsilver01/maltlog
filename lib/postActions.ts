@@ -1,4 +1,4 @@
-import { supabase } from './supabase'
+import { supabaseBrowser()Browser } from '@/lib/supabaseBrowser()/browser'
 
 /**
  * 게시글 좋아요 기능을 위한 Supabase 헬퍼 함수들
@@ -7,7 +7,7 @@ import { supabase } from './supabase'
 // 게시글에 좋아요 추가
 export async function likePost(postId: string, userId: string): Promise<boolean> {
   try {
-    const { error } = await supabase
+    const { error } = await supabaseBrowser()
       .from('post_likes')
       .insert({
         post_id: postId,
@@ -30,7 +30,7 @@ export async function likePost(postId: string, userId: string): Promise<boolean>
 // 게시글 좋아요 취소
 export async function unlikePost(postId: string, userId: string): Promise<boolean> {
   try {
-    const { error } = await supabase
+    const { error } = await supabaseBrowser()
       .from('post_likes')
       .delete()
       .eq('post_id', postId)
@@ -52,7 +52,7 @@ export async function unlikePost(postId: string, userId: string): Promise<boolea
 // 게시글에 좋아요를 눌렀는지 확인
 export async function checkIfPostLiked(postId: string, userId: string): Promise<boolean> {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseBrowser()
       .from('post_likes')
       .select('id')
       .eq('post_id', postId)
@@ -74,7 +74,7 @@ export async function checkIfPostLiked(postId: string, userId: string): Promise<
 // 특정 게시글의 총 좋아요 개수 가져오기
 export async function getPostLikesCount(postId: string): Promise<number> {
   try {
-    const { count, error } = await supabase
+    const { count, error } = await supabaseBrowser()
       .from('post_likes')
       .select('*', { count: 'exact', head: true })
       .eq('post_id', postId)
@@ -94,7 +94,7 @@ export async function getPostLikesCount(postId: string): Promise<number> {
 // 여러 게시글의 좋아요 상태를 한번에 확인 (성능 최적화)
 export async function checkMultiplePostsLiked(postIds: string[], userId: string): Promise<{[key: string]: boolean}> {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseBrowser()
       .from('post_likes')
       .select('post_id')
       .eq('user_id', userId)
@@ -130,7 +130,7 @@ export async function updatePostLikesCount(postId: string): Promise<boolean> {
     const currentCount = await getPostLikesCount(postId)
 
     // posts 테이블의 likes_count 업데이트
-    const { error } = await supabase
+    const { error } = await supabaseBrowser()
       .from('posts')
       .update({ likes_count: currentCount })
       .eq('id', postId)

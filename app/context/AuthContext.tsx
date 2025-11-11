@@ -1,7 +1,7 @@
 'use client'
 
 import { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react'
-import { supabase } from '@/lib/supabase'
+import { supabaseBrowser } from '@/lib/supabase/browser'
 import { Session, User } from '@supabase/supabase-js'
 import { getCurrentUserProfile, UserProfile, saveUserProfile } from '@/lib/userProfiles'
 import toast from 'react-hot-toast'
@@ -41,7 +41,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession()
+        const { data: { session } } = await supabaseBrowser().auth.getSession()
         setUser(session?.user ?? null)
         setLoading(false) // 세션 확인 후 즉시 UI 오픈
 
@@ -66,7 +66,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     initializeAuth()
 
-    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: authListener } = supabaseBrowser().auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null)
       if (session?.user) {
         // 프로필은 백그라운드에서 로드 (UI 블로킹 방지)
@@ -90,7 +90,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!credentials.email || !credentials.password) throw new Error('이메일과 비밀번호를 입력해주세요.')
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { error } = await supabaseBrowser().auth.signInWithPassword({
         email: credentials.email,
         password: credentials.password,
       })
@@ -107,7 +107,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!credentials.email || !credentials.password || !credentials.nickname) throw new Error('이메일, 비밀번호, 닉네임을 모두 입력해주세요.')
 
     try {
-      const { error } = await supabase.auth.signUp({
+      const { error } = await supabaseBrowser().auth.signUp({
         email: credentials.email,
         password: credentials.password,
         options: { data: { nickname: credentials.nickname } },
@@ -125,7 +125,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = useCallback(async () => {
     try {
-      const { error } = await supabase.auth.signOut()
+      const { error } = await supabaseBrowser().auth.signOut()
 
       if (error) {
         throw error
@@ -137,7 +137,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signInWithKakao = useCallback(async () => {
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
+      const { error } = await supabaseBrowser().auth.signInWithOAuth({
         provider: 'kakao',
         options: { redirectTo: `${window.location.origin}/auth/callback` },
       })

@@ -9,13 +9,11 @@ export const dynamic = 'force-dynamic'
 async function getWhiskies(): Promise<WhiskyData[]> {
   console.log('📊 서버에서 위스키 데이터 로드 시작...')
 
-  // [수정] whiskies_with_stats 뷰 사용으로 실시간 집계 데이터 조회
+  // [Hotfix] whiskies_with_stats_v2 뷰 사용으로 홈 목록 비표시 해결
   const { data, error } = await supabase
-    .from('whiskies_with_stats')
+    .from('whiskies_with_stats_v2')
     .select('id, name, image, abv, region, price, cask, distillery, avg_rating, reviews_count, likes_count')
-    .neq('image', '')
     .not('image', 'is', null)
-    .order('image', { ascending: false }) // Supabase Storage URL이 먼저 오도록 (s로 시작)
     .order('name', { ascending: true })
     .limit(20);
 
