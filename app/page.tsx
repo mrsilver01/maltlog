@@ -9,12 +9,12 @@ export const dynamic = 'force-dynamic'
 async function getWhiskies(): Promise<WhiskyData[]> {
   console.log('📊 서버에서 위스키 데이터 로드 시작...')
 
-  // [Hotfix] whiskies_with_stats_v2 뷰 사용으로 홈 목록 비표시 해결
+  // [Hotfix] whiskies_with_stats 뷰 사용으로 홈 목록 비표시 해결 + 추천 컬럼 포함
   const { data, error } = await supabase
-    .from('whiskies_with_stats_v2')
-    .select('id, name, image, abv, region, price, cask, distillery, avg_rating, reviews_count, likes_count')
+    .from('whiskies_with_stats')
+    .select('id, name, name_ko, image, distillery, region, abv, cask, price, is_featured, display_order, avg_rating, reviews_count, likes_count')
     .not('image', 'is', null)
-    .order('name', { ascending: true })
+    .order('display_order', { ascending: true })
     .limit(20);
 
   if (error) {

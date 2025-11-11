@@ -129,7 +129,7 @@ export default function ProfilePageClient({
           const reviewsWithFormat = userReviews.map(review => ({
             id: review.id || '',
             user: profile?.nickname || '익명',
-            whisky: review.whisky_name || '위스키',
+            whisky: review.whisky_id || '위스키',
             rating: review.rating,
             content: review.note || '',
             likes: 0,

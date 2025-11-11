@@ -394,7 +394,7 @@ export default function WhiskyDetailClient({ whisky, initialReviews }: WhiskyDet
     }
 
     try {
-      const success = await saveWhiskyReview(whisky.name, rating)
+      const success = await saveWhiskyReview(whisky.id, rating)
 
       if (!success) {
         toast.error('평점 저장에 실패했습니다.')
@@ -439,7 +439,7 @@ export default function WhiskyDetailClient({ whisky, initialReviews }: WhiskyDet
 
     try {
       const success = await saveWhiskyReview(
-        whisky.name,
+        whisky.id,
         hasUserRated ? currentRating : 1, // 평점이 없으면 기본값 1로 설정
         quickReviewText.trim()
       )
@@ -500,7 +500,7 @@ export default function WhiskyDetailClient({ whisky, initialReviews }: WhiskyDet
     setSubmitting(true)
 
     try {
-      const success = await saveWhiskyReview(whisky.name, currentRating, currentNote.trim())
+      const success = await saveWhiskyReview(whisky.id, currentRating, currentNote.trim())
 
       if (!success) {
         toast.error('리뷰 저장에 실패했습니다.')

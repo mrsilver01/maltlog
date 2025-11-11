@@ -48,7 +48,7 @@ export default function CommunityClient({
   // 페이지 로드 시 좋아요 상태 초기화
   useEffect(() => {
     const initializeLikes = async () => {
-      if (!user || posts.length === 0) {
+      if (posts.length === 0) {
         setLikesLoading(false);
         return;
       }
@@ -56,21 +56,24 @@ export default function CommunityClient({
       try {
         const postIds = posts.map(post => post.id!).filter(id => id);
 
-        // 좋아요 상태와 개수를 병렬로 가져오기
-        const [likeStates, likeCounts] = await Promise.all([
-          checkMultiplePostsLiked(postIds, user.id),
-          Promise.all(postIds.map(async (postId) => ({
-            postId,
-            count: await getPostLikesCount(postId)
-          })))
-        ]);
+        // 좋아요 개수는 항상 로드
+        const likeCounts = await Promise.all(postIds.map(async (postId) => ({
+          postId,
+          count: await getPostLikesCount(postId)
+        })));
+
+        // 좋아요 상태는 로그인된 경우만 로드
+        let likeStates: { [key: string]: boolean } = {};
+        if (user) {
+          likeStates = await checkMultiplePostsLiked(postIds, user.id);
+        }
 
         // 상태 초기화
         const initialLikes: { [key: string]: { isLiked: boolean; count: number } } = {};
         postIds.forEach(postId => {
           const countData = likeCounts.find(item => item.postId === postId);
           initialLikes[postId] = {
-            isLiked: likeStates[postId] || false,
+            isLiked: user ? (likeStates[postId] || false) : false,
             count: countData?.count || 0
           };
         });
@@ -372,9 +375,15 @@ export default function CommunityClient({
                           <button
                             onClick={(e) => {
                               e.stopPropagation(); // 카드 클릭 이벤트 방지
+                              if (!user) {
+                                toast('로그인 후 이용 가능합니다');
+                                return;
+                              }
                               handlePostLike(post.id!);
                             }}
-                            className="flex items-center gap-1.5 group"
+                            className={`flex items-center gap-1.5 group ${!user ? 'opacity-70' : ''}`}
+                            aria-disabled={!user}
+                            title={user ? '좋아요' : '로그인 후 이용 가능합니다'}
                             disabled={likesLoading}
                           >
                             {/* 채워진 하트 (좋아요 누른 상태) */}

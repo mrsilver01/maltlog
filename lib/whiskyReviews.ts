@@ -7,7 +7,7 @@ import { supabaseBrowser } from '@/lib/supabase/browser'
 export interface WhiskyReview {
   id?: string
   user_id: string
-  whisky_name: string
+  whisky_id: string
   rating: number
   note?: string
   created_at?: string
@@ -15,7 +15,7 @@ export interface WhiskyReview {
 }
 
 // 현재 사용자의 특정 위스키에 대한 리뷰 가져오기
-export async function getUserWhiskyReview(whiskyName: string): Promise<WhiskyReview | null> {
+export async function getUserWhiskyReview(whiskyId: string): Promise<WhiskyReview | null> {
   try {
     const { data: { user }, error: userError } = await supabaseBrowser().auth.getUser()
 
@@ -28,7 +28,7 @@ export async function getUserWhiskyReview(whiskyName: string): Promise<WhiskyRev
       .from('reviews')
       .select('*')
       .eq('user_id', user.id)
-      .eq('whisky_name', whiskyName)
+      .eq('whisky_id', whiskyId)
       .single()
 
     if (error && error.code !== 'PGRST116') { // PGRST116은 "no rows returned" 에러
@@ -73,7 +73,7 @@ export async function getAllUserWhiskyReviews(): Promise<WhiskyReview[]> {
 
 // 위스키 리뷰 저장 또는 업데이트 (upsert 사용)
 export async function saveWhiskyReview(
-  whiskyName: string,
+  whiskyId: string,
   rating: number,
   note?: string
 ): Promise<boolean> {
@@ -91,17 +91,17 @@ export async function saveWhiskyReview(
       return false
     }
 
-    const reviewData: Partial<WhiskyReview> = {
+    const reviewData = {
       user_id: user.id,
-      whisky_name: whiskyName,
+      whisky_id: whiskyId,
       rating: rating,
-      note: note || undefined
+      note: note ?? null
     }
 
     const { error } = await (supabaseBrowser() as any)
       .from('reviews')
       .upsert(reviewData, {
-        onConflict: 'user_id, whisky_name',
+        onConflict: 'whisky_id,user_id',
         ignoreDuplicates: false
       })
 
@@ -110,7 +110,7 @@ export async function saveWhiskyReview(
       return false
     }
 
-    console.log('✅ 위스키 리뷰 저장 성공:', whiskyName, '평점:', rating)
+    console.log('✅ 위스키 리뷰 저장 성공:', whiskyId, '평점:', rating)
     return true
   } catch (error) {
     console.error('리뷰 저장 중 오류:', error)
@@ -148,7 +148,7 @@ export async function getUserWhiskyReviews(): Promise<WhiskyReview[]> {
 }
 
 // 위스키 리뷰 삭제
-export async function deleteWhiskyReview(whiskyName: string): Promise<boolean> {
+export async function deleteWhiskyReview(whiskyId: string): Promise<boolean> {
   try {
     const { data: { user }, error: userError } = await supabaseBrowser().auth.getUser()
 
@@ -161,14 +161,14 @@ export async function deleteWhiskyReview(whiskyName: string): Promise<boolean> {
       .from('reviews')
       .delete()
       .eq('user_id', user.id)
-      .eq('whisky_name', whiskyName)
+      .eq('whisky_id', whiskyId)
 
     if (error) {
       console.error('리뷰 삭제 실패:', error)
       return false
     }
 
-    console.log('✅ 위스키 리뷰 삭제 성공:', whiskyName)
+    console.log('✅ 위스키 리뷰 삭제 성공:', whiskyId)
     return true
   } catch (error) {
     console.error('리뷰 삭제 중 오류:', error)
@@ -177,9 +177,9 @@ export async function deleteWhiskyReview(whiskyName: string): Promise<boolean> {
 }
 
 // 특정 위스키에 대한 사용자의 리뷰 존재 여부 확인
-export async function hasUserReviewedWhisky(whiskyName: string): Promise<boolean> {
+export async function hasUserReviewedWhisky(whiskyId: string): Promise<boolean> {
   try {
-    const review = await getUserWhiskyReview(whiskyName)
+    const review = await getUserWhiskyReview(whiskyId)
     return review !== null
   } catch (error) {
     console.error('리뷰 존재 여부 확인 중 오류:', error)
@@ -188,9 +188,9 @@ export async function hasUserReviewedWhisky(whiskyName: string): Promise<boolean
 }
 
 // 특정 위스키에 대한 사용자의 평점만 확인
-export async function getUserWhiskyRating(whiskyName: string): Promise<number | null> {
+export async function getUserWhiskyRating(whiskyId: string): Promise<number | null> {
   try {
-    const review = await getUserWhiskyReview(whiskyName)
+    const review = await getUserWhiskyReview(whiskyId)
     return review ? review.rating : null
   } catch (error) {
     console.error('평점 확인 중 오류:', error)
