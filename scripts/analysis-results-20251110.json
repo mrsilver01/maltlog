@@ -1,0 +1,36 @@
+{
+  "timestamp": "20251110",
+  "tableCounts": {
+    "likes": 10,
+    "post_likes": 4,
+    "review_likes": 1
+  },
+  "insertTrends": {
+    "likes": {
+      "2025-10-13": 1,
+      "2025-10-25": 1,
+      "2025-10-26": 1,
+      "2025-10-27": 1,
+      "2025-10-29": 2,
+      "2025-10-30": 3,
+      "2025-11-06": 1
+    }
+  },
+  "duplicates": {
+    "likes": []
+  },
+  "rls": {},
+  "foreignKeys": {
+    "whiskies": {
+      "total": 659,
+      "unique": 659,
+      "duplicates": 0,
+      "canUseFk": true
+    }
+  },
+  "indexes": {},
+  "storageCheck": {
+    "featured": []
+  },
+  "performance": {}
+}

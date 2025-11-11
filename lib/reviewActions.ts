@@ -7,7 +7,7 @@ import { supabaseBrowser } from '@/lib/supabase/browser'
 // 리뷰에 좋아요 추가
 export async function likeReview(reviewId: string, userId: string): Promise<boolean> {
   try {
-    const { error } = await supabaseBrowser()
+    const { error } = await (supabaseBrowser() as any)
       .from('review_likes')
       .insert({
         review_id: reviewId,
@@ -111,7 +111,7 @@ export async function checkMultipleReviewsLiked(reviewIds: string[], userId: str
       likedReviews[id] = false
     })
 
-    data?.forEach(like => {
+    data?.forEach((like: any) => {
       likedReviews[like.review_id] = true
     })
 

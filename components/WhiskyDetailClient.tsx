@@ -9,6 +9,7 @@ import { likeReview, unlikeReview, checkMultipleReviewsLiked, getReviewLikesCoun
 import { isWhiskyLiked, likeWhisky, unlikeWhisky } from '@/lib/likes'
 import { getReviewComments, addComment, getReviewCommentsCount, ReviewComment, updateComment, deleteComment } from '@/lib/commentActions'
 import { formatLikeCount } from '@/lib/formatLikes'
+import { saveWhiskyReview } from '@/lib/whiskyReviews'
 import toast from 'react-hot-toast'
 
 // RatingSystem 컴포넌트 - 원본 디자인 적용
@@ -393,21 +394,9 @@ export default function WhiskyDetailClient({ whisky, initialReviews }: WhiskyDet
     }
 
     try {
-      const reviewData = {
-        whisky_id: whisky.id,
-        user_id: user.id,
-        rating: rating,
-        note: null,
-      }
+      const success = await saveWhiskyReview(whisky.name, rating)
 
-      const { error } = await supabaseBrowser()
-        .from('reviews')
-        .upsert(reviewData, {
-          onConflict: 'whisky_id,user_id'
-        })
-
-      if (error) {
-        console.error('평점 저장 실패:', error)
+      if (!success) {
         toast.error('평점 저장에 실패했습니다.')
       } else {
         setCurrentRating(rating)
@@ -449,22 +438,14 @@ export default function WhiskyDetailClient({ whisky, initialReviews }: WhiskyDet
     setIsSubmittingQuickReview(true)
 
     try {
-      const reviewData = {
-        whisky_id: whisky.id,
-        user_id: user.id,
-        rating: hasUserRated ? currentRating : null, // 기존 별점이 있으면 유지, 없으면 null
-        note: quickReviewText.trim(),
-      }
+      const success = await saveWhiskyReview(
+        whisky.name,
+        hasUserRated ? currentRating : 1, // 평점이 없으면 기본값 1로 설정
+        quickReviewText.trim()
+      )
 
-      const { error } = await supabaseBrowser()
-        .from('reviews')
-        .upsert(reviewData, {
-          onConflict: 'whisky_id,user_id'
-        })
-
-      if (error) {
-        console.error('리뷰 저장 실패:', error)
-        toast.error('리뷰 저장에 실패했습니다: ' + error.message)
+      if (!success) {
+        toast.error('리뷰 저장에 실패했습니다.')
       } else {
         // 상태 업데이트
         setHasUserReviewed(true)
@@ -519,22 +500,10 @@ export default function WhiskyDetailClient({ whisky, initialReviews }: WhiskyDet
     setSubmitting(true)
 
     try {
-      const reviewData = {
-        whisky_id: whisky.id,
-        user_id: user.id,
-        rating: currentRating,
-        note: currentNote.trim(),
-      }
+      const success = await saveWhiskyReview(whisky.name, currentRating, currentNote.trim())
 
-      const { error } = await supabaseBrowser()
-        .from('reviews')
-        .upsert(reviewData, {
-          onConflict: 'whisky_id,user_id'
-        })
-
-      if (error) {
-        console.error('리뷰 저장 실패:', error)
-        toast.error('리뷰 저장에 실패했습니다: ' + error.message)
+      if (!success) {
+        toast.error('리뷰 저장에 실패했습니다.')
       } else {
         // 사용자의 리뷰 정보 즉시 업데이트
         const newReview = {

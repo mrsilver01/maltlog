@@ -90,7 +90,7 @@ export async function addComment(
       return false
     }
 
-    const { error } = await supabaseBrowser()
+    const { error } = await (supabaseBrowser() as any)
       .from('comments')
       .insert(commentData)
 
@@ -117,7 +117,7 @@ export async function addComment(
 // 댓글 수정
 export async function updateComment(commentId: string, userId: string, content: string): Promise<boolean> {
   try {
-    const { error } = await supabaseBrowser()
+    const { error } = await (supabaseBrowser() as any)
       .from('comments')
       .update({
         content: content.trim(),

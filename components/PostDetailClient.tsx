@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/app/context/AuthContext'
 import { supabaseBrowser } from '@/lib/supabase/browser'
 import { likePost, unlikePost, checkIfPostLiked, getPostLikesCount } from '@/lib/postActions'
+import { addComment, updateComment, deleteComment } from '@/lib/commentActions'
 import AdminBadge from '@/components/AdminBadge'
 import { ReportDialog } from '@/components/ReportDialog'
 import { isAdmin } from '@/lib/isAdmin'
@@ -239,16 +240,9 @@ export default function PostDetailClient({ post, initialComments }: PostDetailCl
     setIsSubmittingComment(true)
 
     try {
-      const { error } = await supabaseBrowser()
-        .from('comments')
-        .insert([{
-          post_id: post.id,
-          user_id: user.id,
-          content: newComment.trim()
-        }])
+      const success = await addComment(post.id, user.id, newComment.trim(), 'post')
 
-      if (error) {
-        console.error('댓글 작성 실패:', error)
+      if (!success) {
         toast.error('댓글 작성에 실패했습니다.')
       } else {
         setNewComment('')
@@ -271,14 +265,9 @@ export default function PostDetailClient({ post, initialComments }: PostDetailCl
     }
 
     try {
-      const { error } = await supabaseBrowser()
-        .from('comments')
-        .update({ content: editCommentContent.trim() })
-        .eq('id', commentId)
-        .eq('user_id', user?.id)
+      const success = await updateComment(commentId, user?.id || '', editCommentContent.trim())
 
-      if (error) {
-        console.error('댓글 수정 실패:', error)
+      if (!success) {
         toast.error('댓글 수정에 실패했습니다.')
       } else {
         setEditingCommentId(null)
@@ -297,14 +286,9 @@ export default function PostDetailClient({ post, initialComments }: PostDetailCl
     if (!confirm('정말로 이 댓글을 삭제하시겠습니까?')) return
 
     try {
-      const { error } = await supabaseBrowser()
-        .from('comments')
-        .delete()
-        .eq('id', commentId)
-        .eq('user_id', user?.id)
+      const success = await deleteComment(commentId, user?.id || '')
 
-      if (error) {
-        console.error('댓글 삭제 실패:', error)
+      if (!success) {
         toast.error('댓글 삭제에 실패했습니다.')
       } else {
         await refreshComments()
@@ -368,17 +352,9 @@ export default function PostDetailClient({ post, initialComments }: PostDetailCl
     setReplySubmitting(prev => ({ ...prev, [parentCommentId]: true }))
 
     try {
-      const { error } = await supabaseBrowser()
-        .from('comments')
-        .insert([{
-          post_id: post.id,
-          user_id: user.id,
-          content: content,
-          parent_comment_id: parentCommentId
-        }])
+      const success = await addComment(post.id, user.id, content, 'post', parseInt(parentCommentId))
 
-      if (error) {
-        console.error('대댓글 작성 실패:', error)
+      if (!success) {
         toast.error('대댓글 작성에 실패했습니다.')
       } else {
         // 대댓글 목록 새로고침
@@ -419,14 +395,9 @@ export default function PostDetailClient({ post, initialComments }: PostDetailCl
     if (!confirm('정말로 이 대댓글을 삭제하시겠습니까?')) return
 
     try {
-      const { error } = await supabaseBrowser()
-        .from('comments')
-        .delete()
-        .eq('id', replyId)
-        .eq('user_id', user?.id)
+      const success = await deleteComment(replyId, user?.id || '')
 
-      if (error) {
-        console.error('대댓글 삭제 실패:', error)
+      if (!success) {
         toast.error('대댓글 삭제에 실패했습니다.')
       } else {
         // 해당 댓글의 대댓글 목록 새로고침
@@ -453,7 +424,7 @@ export default function PostDetailClient({ post, initialComments }: PostDetailCl
         .from('posts')
         .delete()
         .eq('id', post.id)
-        .eq('user_id', user?.id)
+        .eq('user_id', user?.id || '')
 
       if (error) {
         console.error('게시글 삭제 실패:', error)

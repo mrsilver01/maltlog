@@ -38,7 +38,7 @@ export async function getCurrentUserProfile(): Promise<UserProfile | null> {
       return null
     }
 
-    console.log('✅ 사용자 프로필 로드 성공:', profile.nickname)
+    console.log('✅ 사용자 프로필 로드 성공:', (profile as any)?.nickname)
     return profile
   } catch (error) {
     console.error('프로필 가져오기 중 오류:', error)
@@ -70,7 +70,7 @@ export async function saveUserProfile(
       avatar_url: avatarUrl || undefined
     }
 
-    const { error } = await supabaseBrowser()
+    const { error } = await (supabaseBrowser() as any)
       .from('profiles')
       .upsert(profileData, {
         onConflict: 'id',
@@ -105,7 +105,7 @@ export async function updateNickname(nickname: string): Promise<boolean> {
       return false
     }
 
-    const { error } = await supabaseBrowser()
+    const { error } = await (supabaseBrowser() as any)
       .from('profiles')
       .update({ nickname: nickname.trim() })
       .eq('id', user.id)
@@ -133,7 +133,7 @@ export async function updateAvatarUrl(avatarUrl: string): Promise<boolean> {
       return false
     }
 
-    const { error } = await supabaseBrowser()
+    const { error } = await (supabaseBrowser() as any)
       .from('profiles')
       .update({ avatar_url: avatarUrl })
       .eq('id', user.id)

@@ -98,7 +98,7 @@ export async function saveWhiskyReview(
       note: note || undefined
     }
 
-    const { error } = await supabaseBrowser()
+    const { error } = await (supabaseBrowser() as any)
       .from('reviews')
       .upsert(reviewData, {
         onConflict: 'user_id, whisky_name',

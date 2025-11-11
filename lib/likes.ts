@@ -15,7 +15,7 @@ export async function isWhiskyLiked(userId: string, whiskyId: string) {
 
 export async function likeWhisky(userId: string, whiskyId: string) {
   // post_id는 사용하지 않음 → 항상 null
-  const { error } = await supabaseBrowser()
+  const { error } = await (supabaseBrowser() as any)
     .from('likes')
     .insert([{ user_id: userId, whisky_id: whiskyId, post_id: null }])
 
@@ -54,13 +54,13 @@ export async function getUserWhiskyLikes(userId: string): Promise<string[]> {
     .is('post_id', null) // 위스키 찜만 필터링
 
   if (error) throw error
-  return (data || []).map(like => like.whisky_id)
+  return (data || []).map((like: any) => like.whisky_id)
 }
 
 // 위스키 찜 수 증가
 async function incrementWhiskyLikesCount(whiskyId: string) {
   try {
-    const { error } = await supabaseBrowser().rpc('increment_whisky_likes', {
+    const { error } = await (supabaseBrowser() as any).rpc('increment_whisky_likes', {
       whisky_id: whiskyId
     })
 
@@ -79,7 +79,7 @@ async function incrementWhiskyLikesCount(whiskyId: string) {
 // 위스키 찜 수 감소
 async function decrementWhiskyLikesCount(whiskyId: string) {
   try {
-    const { error } = await supabaseBrowser().rpc('decrement_whisky_likes', {
+    const { error } = await (supabaseBrowser() as any).rpc('decrement_whisky_likes', {
       whisky_id: whiskyId
     })
 
@@ -112,7 +112,7 @@ async function updateWhiskyLikesCountDirect(whiskyId: string, increment: number)
   const actualLikesCount = likesData?.length ?? 0
 
   // whiskies 테이블 업데이트 (likes 컬럼 사용)
-  const { error: updateError } = await supabaseBrowser()
+  const { error: updateError } = await (supabaseBrowser() as any)
     .from('whiskies')
     .update({ likes: actualLikesCount })
     .eq('id', whiskyId)

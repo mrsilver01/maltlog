@@ -7,7 +7,7 @@ import { supabaseBrowser } from '@/lib/supabase/browser'
 // 게시글에 좋아요 추가
 export async function likePost(postId: string, userId: string): Promise<boolean> {
   try {
-    const { error } = await supabaseBrowser()
+    const { error } = await (supabaseBrowser() as any)
       .from('post_likes')
       .insert({
         post_id: postId,
@@ -111,7 +111,7 @@ export async function checkMultiplePostsLiked(postIds: string[], userId: string)
       likedPosts[id] = false
     })
 
-    data?.forEach(like => {
+    data?.forEach((like: any) => {
       likedPosts[like.post_id] = true
     })
 
@@ -130,7 +130,7 @@ export async function updatePostLikesCount(postId: string): Promise<boolean> {
     const currentCount = await getPostLikesCount(postId)
 
     // posts 테이블의 likes_count 업데이트
-    const { error } = await supabaseBrowser()
+    const { error } = await (supabaseBrowser() as any)
       .from('posts')
       .update({ likes_count: currentCount })
       .eq('id', postId)
