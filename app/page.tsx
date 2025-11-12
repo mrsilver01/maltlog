@@ -2,6 +2,7 @@ import { supabase } from '@/lib/supabase'
 import HomePageClient from '@/components/HomePageClient'
 import type { WhiskyData } from '@/components/HomePageClient'
 import { getLikedWhiskyIdsServer } from '@/lib/server/getLikedWhiskyIdsServer'
+import { toPublicImageUrl } from '@/lib/supabase/publicUrl'
 
 // 찜 상태 포함한 사용자별 페이지이므로 동적 렌더링 필요
 export const dynamic = 'force-dynamic'
@@ -13,7 +14,6 @@ async function getWhiskies(): Promise<WhiskyData[]> {
   const { data, error } = await supabase
     .from('whiskies_with_stats')
     .select('id, name, name_ko, image, distillery, region, abv, cask, price, is_featured, display_order, avg_rating, reviews_count, likes_count')
-    .not('image', 'is', null)
     .order('display_order', { ascending: true })
     .limit(20);
 
@@ -22,11 +22,21 @@ async function getWhiskies(): Promise<WhiskyData[]> {
     return [];
   }
 
-  const transformedData = data.map(whisky => ({
-    ...whisky,
-    avgRating: whisky.avg_rating || 0,
-    totalReviews: whisky.reviews_count || 0,
-    likes: whisky.likes_count || 0
+  const transformedData = (data ?? []).map((w: any) => ({
+    id: w.id,
+    name: w.name,
+    name_ko: w.name_ko,
+    image: toPublicImageUrl(w.image),           // ✅ 절대 URL로 변환
+    distillery: w.distillery,
+    region: w.region,
+    abv: w.abv,
+    cask: w.cask,
+    price: w.price,
+    is_featured: w.is_featured,
+    display_order: w.display_order,
+    avgRating: Number(w.avg_rating ?? 0),
+    totalReviews: w.reviews_count ?? 0,
+    likes: w.likes_count ?? 0,
   })) as WhiskyData[];
 
   console.log('✅ 서버에서 위스키 데이터 로드 완료:', transformedData.length, '개')
