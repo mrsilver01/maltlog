@@ -14,15 +14,16 @@ async function getWhiskies(): Promise<WhiskyData[]> {
   const { data, error } = await supabase
     .from('whiskies_with_stats')
     .select('id, name, name_ko, image, distillery, region, abv, cask, price, is_featured, display_order, avg_rating, reviews_count, likes_count')
-    .order('display_order', { ascending: true })
-    .limit(20);
+    .order('avg_rating', { ascending: false })
+    .order('reviews_count', { ascending: false })
+    .limit(100);
 
   if (error) {
     console.error("❌ 위스키 데이터 로드 실패:", error);
     return [];
   }
 
-  const transformedData = (data ?? []).map((w: any) => ({
+  const all = (data ?? []).map((w: any) => ({
     id: w.id,
     name: w.name,
     name_ko: w.name_ko,
@@ -39,7 +40,27 @@ async function getWhiskies(): Promise<WhiskyData[]> {
     likes: w.likes_count ?? 0,
   })) as WhiskyData[];
 
-  console.log('✅ 서버에서 위스키 데이터 로드 완료:', transformedData.length, '개')
+  // 추천 섹션 fallback 로직
+  const featured = all
+    .filter(w => w.is_featured)
+    .sort((a,b) => (a.display_order ?? 999) - (b.display_order ?? 999));
+
+  const NEED = 8; // 추천 섹션 카드 수
+  let recommend = featured.slice(0, NEED);
+
+  if (recommend.length < NEED) {
+    const extra = all
+      .filter(w => !w.is_featured)
+      .sort((a,b) => (Number(b.avgRating ?? 0) - Number(a.avgRating ?? 0)))
+      .slice(0, NEED - recommend.length);
+    recommend = [...recommend, ...extra];
+  }
+
+  // 추천을 맨 앞에 배치하고 나머지는 평점순으로 정렬
+  const remaining = all.filter(w => !recommend.some(r => r.id === w.id));
+  const transformedData = [...recommend, ...remaining];
+
+  console.log('✅ 서버에서 위스키 데이터 로드 완료:', transformedData.length, '개, 추천:', recommend.length, '개')
   return transformedData;
 }
 

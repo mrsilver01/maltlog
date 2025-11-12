@@ -14,6 +14,7 @@ import { formatLikeCount } from '../lib/formatLikes'
 export interface WhiskyData {
   id: string
   name: string
+  name_ko?: string
   image: string
   abv: string
   region: string
@@ -22,6 +23,8 @@ export interface WhiskyData {
   avgRating: number
   totalReviews: number
   likes: number
+  is_featured?: boolean
+  display_order?: number
   distillery?: string
   created_at?: string
   updated_at?: string
