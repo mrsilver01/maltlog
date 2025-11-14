@@ -237,6 +237,19 @@ export default function LoginPage() {
             </button>
           </form>
 
+          {/* 비밀번호 재설정 링크 (로그인 모드에서만) */}
+          {isLogin && (
+            <div className="text-center mt-3">
+              <button
+                type="button"
+                className="text-sm text-gray-500 hover:text-gray-700 hover:underline"
+                onClick={() => router.push('/auth/forgot-password')}
+              >
+                비밀번호를 잊으셨나요?
+              </button>
+            </div>
+          )}
+
           {/* 구분선 */}
           <div className="flex items-center my-4">
             <div className="flex-1 border-t border-gray-300"></div>
