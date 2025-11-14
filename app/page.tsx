@@ -13,9 +13,25 @@ async function getWhiskies(): Promise<WhiskyData[]> {
   // [Hotfix] whiskies_with_stats 뷰 사용으로 홈 목록 비표시 해결 + 추천 컬럼 포함
   const { data, error } = await supabase
     .from('whiskies_with_stats')
-    .select('id, name, name_ko, image, distillery, region, abv, cask, price, is_featured, display_order, avg_rating, reviews_count, likes_count')
-    .order('avg_rating', { ascending: false })
-    .order('reviews_count', { ascending: false })
+    .select(`
+      id,
+      name,
+      name_ko,
+      image,
+      distillery,
+      region,
+      abv,
+      cask,
+      price,
+      is_featured,
+      display_order,
+      avg_rating,
+      reviews_count,
+      likes_count
+    `)
+    .order('is_featured', { ascending: false }) // 추천 먼저
+    .order('display_order', { ascending: true }) // 정렬 순서
+    .order('avg_rating', { ascending: false })   // 동일 순위일 때 평점 높은 순
     .limit(100);
 
   if (error) {
@@ -26,15 +42,20 @@ async function getWhiskies(): Promise<WhiskyData[]> {
   const all = (data ?? []).map((w: any) => ({
     id: w.id,
     name: w.name,
-    name_ko: w.name_ko,
-    image: toPublicImageUrl(w.image),           // ✅ 절대 URL로 변환
-    distillery: w.distillery,
-    region: w.region,
-    abv: w.abv,
-    cask: w.cask,
-    price: w.price,
-    is_featured: w.is_featured,
-    display_order: w.display_order,
+    name_ko: w.name_ko ?? null,
+
+    // 뷰의 image는 스토리지 경로이므로 절대 URL로 변환
+    image: toPublicImageUrl(w.image),
+
+    distillery: w.distillery ?? '',
+    region: w.region ?? '',
+    abv: w.abv ?? '',
+    cask: w.cask ?? '',
+    price: w.price ?? '',
+
+    is_featured: !!w.is_featured,
+    display_order: w.display_order ?? null,
+
     avgRating: Number(w.avg_rating ?? 0),
     totalReviews: w.reviews_count ?? 0,
     likes: w.likes_count ?? 0,
