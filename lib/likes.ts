@@ -47,14 +47,23 @@ export async function unlikeWhisky(userId: string, whiskyId: string) {
 
 // 사용자의 모든 찜한 위스키 ID 목록 가져오기
 export async function getUserWhiskyLikes(userId: string): Promise<string[]> {
+  console.log('🔍 getUserWhiskyLikes 호출:', { userId })
+
   const { data, error } = await supabaseBrowser()
     .from('likes')
     .select('whisky_id')
     .eq('user_id', userId)
     .is('post_id', null) // 위스키 찜만 필터링
 
-  if (error) throw error
-  return (data || []).map((like: any) => like.whisky_id)
+  if (error) {
+    console.error('❌ getUserWhiskyLikes 오류:', error)
+    throw error
+  }
+
+  const result = (data || []).map((like: any) => like.whisky_id)
+  console.log('✅ getUserWhiskyLikes 결과:', { userId, count: result.length, likes: result.slice(0, 5) })
+
+  return result
 }
 
 // 위스키 찜 수 증가

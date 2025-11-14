@@ -1,7 +1,7 @@
 'use client'
 
-import React, { createContext, useContext, useMemo, useState, useCallback } from 'react'
-import { likeWhisky, unlikeWhisky } from '@/lib/likes'
+import React, { createContext, useContext, useMemo, useState, useCallback, useEffect } from 'react'
+import { likeWhisky, unlikeWhisky, getUserWhiskyLikes } from '@/lib/likes'
 import toast from 'react-hot-toast'
 
 interface LikesContextType {
@@ -34,6 +34,33 @@ export function LikesProvider({ userId, initialLikedIds, children }: LikesProvid
     initialLikedCount: initialLikedIds.length,
     initialLikedIds: initialLikedIds.slice(0, 5) // 처음 5개만 로그
   })
+
+  // userId 변경 시 찜 목록 재로딩
+  useEffect(() => {
+    if (!userId) {
+      // 로그아웃 시 찜 목록 초기화
+      setLiked(new Set())
+      console.log('🔒 로그아웃으로 찜 목록 초기화')
+      return
+    }
+
+    // 로그인된 사용자의 찜 목록을 새로 불러오기
+    const loadUserLikes = async () => {
+      try {
+        console.log('🔄 사용자 변경으로 찜 목록 재로딩:', userId)
+        const userLikedIds = await getUserWhiskyLikes(userId)
+        setLiked(new Set(userLikedIds))
+        console.log('✅ 찜 목록 재로딩 완료:', userLikedIds.length, '개')
+      } catch (error) {
+        console.error('❌ 찜 목록 재로딩 실패:', error)
+        // 실패 시 초기 데이터로 폴백
+        setLiked(new Set(initialLikedIds))
+      }
+    }
+
+    // 초기 데이터와 비교해서 다르면 재로딩
+    loadUserLikes()
+  }, [userId, initialLikedIds])
 
   const isLiked = useCallback((whiskyId: string) => {
     return liked.has(whiskyId)
