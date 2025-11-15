@@ -27,11 +27,11 @@ export const metadata: Metadata = {
   description: "위스키를 사랑하는 모든 이들을 위한 완벽한 기록 공간",
   icons: {
     icon: [
-      { url: '/favicon.ico?v=3' },
-      { url: '/Pavicon.png?v=3', type: 'image/png', sizes: '32x32' },
+      { url: '/favicon.ico?v=4' },
+      { url: '/Pavicon.png?v=4', type: 'image/png', sizes: '32x32' },
     ],
-    shortcut: '/favicon.ico?v=3',
-    apple: '/Pavicon.png?v=3',
+    shortcut: '/favicon.ico?v=4',
+    apple: '/Pavicon.png?v=4',
   },
 };
 
