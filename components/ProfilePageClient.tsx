@@ -114,11 +114,12 @@ export default function ProfilePageClient({
       const reviewCount = userReviews.length
 
       // 실제 노트가 있는 리뷰 개수 (단순 별점이 아닌 경우)
-      const noteCount = userReviews.filter(review =>
-        review.note && review.note.trim() !== '' &&
-        !review.note.includes('별점') &&
-        review.note.trim() !== `별점 ${review.rating}점을 남겼습니다.`
-      ).length
+      const noteCount = userReviews.filter(review => {
+        if (!review.note || review.note.trim() === '') return false
+        const trimmedNote = review.note.trim()
+        const autoMessages = [`별점 ${review.rating}점을 남겼습니다.`, `별점 ${review.rating}점`, `${review.rating}점`]
+        return !autoMessages.includes(trimmedNote)
+      }).length
 
       // 커뮤니티 게시글 개수
       const userPosts = await getUserCommunityPosts(user.id)
@@ -616,19 +617,19 @@ export default function ProfilePageClient({
                 </div>
                 <div className="bg-amber-800 p-4 sm:p-6 md:p-8 rounded flex items-center justify-center">
                   <div className="flex gap-2 sm:gap-4 md:gap-8">
-                    {/* ⭐ 찜한 위스키 3개 표시 */}
-                    {likedWhiskies.length > 0 ? (
-                      likedWhiskies.slice(0, 3).map((whisky, index) => {
+                    {/* ⭐ 평점 높은 위스키 3개 표시 */}
+                    {topRatedWhiskies.length > 0 ? (
+                      topRatedWhiskies.slice(0, 3).map((review, index) => {
                         const handleScrollToCollection = () => {
-                          router.push(`/whisky/${whisky.id}`)
+                          router.push(`/whisky/${review.whiskyId}`)
                         }
 
                         return (
                           <div
-                            key={whisky.id}
+                            key={review.whiskyId}
                             role="button"
                             tabIndex={0}
-                            aria-label={`${whisky.name} 위스키 상세보기`}
+                            aria-label={`${review.whisky} 위스키 상세보기 (평점: ${review.rating}점)`}
                             className="w-6 sm:w-8 md:w-10 h-12 sm:h-16 md:h-20 bg-white bg-opacity-20 rounded overflow-hidden flex items-center justify-center cursor-pointer hover:scale-110 transition-transform focus:outline-none focus:ring-2 focus:ring-white"
                             onClick={handleScrollToCollection}
                             onKeyPress={(e) => {
@@ -638,10 +639,10 @@ export default function ProfilePageClient({
                               }
                             }}
                           >
-                            {whisky.image ? (
+                            {review.whiskyImage ? (
                               <img
-                                src={useWhiskyImage(whisky.id, whisky.image)}
-                                alt={whisky.name}
+                                src={useWhiskyImage(review.whiskyId, review.whiskyImage)}
+                                alt={review.whisky}
                                 className="w-full h-full object-cover"
                                 style={{ filter: 'brightness(1.1)' }}
                               />
@@ -724,6 +725,15 @@ export default function ProfilePageClient({
                           <span className="text-yellow-400">★</span>
                           <span className="font-medium text-gray-700">{note.rating}</span>
                           <span className="text-gray-500">{note.date}</span>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleGoToWhisky()
+                            }}
+                            className="text-amber-600 px-2 py-1 hover:bg-amber-50 rounded transition-colors font-medium"
+                          >
+                            위스키 보기
+                          </button>
                           <button
                             onClick={(e) => {
                               e.stopPropagation()
