@@ -4,7 +4,7 @@ import { useState, useRef, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { updateNickname } from '../lib/userProfiles'
 import { uploadAndSetAvatar } from '../lib/avatarStorage'
-import { getUserWhiskyReviews } from '../lib/whiskyReviews'
+import { getUserWhiskyReviews, getWhiskiesByIds } from '../lib/whiskyReviews'
 import { getUserWhiskyLikes } from '../lib/likes'
 import { useWhiskyImage } from '../lib/updateWhiskyImages'
 import { useAuth } from '../app/context/AuthContext'
@@ -133,9 +133,14 @@ export default function ProfilePageClient({
 
           // 사용자 리뷰 로드
           const userReviews = await getUserWhiskyReviews()
+
+          // ⭐ 위스키 ID 추출 후 위스키 정보 일괄 조회
+          const whiskyIds = userReviews.map(r => r.whisky_id)
+          const whiskiesMap = await getWhiskiesByIds(whiskyIds)
+
           const reviewsWithFormat = userReviews.map(review => {
-            // whiskies 테이블 JOIN 데이터 추출 (타입 안전)
-            const whiskyData = review.whiskies || {}
+            // ⭐ whiskiesMap에서 위스키 정보 조회
+            const whiskyData = whiskiesMap[review.whisky_id] || {}
             const whiskyName = whiskyData.name_ko || whiskyData.name || review.whisky_id || '위스키'
             const whiskyImage = whiskyData.image || ''
 

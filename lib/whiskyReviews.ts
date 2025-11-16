@@ -136,14 +136,7 @@ export async function getUserWhiskyReviews(): Promise<WhiskyReview[]> {
 
     const { data: reviews, error } = await supabaseBrowser()
       .from('reviews')
-      .select(`
-        *,
-        whiskies (
-          name,
-          name_ko,
-          image
-        )
-      `)
+      .select('*')  // ⭐ JOIN 제거, reviews만 조회
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
 
@@ -237,5 +230,46 @@ export async function getUserWhiskyRating(whiskyId: string): Promise<number | nu
   } catch (error) {
     console.error('평점 확인 중 오류:', error)
     return null
+  }
+}
+
+/**
+ * whisky_id 배열로 위스키 정보 일괄 조회
+ * @param whiskyIds - 조회할 위스키 ID 배열
+ * @returns whisky_id를 key로 하는 위스키 정보 맵
+ */
+export async function getWhiskiesByIds(
+  whiskyIds: string[]
+): Promise<Record<string, { name?: string; name_ko?: string; image?: string }>> {
+  if (whiskyIds.length === 0) {
+    return {}
+  }
+
+  try {
+    const { data, error } = await supabaseBrowser()
+      .from('whiskies')
+      .select('id, name, name_ko, image')
+      .in('id', whiskyIds)
+
+    if (error) {
+      console.error('위스키 정보 조회 실패:', error)
+      return {}
+    }
+
+    // id를 key로 하는 객체로 변환
+    const whiskyMap: Record<string, { name?: string; name_ko?: string; image?: string }> = {}
+    data?.forEach((whisky) => {
+      whiskyMap[whisky.id] = {
+        name: whisky.name,
+        name_ko: whisky.name_ko,
+        image: whisky.image
+      }
+    })
+
+    console.log(`✅ 위스키 정보 ${Object.keys(whiskyMap).length}개 로드 완료`)
+    return whiskyMap
+  } catch (error) {
+    console.error('위스키 정보 조회 중 오류:', error)
+    return {}
   }
 }
