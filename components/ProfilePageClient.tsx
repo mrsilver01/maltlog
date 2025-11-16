@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { updateNickname } from '../lib/userProfiles'
 import { uploadAndSetAvatar } from '../lib/avatarStorage'
@@ -77,6 +77,13 @@ export default function ProfilePageClient({
   const [userStats, setUserStats] = useState(initialStats)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  // ⭐ 성능 최적화: 평점 높은 순으로 정렬된 위스키 3개 캐싱
+  const topRatedWhiskies = useMemo(() => {
+    return [...notesData]
+      .sort((a, b) => b.rating - a.rating)
+      .slice(0, 3)
+  }, [notesData])
+
   // 프로필 정보 업데이트
   useEffect(() => {
     if (profile) {
@@ -127,8 +134,8 @@ export default function ProfilePageClient({
           // 사용자 리뷰 로드
           const userReviews = await getUserWhiskyReviews()
           const reviewsWithFormat = userReviews.map(review => {
-            // whiskies 테이블 JOIN 데이터 추출
-            const whiskyData = (review as any).whiskies || {}
+            // whiskies 테이블 JOIN 데이터 추출 (타입 안전)
+            const whiskyData = review.whiskies || {}
             const whiskyName = whiskyData.name_ko || whiskyData.name || review.whisky_id || '위스키'
             const whiskyImage = whiskyData.image || ''
 
@@ -301,14 +308,10 @@ export default function ProfilePageClient({
     if (!confirm('정말로 이 리뷰를 삭제하시겠습니까?')) return
 
     try {
-      // Supabase에서 리뷰 삭제는 whiskyReviews.ts의 deleteWhiskyReview 함수 사용
-      const { deleteWhiskyReview } = await import('../lib/whiskyReviews')
+      // Review ID로 직접 삭제하는 안전한 함수 사용
+      const { deleteWhiskyReviewById } = await import('../lib/whiskyReviews')
 
-      // 해당 리뷰 찾기
-      const review = notesData.find(n => n.id === noteId)
-      if (!review) return
-
-      const success = await deleteWhiskyReview(review.whiskyId)
+      const success = await deleteWhiskyReviewById(noteId)
       if (success) {
         // 상태에서 삭제
         setNotesData(prevNotes => prevNotes.filter(note => note.id !== noteId))
@@ -516,35 +519,47 @@ export default function ProfilePageClient({
                                    !review.content.includes('별점') &&
                                    review.content.trim() !== `별점 ${review.rating}점을 남겼습니다.`
                   const reviewPreview = hasReview ?
-                    (review.content.length > 30 ? review.content.slice(0, 30) + '...' : review.content)
+                    (review.content.length > 50 ? review.content.slice(0, 50) + '...' : review.content)
                     : null
+
+                  const handleScrollToReview = () => {
+                    // 해당 리뷰로 스크롤
+                    const reviewElement = document.getElementById(`review-${review.id}`)
+                    if (reviewElement) {
+                      reviewElement.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                      // 하이라이트 효과
+                      reviewElement.classList.add('ring-2', 'ring-amber-400')
+                      setTimeout(() => {
+                        reviewElement.classList.remove('ring-2', 'ring-amber-400')
+                      }, 2000)
+                    }
+                  }
 
                   return (
                     <div
                       key={review.id}
-                      className="cursor-pointer hover:bg-gray-50 p-2 rounded transition-colors"
-                      onClick={() => {
-                        // 해당 리뷰로 스크롤
-                        const reviewElement = document.getElementById(`review-${review.id}`)
-                        if (reviewElement) {
-                          reviewElement.scrollIntoView({ behavior: 'smooth', block: 'center' })
-                          // 하이라이트 효과
-                          reviewElement.classList.add('ring-2', 'ring-amber-400')
-                          setTimeout(() => {
-                            reviewElement.classList.remove('ring-2', 'ring-amber-400')
-                          }, 2000)
+                      role="button"
+                      tabIndex={0}
+                      className="cursor-pointer hover:bg-gray-50 p-2 rounded transition-colors focus:outline-none focus:ring-2 focus:ring-amber-500"
+                      onClick={handleScrollToReview}
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault()
+                          handleScrollToReview()
                         }
                       }}
                     >
-                      <div className="flex items-center justify-between mb-1">
-                        <div className="flex items-center gap-2">
-                          <span className="text-yellow-400">★</span>
-                          <span className="text-sm font-medium">{review.rating}</span>
+                      <div className="flex flex-col gap-1">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-bold text-gray-800 truncate">{review.whisky}</span>
+                          <div className="flex items-center gap-2 ml-2">
+                            <span className="text-yellow-400">★</span>
+                            <span className="text-sm font-medium">{review.rating}</span>
+                          </div>
                         </div>
-                        <span className="text-sm font-bold text-gray-800">{review.whisky}</span>
                       </div>
                       {reviewPreview && (
-                        <p className="text-xs text-gray-600 italic ml-6">
+                        <p className="text-xs text-gray-600 italic">
                           "{reviewPreview}"
                         </p>
                       )}
@@ -565,23 +580,32 @@ export default function ProfilePageClient({
                 </div>
                 <div className="bg-amber-800 p-4 sm:p-6 md:p-8 rounded flex items-center justify-center">
                   <div className="flex gap-2 sm:gap-4 md:gap-8">
-                    {/* ⭐ 평점 높은 순으로 정렬하여 상위 3개 표시 */}
-                    {notesData.length > 0 ? (
-                      [...notesData]
-                        .sort((a, b) => b.rating - a.rating)  // 평점 높은 순 정렬
-                        .slice(0, 3)
-                        .map((review, index) => (
-                          <div
-                            key={index}
-                            className="w-6 sm:w-8 md:w-10 h-12 sm:h-16 md:h-20 bg-white bg-opacity-20 rounded overflow-hidden flex items-center justify-center cursor-pointer hover:scale-110 transition-transform"
-                            onClick={() => {
-                              // 클릭 시 해당 리뷰로 스크롤
-                              const reviewElement = document.getElementById(`review-${review.id}`)
-                              if (reviewElement) {
-                                reviewElement.scrollIntoView({ behavior: 'smooth', block: 'center' })
-                              }
-                            }}
-                          >
+                    {/* ⭐ 평점 높은 순으로 정렬된 위스키 3개 (useMemo로 최적화) */}
+                    {topRatedWhiskies.length > 0 ? (
+                      topRatedWhiskies
+                        .map((review, index) => {
+                          const handleScrollToCollection = () => {
+                            const reviewElement = document.getElementById(`review-${review.id}`)
+                            if (reviewElement) {
+                              reviewElement.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                            }
+                          }
+
+                          return (
+                            <div
+                              key={index}
+                              role="button"
+                              tabIndex={0}
+                              aria-label={`${review.whisky} 리뷰로 이동 (평점: ${review.rating}점)`}
+                              className="w-6 sm:w-8 md:w-10 h-12 sm:h-16 md:h-20 bg-white bg-opacity-20 rounded overflow-hidden flex items-center justify-center cursor-pointer hover:scale-110 transition-transform focus:outline-none focus:ring-2 focus:ring-white"
+                              onClick={handleScrollToCollection}
+                              onKeyPress={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                  e.preventDefault()
+                                  handleScrollToCollection()
+                                }
+                              }}
+                            >
                             {review.whiskyImage ? (
                               <img
                                 src={useWhiskyImage(review.whiskyId, review.whiskyImage)}
@@ -595,7 +619,8 @@ export default function ProfilePageClient({
                               </div>
                             )}
                           </div>
-                        ))
+                          )
+                        })
                     ) : (
                       <>
                         <div className="w-6 sm:w-8 md:w-10 h-12 sm:h-16 md:h-20 bg-white bg-opacity-30 rounded"></div>

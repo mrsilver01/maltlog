@@ -12,6 +12,12 @@ export interface WhiskyReview {
   note?: string
   created_at?: string
   updated_at?: string
+  // ⭐ JOIN 쿼리로 가져오는 위스키 정보 (타입 안전성 개선)
+  whiskies?: {
+    name?: string
+    name_ko?: string
+    image?: string
+  }
 }
 
 // 현재 사용자의 특정 위스키에 대한 리뷰 가져오기
@@ -176,6 +182,35 @@ export async function deleteWhiskyReview(whiskyId: string): Promise<boolean> {
     }
 
     console.log('✅ 위스키 리뷰 삭제 성공:', whiskyId)
+    return true
+  } catch (error) {
+    console.error('리뷰 삭제 중 오류:', error)
+    return false
+  }
+}
+
+// Review ID로 직접 삭제하는 안전한 함수
+export async function deleteWhiskyReviewById(reviewId: string): Promise<boolean> {
+  try {
+    const { data: { user }, error: userError } = await supabaseBrowser().auth.getUser()
+
+    if (userError || !user) {
+      console.log('로그인이 필요합니다')
+      return false
+    }
+
+    const { error } = await supabaseBrowser()
+      .from('reviews')
+      .delete()
+      .eq('id', reviewId)
+      .eq('user_id', user.id)  // 보안: 본인 리뷰만 삭제 가능
+
+    if (error) {
+      console.error('리뷰 삭제 실패:', error)
+      return false
+    }
+
+    console.log('✅ 리뷰 삭제 성공:', reviewId)
     return true
   } catch (error) {
     console.error('리뷰 삭제 중 오류:', error)
