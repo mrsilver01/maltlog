@@ -79,7 +79,6 @@ export default function ProfilePageClient({
   const [userStats, setUserStats] = useState(initialStats)
   const [likedWhiskies, setLikedWhiskies] = useState<WhiskyData[]>([])
   const [likedWhiskyIds, setLikedWhiskyIds] = useState<string[]>([])
-  const [communityPosts, setCommunityPosts] = useState<any[]>([])
   const [communityPostsCount, setCommunityPostsCount] = useState(initialStats.postsCount || 0)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -154,7 +153,7 @@ export default function ProfilePageClient({
             const whiskyData = likedWhiskiesMap[id] || {}
             return {
               id: id,
-              name: whiskyData.name_ko || whiskyData.name || '위스키',
+              name: whiskyData.name || '',
               image: whiskyData.image || '',
               distillery: '',
               region: '',
@@ -196,7 +195,6 @@ export default function ProfilePageClient({
 
           // 커뮤니티 게시글 개수 업데이트
           const userPosts = await getUserCommunityPosts(user.id)
-          setCommunityPosts(userPosts.slice(0, 5))
           setCommunityPostsCount(userPosts.length)
         } catch (error) {
           console.error('사용자 데이터 로드 중 오류:', error)
@@ -546,7 +544,7 @@ export default function ProfilePageClient({
                   <div className="text-xs sm:text-sm text-rose-700">찜</div>
                 </div>
                 <div
-                  className="py-3 sm:py-4 cursor-pointer hover:bg-rose-100 transition-colors rounded"
+                  className="py-3 sm:py-4 cursor-pointer hover:bg-rose-100 transition-colors"
                   onClick={() => router.push('/community')}
                   role="button"
                   tabIndex={0}
@@ -616,32 +614,36 @@ export default function ProfilePageClient({
                 </div>
                 <div className="bg-amber-800 p-4 sm:p-6 md:p-8 rounded flex items-center justify-center">
                   <div className="flex gap-2 sm:gap-4 md:gap-8">
-                    {/* ⭐ 찜한 위스키 3개 표시 */}
-                    {likedWhiskies.length > 0 ? (
-                      likedWhiskies.slice(0, 3).map((whisky, index) => {
-                        const handleScrollToCollection = () => {
-                          router.push(`/whisky/${whisky.id}`)
-                        }
+                    {/* ⭐ 평점 높은 순으로 정렬된 위스키 3개 (useMemo로 최적화) */}
+                    {topRatedWhiskies.length > 0 ? (
+                      topRatedWhiskies
+                        .map((review, index) => {
+                          const handleScrollToCollection = () => {
+                            const reviewElement = document.getElementById(`review-${review.id}`)
+                            if (reviewElement) {
+                              reviewElement.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                            }
+                          }
 
-                        return (
-                          <div
-                            key={whisky.id}
-                            role="button"
-                            tabIndex={0}
-                            aria-label={`${whisky.name} 위스키 상세보기`}
-                            className="w-6 sm:w-8 md:w-10 h-12 sm:h-16 md:h-20 bg-white bg-opacity-20 rounded overflow-hidden flex items-center justify-center cursor-pointer hover:scale-110 transition-transform focus:outline-none focus:ring-2 focus:ring-white"
-                            onClick={handleScrollToCollection}
-                            onKeyPress={(e) => {
-                              if (e.key === 'Enter' || e.key === ' ') {
-                                e.preventDefault()
-                                handleScrollToCollection()
-                              }
-                            }}
-                          >
-                            {whisky.image ? (
+                          return (
+                            <div
+                              key={index}
+                              role="button"
+                              tabIndex={0}
+                              aria-label={`${review.whisky} 리뷰로 이동 (평점: ${review.rating}점)`}
+                              className="w-6 sm:w-8 md:w-10 h-12 sm:h-16 md:h-20 bg-white bg-opacity-20 rounded overflow-hidden flex items-center justify-center cursor-pointer hover:scale-110 transition-transform focus:outline-none focus:ring-2 focus:ring-white"
+                              onClick={handleScrollToCollection}
+                              onKeyPress={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                  e.preventDefault()
+                                  handleScrollToCollection()
+                                }
+                              }}
+                            >
+                            {review.whiskyImage ? (
                               <img
-                                src={useWhiskyImage(whisky.id, whisky.image)}
-                                alt={whisky.name}
+                                src={useWhiskyImage(review.whiskyId, review.whiskyImage)}
+                                alt={review.whisky}
                                 className="w-full h-full object-cover"
                                 style={{ filter: 'brightness(1.1)' }}
                               />
@@ -651,8 +653,8 @@ export default function ProfilePageClient({
                               </div>
                             )}
                           </div>
-                        )
-                      })
+                          )
+                        })
                     ) : (
                       <>
                         <div className="w-6 sm:w-8 md:w-10 h-12 sm:h-16 md:h-20 bg-white bg-opacity-30 rounded"></div>
@@ -681,188 +683,184 @@ export default function ProfilePageClient({
                   }
 
                   return (
-                    <div
-                      key={note.id}
-                      id={`review-${note.id}`}
-                      className="bg-white border border-gray-200 rounded-lg p-3 sm:p-4 hover:shadow-lg transition-all duration-300"
-                    >
-                      {/* 노트 헤더 */}
-                      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-2 sm:mb-3 gap-2 sm:gap-0">
-                        <div
-                          className="flex items-center gap-2 cursor-pointer hover:text-amber-600 transition-colors"
-                          onClick={handleGoToWhisky}
-                          role="button"
-                          tabIndex={0}
-                          onKeyPress={(e) => {
-                            if (e.key === 'Enter' || e.key === ' ') {
-                              e.preventDefault()
-                              handleGoToWhisky()
-                            }
+                  <div
+                    key={note.id}
+                    id={`review-${note.id}`}  // ⭐ 스크롤 타겟용 ID 추가
+                    className="bg-white border border-gray-200 rounded-lg p-3 sm:p-4 hover:shadow-lg transition-all duration-300 cursor-pointer"
+                    onClick={handleGoToWhisky}
+                    role="button"
+                    tabIndex={0}
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault()
+                        handleGoToWhisky()
+                      }
+                    }}
+                  >
+                    {/* 노트 헤더 */}
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-2 sm:mb-3 gap-2 sm:gap-0">
+                      <div className="flex items-center gap-2 sm:gap-3">
+                        {/* 프로필 사진 */}
+                        <div className="w-6 sm:w-8 h-6 sm:h-8 rounded-full border border-gray-300 bg-gray-100 overflow-hidden flex-shrink-0">
+                          {profileImage ? (
+                            <img
+                              src={profileImage}
+                              alt="프로필"
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
+                              👤
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="font-medium text-gray-800 text-sm sm:text-base">{note.user}</span>
+                          <span className="text-xs text-amber-600 font-medium">{note.whisky}</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 text-xs sm:text-sm">
+                        <span className="text-yellow-400">★</span>
+                        <span className="font-medium text-gray-700">{note.rating}</span>
+                        <span className="text-gray-500">{note.date}</span>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation() // 리뷰 박스 클릭 이벤트 방지
+                            handleDeleteReview(note.id)
                           }}
+                          className="text-red-500 px-2 py-1 hover:bg-red-50 rounded transition-colors"
                         >
-                          {/* 프로필 사진 */}
-                          <div className="w-6 sm:w-8 h-6 sm:h-8 rounded-full border border-gray-300 bg-gray-100 overflow-hidden flex-shrink-0">
-                            {profileImage ? (
-                              <img
-                                src={profileImage}
-                                alt="프로필"
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
-                                👤
-                              </div>
-                            )}
-                          </div>
-                          <div className="flex flex-col">
-                            <span className="font-medium text-gray-800 text-sm sm:text-base">{note.user}</span>
-                            <span className="text-xs text-amber-600 font-medium">{note.whisky}</span>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-2 text-xs sm:text-sm">
-                          <span className="text-yellow-400">★</span>
-                          <span className="font-medium text-gray-700">{note.rating}</span>
-                          <span className="text-gray-500">{note.date}</span>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              handleDeleteReview(note.id)
-                            }}
-                            className="text-red-500 px-2 py-1 hover:bg-red-50 rounded transition-colors"
-                          >
-                            삭제
-                          </button>
-                        </div>
+                          삭제
+                        </button>
                       </div>
+                    </div>
 
-                      {/* 노트 내용 - 단순 별점이 아닌 경우만 표시 */}
-                      {note.content &&
-                       note.content.trim() !== '' &&
-                       !note.content.includes('별점') &&
-                       note.content.trim() !== `별점 ${note.rating}점을 남겼습니다.` && (
-                        <p className="text-gray-700 mb-4 leading-relaxed">
-                          {note.content}
-                        </p>
-                      )}
+                    {/* 노트 내용 - 단순 별점이 아닌 경우만 표시 */}
+                    {note.content &&
+                     note.content.trim() !== '' &&
+                     !note.content.includes('별점') &&
+                     note.content.trim() !== `별점 ${note.rating}점을 남겼습니다.` && (
+                      <p className="text-gray-700 mb-4 leading-relaxed">
+                        {note.content}
+                      </p>
+                    )}
 
-                      {/* 좋아요, 댓글 수 */}
-                      <div className="flex items-center justify-between text-sm text-gray-500 mb-3">
-                        <span>좋아요 {note.likes}</span>
-                        <span>댓글 {note.comments.length}</span>
-                      </div>
+                    {/* 좋아요, 댓글 수 */}
+                    <div className="flex items-center justify-between text-sm text-gray-500 mb-3">
+                      <span>좋아요 {note.likes}</span>
+                      <span>댓글 {note.comments.length}</span>
+                    </div>
 
-                      {/* 액션 버튼들 */}
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <button className="transition-all duration-200 hover:scale-110 transform text-gray-300 hover:text-red-400">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                            </svg>
-                          </button>
-                          <button
-                            onClick={() => toggleComments(note.id.toString())}
-                            className="text-gray-300 hover:text-blue-400 transition-all duration-200 hover:scale-110 transform"
-                          >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                            </svg>
-                          </button>
-                        </div>
-
-                        {/* 답글 토글 버튼 - 항상 표시 */}
+                    {/* 액션 버튼들 */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <button className="transition-all duration-200 hover:scale-110 transform text-gray-300 hover:text-red-400">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                          </svg>
+                        </button>
                         <button
                           onClick={() => toggleComments(note.id.toString())}
-                          className="flex items-center gap-2 text-blue-500 hover:text-blue-600 text-sm font-medium transition-colors"
+                          className="text-gray-300 hover:text-blue-400 transition-all duration-200 hover:scale-110 transform"
                         >
-                          <span>{expandedComments[note.id.toString()] === true ? '답글 접기' : '답글 달기'}</span>
-                          <svg
-                            className={`w-4 h-4 transition-transform duration-200 ${expandedComments[note.id.toString()] === true ? 'rotate-180' : ''}`}
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                           </svg>
                         </button>
                       </div>
 
-                      {/* 댓글 목록 - 접힌/펼쳐진 상태에 따라 표시 */}
-                      {expandedComments[note.id.toString()] === true && note.comments.length > 0 && (
-                        <div className="mt-2 space-y-2">
-                          {note.comments.map((comment: Comment) => (
-                            <div key={comment.id} className="flex items-center justify-between bg-gray-50 p-3 rounded border border-gray-100">
-                              <div className="flex items-center gap-3 flex-1 min-w-0">
-                                {/* 댓글 작성자 프로필 사진 */}
-                                <div className="w-6 h-6 rounded-full border border-gray-300 bg-gray-100 overflow-hidden flex-shrink-0">
-                                  {comment.user === nickname && profileImage ? (
-                                    <img
-                                      src={profileImage}
-                                      alt="프로필"
-                                      className="w-full h-full object-cover"
-                                    />
-                                  ) : (
-                                    <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
-                                      👤
-                                    </div>
-                                  )}
-                                </div>
-                                <span className="text-sm font-medium text-gray-800 flex-shrink-0">{comment.user}</span>
-                                <span className="text-sm text-gray-600 truncate" title={comment.content}>
-                                  {truncateText(comment.content, 30)}
-                                </span>
-                              </div>
-                              <div className="flex items-center gap-2 flex-shrink-0">
-                                <span className="text-xs text-gray-500">{comment.date}</span>
-                                {/* 댓글 작성자만 삭제 버튼 표시 */}
-                                {comment.user === nickname && (
-                                  <button
-                                    onClick={() => handleDeleteReply(note.id, comment.id)}
-                                    className="text-xs text-red-500 hover:text-red-700 px-1 py-0.5 hover:bg-red-50 rounded transition-colors"
-                                  >
-                                    삭제
-                                  </button>
+                      {/* 답글 토글 버튼 - 항상 표시 */}
+                      <button
+                        onClick={() => toggleComments(note.id.toString())}
+                        className="flex items-center gap-2 text-blue-500 hover:text-blue-600 text-sm font-medium transition-colors"
+                      >
+                        <span>{expandedComments[note.id.toString()] === true ? '답글 접기' : '답글 달기'}</span>
+                        <svg
+                          className={`w-4 h-4 transition-transform duration-200 ${expandedComments[note.id.toString()] === true ? 'rotate-180' : ''}`}
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </button>
+                    </div>
+
+                    {/* 댓글 목록 - 접힌/펼쳐진 상태에 따라 표시 */}
+                    {expandedComments[note.id.toString()] === true && note.comments.length > 0 && (
+                      <div className="mt-2 space-y-2">
+                        {note.comments.map((comment: Comment) => (
+                          <div key={comment.id} className="flex items-center justify-between bg-gray-50 p-3 rounded border border-gray-100">
+                            <div className="flex items-center gap-3 flex-1 min-w-0">
+                              {/* 댓글 작성자 프로필 사진 */}
+                              <div className="w-6 h-6 rounded-full border border-gray-300 bg-gray-100 overflow-hidden flex-shrink-0">
+                                {comment.user === nickname && profileImage ? (
+                                  <img
+                                    src={profileImage}
+                                    alt="프로필"
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
+                                    👤
+                                  </div>
                                 )}
                               </div>
+                              <span className="text-sm font-medium text-gray-800 flex-shrink-0">{comment.user}</span>
+                              <span className="text-sm text-gray-600 truncate" title={comment.content}>
+                                {truncateText(comment.content, 30)}
+                              </span>
                             </div>
-                          ))}
-                        </div>
-                      )}
-
-                      {/* 댓글 작성란 - 댓글이 펼쳐진 상태일 때만 표시 */}
-                      {expandedComments[note.id.toString()] === true && (
-                        <div className="mt-3 border-t border-gray-100 pt-3">
-                          <div className="flex gap-2">
-                            <input
-                              type="text"
-                              placeholder="답글 달기..."
-                              value={replyText[note.id.toString()] || ''}
-                              onChange={(e) => setReplyText(prev => ({
-                                ...prev,
-                                [note.id.toString()]: e.target.value
-                              }))}
-                              onKeyPress={(e) => {
-                                if (e.key === 'Enter') {
-                                  e.preventDefault()
-                                  handleAddReply(note.id)
-                                }
-                              }}
-                              className="flex-1 text-sm border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            />
-                            <button
-                              onClick={() => handleAddReply(note.id)}
-                              disabled={!replyText[note.id.toString()]?.trim()}
-                              className="px-4 py-2 bg-blue-500 text-white text-sm rounded hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                              답글 달기
-                            </button>
+                            <div className="flex items-center gap-2 flex-shrink-0">
+                              <span className="text-xs text-gray-500">{comment.date}</span>
+                              {/* 댓글 작성자만 삭제 버튼 표시 */}
+                              {comment.user === nickname && (
+                                <button
+                                  onClick={() => handleDeleteReply(note.id, comment.id)}
+                                  className="text-xs text-red-500 hover:text-red-700 px-1 py-0.5 hover:bg-red-50 rounded transition-colors"
+                                >
+                                  삭제
+                                </button>
+                              )}
+                            </div>
                           </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* 댓글 작성란 - 댓글이 펼쳐진 상태일 때만 표시 */}
+                    {expandedComments[note.id.toString()] === true && (
+                      <div className="mt-3 border-t border-gray-100 pt-3">
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            placeholder="답글 달기..."
+                            value={replyText[note.id.toString()] || ''}
+                            onChange={(e) => setReplyText(prev => ({
+                              ...prev,
+                              [note.id.toString()]: e.target.value
+                            }))}
+                            onKeyPress={(e) => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault()
+                                handleAddReply(note.id)
+                              }
+                            }}
+                            className="flex-1 text-sm border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          />
+                          <button
+                            onClick={() => handleAddReply(note.id)}
+                            disabled={!replyText[note.id.toString()]?.trim()}
+                            className="px-4 py-2 bg-blue-500 text-white text-sm rounded hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            답글 달기
+                          </button>
                         </div>
-                      )}
-                    </div>
+                      </div>
+                    )}
+                  </div>
                   )
                 })}
-              </div>
 
               {/* 더보기/접기 버튼 */}
               {notesData.length > 3 && (
@@ -875,55 +873,6 @@ export default function ProfilePageClient({
                   </button>
                 </div>
               )}
-            </div>
-
-            {/* 내 게시글 섹션 */}
-            <div className="mt-8">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg sm:text-xl font-bold text-red-500">내 게시글</h3>
-                <button
-                  onClick={() => router.push('/community')}
-                  className="text-xs sm:text-sm text-gray-600 hover:text-gray-800"
-                >
-                  전체보기 →
-                </button>
-              </div>
-
-              <div className="space-y-3">
-                {communityPosts.map((post) => (
-                  <div
-                    key={post.id}
-                    className="bg-white border border-gray-200 rounded-lg p-3 sm:p-4 hover:shadow-lg transition-all cursor-pointer"
-                    onClick={() => router.push(`/community/post/${post.id}`)}
-                    role="button"
-                    tabIndex={0}
-                    onKeyPress={(e) => {
-                      if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault()
-                        router.push(`/community/post/${post.id}`)
-                      }
-                    }}
-                  >
-                    <div className="flex items-start justify-between mb-2">
-                      <h4 className="font-bold text-gray-800 text-sm sm:text-base">{post.title}</h4>
-                      <span className="text-xs text-gray-500 ml-2">
-                        {new Date(post.created_at).toLocaleDateString()}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center gap-4 text-xs text-gray-500">
-                      <span>좋아요 {post.likes_count || 0}</span>
-                      <span>댓글 {post.comments_count || 0}</span>
-                    </div>
-                  </div>
-                ))}
-
-                {communityPosts.length === 0 && (
-                  <div className="text-center text-gray-500 py-8 text-sm">
-                    작성한 게시글이 없습니다.
-                  </div>
-                )}
-              </div>
             </div>
           </div>
         </div>

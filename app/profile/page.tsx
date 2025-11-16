@@ -44,7 +44,8 @@ export default function ProfilePage() {
   const initialStats = {
     reviewCount: 0,
     noteCount: 0,
-    wishlistCount: 0
+    wishlistCount: 0,
+    postsCount: 0
   }
 
   return (
