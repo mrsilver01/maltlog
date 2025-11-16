@@ -130,7 +130,14 @@ export async function getUserWhiskyReviews(): Promise<WhiskyReview[]> {
 
     const { data: reviews, error } = await supabaseBrowser()
       .from('reviews')
-      .select('*')
+      .select(`
+        *,
+        whiskies (
+          name,
+          name_ko,
+          image
+        )
+      `)
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
 

@@ -126,19 +126,26 @@ export default function ProfilePageClient({
 
           // 사용자 리뷰 로드
           const userReviews = await getUserWhiskyReviews()
-          const reviewsWithFormat = userReviews.map(review => ({
-            id: review.id || '',
-            user: profile?.nickname || '익명',
-            whisky: review.whisky_id || '위스키',
-            rating: review.rating,
-            content: review.note || '',
-            likes: 0,
-            comments: [],
-            date: review.created_at ? new Date(review.created_at).toLocaleDateString() : '',
-            whiskyImage: (review as any).whisky_image || '',
-            whiskyId: (review as any).whisky_id,
-            reviewId: review.id || ''
-          }))
+          const reviewsWithFormat = userReviews.map(review => {
+            // whiskies 테이블 JOIN 데이터 추출
+            const whiskyData = (review as any).whiskies || {}
+            const whiskyName = whiskyData.name_ko || whiskyData.name || review.whisky_id || '위스키'
+            const whiskyImage = whiskyData.image || ''
+
+            return {
+              id: review.id || '',
+              user: profile?.nickname || '익명',
+              whisky: whiskyName,  // ⭐ 위스키 실제 이름
+              rating: review.rating,
+              content: review.note || '',
+              likes: 0,
+              comments: [],
+              date: review.created_at ? new Date(review.created_at).toLocaleDateString() : '',
+              whiskyImage: whiskyImage,  // ⭐ 위스키 이미지
+              whiskyId: review.whisky_id,
+              reviewId: review.id || ''
+            }
+          })
           setNotesData(reviewsWithFormat)
         } catch (error) {
           console.error('사용자 데이터 로드 중 오류:', error)
@@ -502,15 +509,48 @@ export default function ProfilePageClient({
             <div>
               <h3 className="text-lg font-bold text-gray-800 mb-4">남긴 별점</h3>
               <div className="space-y-3">
-                {notesData.slice(0, 5).map((review) => (
-                  <div key={review.id} className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className="text-yellow-400">★</span>
-                      <span className="text-sm">{review.rating}</span>
+                {notesData.slice(0, 5).map((review) => {
+                  // 리뷰 내용 축약 (30자)
+                  const hasReview = review.content &&
+                                   review.content.trim() !== '' &&
+                                   !review.content.includes('별점') &&
+                                   review.content.trim() !== `별점 ${review.rating}점을 남겼습니다.`
+                  const reviewPreview = hasReview ?
+                    (review.content.length > 30 ? review.content.slice(0, 30) + '...' : review.content)
+                    : null
+
+                  return (
+                    <div
+                      key={review.id}
+                      className="cursor-pointer hover:bg-gray-50 p-2 rounded transition-colors"
+                      onClick={() => {
+                        // 해당 리뷰로 스크롤
+                        const reviewElement = document.getElementById(`review-${review.id}`)
+                        if (reviewElement) {
+                          reviewElement.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                          // 하이라이트 효과
+                          reviewElement.classList.add('ring-2', 'ring-amber-400')
+                          setTimeout(() => {
+                            reviewElement.classList.remove('ring-2', 'ring-amber-400')
+                          }, 2000)
+                        }
+                      }}
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <div className="flex items-center gap-2">
+                          <span className="text-yellow-400">★</span>
+                          <span className="text-sm font-medium">{review.rating}</span>
+                        </div>
+                        <span className="text-sm font-bold text-gray-800">{review.whisky}</span>
+                      </div>
+                      {reviewPreview && (
+                        <p className="text-xs text-gray-600 italic ml-6">
+                          "{reviewPreview}"
+                        </p>
+                      )}
                     </div>
-                    <span className="text-sm text-gray-700">{review.whisky}</span>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             </div>
           </div>
@@ -525,17 +565,37 @@ export default function ProfilePageClient({
                 </div>
                 <div className="bg-amber-800 p-4 sm:p-6 md:p-8 rounded flex items-center justify-center">
                   <div className="flex gap-2 sm:gap-4 md:gap-8">
-                    {reviewedWhiskies.length > 0 ? (
-                      reviewedWhiskies.slice(0, 3).map((whisky, index) => (
-                        <div key={index} className="w-6 sm:w-8 md:w-10 h-12 sm:h-16 md:h-20 bg-white bg-opacity-20 rounded overflow-hidden flex items-center justify-center">
-                          <img
-                            src={useWhiskyImage(whisky.id, whisky.image)}
-                            alt={whisky.name}
-                            className="w-full h-full object-cover"
-                            style={{ filter: 'brightness(1.1)' }}
-                          />
-                        </div>
-                      ))
+                    {/* ⭐ 평점 높은 순으로 정렬하여 상위 3개 표시 */}
+                    {notesData.length > 0 ? (
+                      [...notesData]
+                        .sort((a, b) => b.rating - a.rating)  // 평점 높은 순 정렬
+                        .slice(0, 3)
+                        .map((review, index) => (
+                          <div
+                            key={index}
+                            className="w-6 sm:w-8 md:w-10 h-12 sm:h-16 md:h-20 bg-white bg-opacity-20 rounded overflow-hidden flex items-center justify-center cursor-pointer hover:scale-110 transition-transform"
+                            onClick={() => {
+                              // 클릭 시 해당 리뷰로 스크롤
+                              const reviewElement = document.getElementById(`review-${review.id}`)
+                              if (reviewElement) {
+                                reviewElement.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                              }
+                            }}
+                          >
+                            {review.whiskyImage ? (
+                              <img
+                                src={useWhiskyImage(review.whiskyId, review.whiskyImage)}
+                                alt={review.whisky}
+                                className="w-full h-full object-cover"
+                                style={{ filter: 'brightness(1.1)' }}
+                              />
+                            ) : (
+                              <div className="w-full h-full bg-white bg-opacity-30 flex items-center justify-center">
+                                <span className="text-xs text-white opacity-50">No Image</span>
+                              </div>
+                            )}
+                          </div>
+                        ))
                     ) : (
                       <>
                         <div className="w-6 sm:w-8 md:w-10 h-12 sm:h-16 md:h-20 bg-white bg-opacity-30 rounded"></div>
@@ -559,7 +619,11 @@ export default function ProfilePageClient({
 
               <div className="space-y-3 sm:space-y-4">
                 {myNotes.map((note) => (
-                  <div key={note.id} className="bg-white border border-gray-200 rounded-lg p-3 sm:p-4 hover:shadow-lg transition-all duration-300">
+                  <div
+                    key={note.id}
+                    id={`review-${note.id}`}  // ⭐ 스크롤 타겟용 ID 추가
+                    className="bg-white border border-gray-200 rounded-lg p-3 sm:p-4 hover:shadow-lg transition-all duration-300"
+                  >
                     {/* 노트 헤더 */}
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-2 sm:mb-3 gap-2 sm:gap-0">
                       <div className="flex items-center gap-2 sm:gap-3">
