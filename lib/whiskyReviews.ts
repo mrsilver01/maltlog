@@ -258,7 +258,7 @@ export async function getWhiskiesByIds(
 
     // id를 key로 하는 객체로 변환
     const whiskyMap: Record<string, { name?: string; name_ko?: string; image?: string }> = {}
-    data?.forEach((whisky) => {
+    data?.forEach((whisky: any) => {
       whiskyMap[whisky.id] = {
         name: whisky.name,
         name_ko: whisky.name_ko,
