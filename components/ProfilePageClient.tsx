@@ -117,8 +117,18 @@ export default function ProfilePageClient({
       const noteCount = userReviews.filter(review => {
         if (!review.note || review.note.trim() === '') return false
         const trimmedNote = review.note.trim()
-        const autoMessages = [`별점 ${review.rating}점을 남겼습니다.`, `별점 ${review.rating}점`, `${review.rating}점`]
-        return !autoMessages.includes(trimmedNote)
+
+        // 자동 생성 메시지 패턴들
+        const autoMessagePatterns = [
+          `별점 ${review.rating}점을 남겼습니다.`,
+          `별점 ${review.rating}점`,
+          `${review.rating}점`,
+          '별점만 남겼습니다.',
+          '평점만 등록했습니다.'
+        ]
+
+        // 정확히 일치하는 자동 메시지가 아닌 경우만 유효한 노트로 간주
+        return !autoMessagePatterns.some(pattern => trimmedNote === pattern)
       }).length
 
       // 커뮤니티 게시글 개수
@@ -732,7 +742,7 @@ export default function ProfilePageClient({
                             }}
                             className="text-amber-600 px-2 py-1 hover:bg-amber-50 rounded transition-colors font-medium"
                           >
-                            위스키 보기
+                            노트 보러 가기
                           </button>
                           <button
                             onClick={(e) => {
