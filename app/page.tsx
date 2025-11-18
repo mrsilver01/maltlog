@@ -77,11 +77,20 @@ async function getWhiskies(): Promise<WhiskyData[]> {
     recommend = [...recommend, ...extra];
   }
 
-  // 추천을 맨 앞에 배치하고 나머지는 평점순으로 정렬
+  // 추천을 맨 앞에 배치하고 나머지는 사진 있는 것 우선, 그 다음 평점순으로 정렬
   const remaining = all.filter(w => !recommend.some(r => r.id === w.id));
-  const transformedData = [...recommend, ...remaining];
 
-  console.log('✅ 서버에서 위스키 데이터 로드 완료:', transformedData.length, '개, 추천:', recommend.length, '개')
+  // 나머지 위스키들을 사진 유무로 분류 후 정렬
+  const withImage = remaining.filter(w => w.image && w.image.trim() !== '');
+  const withoutImage = remaining.filter(w => !w.image || w.image.trim() === '');
+
+  // 각각 평점순으로 정렬
+  withImage.sort((a, b) => (Number(b.avgRating ?? 0) - Number(a.avgRating ?? 0)));
+  withoutImage.sort((a, b) => (Number(b.avgRating ?? 0) - Number(a.avgRating ?? 0)));
+
+  const transformedData = [...recommend, ...withImage, ...withoutImage];
+
+  console.log('✅ 서버에서 위스키 데이터 로드 완료:', transformedData.length, '개, 추천:', recommend.length, '개, 사진있음:', withImage.length, '개, 사진없음:', withoutImage.length, '개')
   return transformedData;
 }
 
