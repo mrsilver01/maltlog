@@ -1,58 +1,114 @@
-'use client'
-
-import { useEffect } from 'react'
-import { useRouter, usePathname } from 'next/navigation'
-import { useAuth } from '@/app/context/AuthContext'
 import ProfilePageClient from '@/components/ProfilePageClient'
+import type { ProfileSummary, ProfileReviewsResponse, FirstReviewedResponse } from '@/types/whisky'
 
-export default function ProfilePage() {
-  const { user, loading } = useAuth()
-  const router = useRouter()
-  const pathname = usePathname()
+// 사용자별 동적 데이터이므로 동적 렌더링 필요
+export const dynamic = 'force-dynamic'
 
-  useEffect(() => {
-    // 로딩 중이면 아무것도 하지 않음
-    if (loading) return
+/**
+ * 프로필 요약 데이터 조회
+ */
+async function getProfileSummary(): Promise<ProfileSummary> {
+  console.log('📊 서버에서 프로필 요약 데이터 로드 시작...')
 
-    // 유저가 없을 때 로그인 페이지로 안전하게 리다이렉트
-    if (!user) {
-      console.log('❌ 비로그인 상태 감지 → 로그인 페이지로 이동')
-      router.replace(`/login?next=${encodeURIComponent(pathname)}`) // 돌아올 위치 보존
-      return
+  try {
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
+    const apiUrl = `${baseUrl}/api/profile/summary?userId=me`
+
+    const response = await fetch(apiUrl, {
+      cache: 'no-store',
+      headers: { 'Content-Type': 'application/json' }
+    })
+
+    if (!response.ok) {
+      throw new Error(`프로필 요약 API 실패: ${response.status}`)
     }
-  }, [user, loading, router, pathname])
 
-  if (loading) {
-    return (
-      <div className="min-h-screen grid place-items-center bg-rose-50 text-neutral-700">
-        로그인 상태 확인 중...
-      </div>
-    )
+    return await response.json()
+  } catch (error) {
+    console.error('❌ 프로필 요약 데이터 로드 실패:', error)
+    // 기본값 반환
+    return {
+      user_id: '',
+      handle: '',
+      display_name: null,
+      avatar_url: null,
+      notes_count: 0,
+      posts_count: 0,
+      likes_received: 0,
+      my_avg_rating: 0
+    }
   }
+}
 
-  if (!user) {
-    return (
-      <div className="min-h-screen grid place-items-center bg-rose-50 text-neutral-700">
-        로그인 페이지로 이동 중...
-      </div>
-    )
-  }
+/**
+ * 프로필 리뷰 데이터 조회
+ */
+async function getProfileReviews(): Promise<ProfileReviewsResponse> {
+  try {
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
+    const apiUrl = `${baseUrl}/api/profile/reviews?userId=me&limit=10`
 
-  // 빈 초기 데이터로 ProfilePageClient를 렌더링
-  const initialReviews: any[] = []
-  const initialWhiskies: any[] = []
-  const initialStats = {
-    reviewCount: 0,
-    noteCount: 0,
-    wishlistCount: 0,
-    postsCount: 0
+    const response = await fetch(apiUrl, {
+      cache: 'no-store',
+      headers: { 'Content-Type': 'application/json' }
+    })
+
+    if (!response.ok) {
+      throw new Error(`프로필 리뷰 API 실패: ${response.status}`)
+    }
+
+    return await response.json()
+  } catch (error) {
+    console.error('❌ 프로필 리뷰 데이터 로드 실패:', error)
+    return { items: [], nextCursor: null }
   }
+}
+
+/**
+ * 첫 리뷰한 위스키 데이터 조회
+ */
+async function getFirstReviewedWhiskies(): Promise<FirstReviewedResponse> {
+  try {
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
+    const apiUrl = `${baseUrl}/api/profile/first-reviewed?userId=me`
+
+    const response = await fetch(apiUrl, {
+      cache: 'no-store',
+      headers: { 'Content-Type': 'application/json' }
+    })
+
+    if (!response.ok) {
+      throw new Error(`첫 리뷰 위스키 API 실패: ${response.status}`)
+    }
+
+    return await response.json()
+  } catch (error) {
+    console.error('❌ 첫 리뷰 위스키 데이터 로드 실패:', error)
+    return { items: [] }
+  }
+}
+
+export default async function ProfilePage() {
+  console.log('🏠 프로필 페이지 서버 렌더링 시작...')
+
+  // 3개 API 병렬 호출
+  const [profileSummary, profileReviews, firstReviewedWhiskies] = await Promise.all([
+    getProfileSummary(),
+    getProfileReviews(),
+    getFirstReviewedWhiskies()
+  ])
+
+  console.log('🎯 프로필 데이터 준비 완료:', {
+    notesCount: profileSummary.notes_count,
+    reviewsCount: profileReviews.items.length,
+    firstReviewedCount: firstReviewedWhiskies.items.length
+  })
 
   return (
     <ProfilePageClient
-      initialReviews={initialReviews}
-      initialWhiskies={initialWhiskies}
-      initialStats={initialStats}
+      profileSummary={profileSummary}
+      initialReviews={profileReviews}
+      firstReviewedWhiskies={firstReviewedWhiskies}
     />
   )
 }

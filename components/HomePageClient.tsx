@@ -10,37 +10,26 @@ import { LikesProvider, useLikes } from './LikesProvider'
 import toast from 'react-hot-toast'
 import { MainPageSkeleton, WhiskyCardSkeleton, CommunityPreviewSkeleton } from './SkeletonUI'
 import { formatLikeCount } from '../lib/formatLikes'
+import type { WhiskyWithStats, WhiskyListResponse } from '@/types/whisky'
 
-export interface WhiskyData {
-  id: string
-  name: string
-  name_ko?: string
-  image: string
-  abv: string
-  region: string
-  price: string
-  cask: string
-  avgRating: number
-  totalReviews: number
-  likes: number
-  is_featured?: boolean
-  display_order?: number
-  distillery?: string
-  created_at?: string
-  updated_at?: string
-}
+// 호환성을 위한 기존 WhiskyData 타입 별칭
+export type WhiskyData = WhiskyWithStats
 
 interface HomePageClientProps {
-  initialWhiskies: WhiskyData[]
+  initial: WhiskyListResponse
   initialLikedIds: string[]
 }
 
-export default function HomePageClient({ initialWhiskies, initialLikedIds }: HomePageClientProps) {
+export default function HomePageClient({ initial, initialLikedIds }: HomePageClientProps) {
   const { user, profile, signOut } = useAuth()
   const [searchQuery, setSearchQuery] = useState('')
-  const [whiskies, setWhiskies] = useState<WhiskyData[]>(initialWhiskies)
-  const [hasLoadedMore, setHasLoadedMore] = useState(false)
-  const [isLoadingMore, setIsLoadingMore] = useState(false)
+
+  // 새로운 커서 기반 페이지네이션 상태
+  const [items, setItems] = useState<WhiskyData[]>(initial.items)
+  const [cursor, setCursor] = useState<number | null>(initial.nextCursor)
+  const [loading, setLoading] = useState(false)
+
+  // 기존 UI 상태 유지
   const [showAllWhiskies, setShowAllWhiskies] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
@@ -49,24 +38,25 @@ export default function HomePageClient({ initialWhiskies, initialLikedIds }: Hom
   const router = useRouter()
   const { isTransitioning, transitionMessage, navigateWithTransition } = usePageTransition()
 
-  // 검색된 위스키 목록
-  const filteredWhiskies = whiskies.filter(whisky => {
+  // 검색된 위스키 목록 (새로운 items 기반)
+  const filteredWhiskies = items.filter(whisky => {
     if (!searchQuery.trim()) return true
 
     const query = searchQuery.toLowerCase().trim()
     return (
       whisky.name.toLowerCase().includes(query) ||
-      whisky.region.toLowerCase().includes(query) ||
-      whisky.cask.toLowerCase().includes(query) ||
-      whisky.abv.toLowerCase().includes(query) ||
-      whisky.price.toLowerCase().includes(query)
+      (whisky.name_ko?.toLowerCase().includes(query) ?? false) ||
+      (whisky.region?.toLowerCase().includes(query) ?? false) ||
+      (whisky.cask?.toLowerCase().includes(query) ?? false) ||
+      String(whisky.abv ?? '').toLowerCase().includes(query) ||
+      String(whisky.price ?? '').toLowerCase().includes(query)
     )
   })
 
   // 초기 로딩 상태 관리
   useEffect(() => {
     // 초기 위스키 데이터가 없으면 로딩 상태 표시
-    if (initialWhiskies.length === 0) {
+    if (initial.items.length === 0) {
       setIsInitialLoading(true)
       // 실제 데이터가 로드되면 로딩 상태 해제
       const timer = setTimeout(() => {
@@ -74,7 +64,7 @@ export default function HomePageClient({ initialWhiskies, initialLikedIds }: Hom
       }, 1000)
       return () => clearTimeout(timer)
     }
-  }, [initialWhiskies.length])
+  }, [initial.items.length])
 
   // 모바일 메뉴 외부 클릭 시 닫기
   useEffect(() => {
@@ -101,33 +91,58 @@ export default function HomePageClient({ initialWhiskies, initialLikedIds }: Hom
     }
   }
 
-  // 더보기/접기 토글 기능
-  const handleToggleShowAll = async () => {
-    if (showAllWhiskies) {
-      // 접기: 원래 상태로 돌아가기
-      setShowAllWhiskies(false);
-      setCurrentPage(1);
-      setWhiskies(initialWhiskies);
-      setHasLoadedMore(false);
-    } else {
-      // 더보기: 모든 위스키 로드
-      setIsLoadingMore(true);
-      try {
-        const response = await fetch('/api/whiskies');
-        if (!response.ok) {
-          throw new Error('Failed to fetch more whiskies');
-        }
-        const additionalWhiskies = await response.json();
-        setWhiskies(currentWhiskies => [...currentWhiskies, ...additionalWhiskies]);
-        setShowAllWhiskies(true);
-        setHasLoadedMore(true);
-        setCurrentPage(1);
-      } catch (error) {
-        console.error(error);
-        toast.error('추가 위스키를 불러오는 데 실패했습니다.');
-      } finally {
-        setIsLoadingMore(false);
+  // 새로운 커서 기반 더보기 함수
+  const loadMore = async () => {
+    if (!cursor || loading) return;
+
+    setLoading(true);
+    try {
+      const response = await fetch(`/api/whiskies?cursor=${cursor}&limit=50`);
+
+      if (!response.ok) {
+        throw new Error(`API 호출 실패: ${response.status}`);
       }
+
+      const { items: moreItems, nextCursor }: WhiskyListResponse = await response.json();
+
+      // id 기준 중복 방지 병합
+      const itemMap = new Map(items.map(w => [w.id, w]));
+      for (const item of moreItems) {
+        itemMap.set(item.id, item);
+      }
+
+      const mergedItems = Array.from(itemMap.values());
+
+      setItems(mergedItems);
+      setCursor(nextCursor);
+
+      console.log('✅ 더보기 성공:', {
+        기존개수: items.length,
+        추가개수: moreItems.length,
+        총개수: mergedItems.length,
+        nextCursor
+      });
+
+    } catch (error) {
+      console.error('❌ 더보기 실패:', error);
+      toast.error('추가 위스키를 불러오는 데 실패했습니다.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 기존 UI 호환성을 위한 토글 함수
+  const handleToggleShowAll = () => {
+    if (showAllWhiskies) {
+      // 접기: 초기 상태로 되돌리기
+      setShowAllWhiskies(false);
+      setItems(initial.items);
+      setCursor(initial.nextCursor);
+      setCurrentPage(1);
+    } else {
+      // 더보기: 모든 데이터 로드
+      setShowAllWhiskies(true);
+      loadMore();
     }
   };
 
@@ -256,12 +271,12 @@ export default function HomePageClient({ initialWhiskies, initialLikedIds }: Hom
 
                   // 추천 위스키들을 찾아서 표시
                   const recommendedWhiskies = recommendedIds
-                    .map(id => whiskies.find(whisky => whisky.id === id))
-                    .filter(whisky => whisky !== undefined);
+                    .map(id => items.find((whisky: WhiskyData) => whisky.id === id))
+                    .filter((whisky: WhiskyData | undefined): whisky is WhiskyData => whisky !== undefined);
 
                   // 만약 추천 위스키가 4개 미만이면 이미지가 있는 위스키로 채움
                   if (recommendedWhiskies.length < 4) {
-                    const whiskiesWithImages = whiskies.filter(whisky =>
+                    const whiskiesWithImages = items.filter(whisky =>
                       whisky.image &&
                       !whisky.image.includes('no.pic') &&
                       whisky.image.trim() !== '' &&
@@ -336,10 +351,10 @@ export default function HomePageClient({ initialWhiskies, initialLikedIds }: Hom
 {!searchQuery.trim() && (
                   <button
                     onClick={handleToggleShowAll}
-                    disabled={isLoadingMore}
+                    disabled={loading || (!showAllWhiskies && !cursor)}
                     className="text-xs font-medium text-red-600 hover:text-red-700 transition-colors bg-amber-900 hover:bg-amber-800 px-3 py-1.5 rounded-full disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {isLoadingMore ? '로딩 중...' : showAllWhiskies ? '접기' : '더보기'}
+                    {loading ? '로딩 중...' : showAllWhiskies ? '접기' : '더보기'}
                   </button>
                 )}
                 {searchQuery.trim() && (
@@ -370,10 +385,10 @@ export default function HomePageClient({ initialWhiskies, initialLikedIds }: Hom
 {!searchQuery.trim() && (
                   <button
                     onClick={handleToggleShowAll}
-                    disabled={isLoadingMore}
+                    disabled={loading || (!showAllWhiskies && !cursor)}
                     className="text-sm font-medium text-amber-700 hover:text-amber-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {isLoadingMore ? '로딩 중...' : showAllWhiskies ? '접기' : '더보기'}
+                    {loading ? '로딩 중...' : showAllWhiskies ? '접기' : '더보기'}
                   </button>
                 )}
                 {searchQuery.trim() && (
@@ -450,7 +465,7 @@ export default function HomePageClient({ initialWhiskies, initialLikedIds }: Hom
                   })()}
 
                   {/* 더보기 로딩 중일 때 스켈레톤 추가 */}
-                  {isLoadingMore && (
+                  {loading && (
                     <>
                       {Array.from({ length: 8 }).map((_, i) => (
                         <WhiskyCardSkeleton key={`loading-${i}`} />
@@ -548,13 +563,13 @@ export default function HomePageClient({ initialWhiskies, initialLikedIds }: Hom
 function WhiskyCard({ whisky, navigateWithTransition }: { whisky: WhiskyData, router: unknown, navigateWithTransition: (path: string, message: string) => void }) {
   const { user } = useAuth()
   const { isLiked, toggle, isLoading } = useLikes()
-  const [currentLikes, setCurrentLikes] = useState(whisky.likes)
+  const [currentLikes, setCurrentLikes] = useState<number>(() => whisky.likes_count ?? 0)
   const [isLikeHovered, setIsLikeHovered] = useState(false)
 
   // 현재 찜 수 업데이트
   useEffect(() => {
-    setCurrentLikes(whisky.likes)
-  }, [whisky.likes])
+    setCurrentLikes(whisky.likes_count ?? 0)
+  }, [whisky.likes_count])
 
   const isWhiskyLiked = isLiked(whisky.id)
 
@@ -577,7 +592,7 @@ function WhiskyCard({ whisky, navigateWithTransition }: { whisky: WhiskyData, ro
     const wasLiked = isWhiskyLiked
 
     // Optimistic UI - 즉시 상태 변경
-    setCurrentLikes(prev => wasLiked ? Math.max(0, prev - 1) : prev + 1)
+    setCurrentLikes(prev => wasLiked ? Math.max(0, (prev || 0) - 1) : (prev || 0) + 1)
 
     try {
       await toggle(whisky.id)
@@ -585,7 +600,7 @@ function WhiskyCard({ whisky, navigateWithTransition }: { whisky: WhiskyData, ro
     } catch (error) {
       console.error('찜 처리 오류:', error)
       // 실패 시 롤백
-      setCurrentLikes(prev => wasLiked ? prev + 1 : Math.max(0, prev - 1))
+      setCurrentLikes(prev => wasLiked ? (prev || 0) + 1 : Math.max(0, (prev || 0) - 1))
     }
   }
 
@@ -597,19 +612,12 @@ function WhiskyCard({ whisky, navigateWithTransition }: { whisky: WhiskyData, ro
       {/* 위스키 이미지/글래스 영역 */}
       <div className="h-32 sm:h-40 mb-2 sm:mb-3 bg-gray-100 rounded flex items-center justify-center relative">
         <img
-          src={whisky.image}
+          src={whisky.image || '/images/placeholder-whisky.png'}
           alt={whisky.name}
           className="max-w-full max-h-full object-contain"
           onError={(e) => {
-            const target = e.target as HTMLImageElement;
-            console.log('Image loading failed for:', target.src, 'whisky:', whisky.name);
-            if (target.src !== window.location.origin + '/whiskies/no.pic whisky.png') {
-              target.src = '/whiskies/no.pic whisky.png';
-            }
-          }}
-          onLoad={(e) => {
-            const target = e.target as HTMLImageElement;
-            console.log('Image loaded successfully for:', target.src, 'whisky:', whisky.name);
+            const t = e.currentTarget as HTMLImageElement
+            t.src = '/images/placeholder-whisky.png'
           }}
         />
 
@@ -635,7 +643,7 @@ function WhiskyCard({ whisky, navigateWithTransition }: { whisky: WhiskyData, ro
             <span className="text-xs">🥃</span>
             <span className="font-bold">찜</span>
           </div>
-          <span className="font-bold">{formatLikeCount(currentLikes)}</span>
+          <span className="font-bold">{formatLikeCount(currentLikes || 0)}</span>
         </button>
       </div>
 
@@ -646,11 +654,13 @@ function WhiskyCard({ whisky, navigateWithTransition }: { whisky: WhiskyData, ro
 
       {/* 평점 */}
       <div className="flex items-center justify-center gap-1 text-xs text-gray-500">
-        {whisky.totalReviews > 0 ? (
+        {(() => {
+          const totalReviews = (whisky as any).totalReviews ?? whisky.reviews_count ?? 0
+          return totalReviews > 0 ? (
           // 리뷰가 있는 경우: 실제 점수에 맞는 별 표시
           <div className="flex items-center gap-0.5">
             {[1, 2, 3, 4, 5].map((starIndex) => {
-              const rating = Number(whisky.avgRating);
+              const rating = Number((whisky as any).avgRating ?? whisky.avg_rating ?? 0);
               const fullStars = Math.floor(rating);
               const hasHalfStar = rating % 1 >= 0.5;
 
@@ -677,19 +687,20 @@ function WhiskyCard({ whisky, navigateWithTransition }: { whisky: WhiskyData, ro
                 );
               }
             })}
-            <span className="ml-1 text-gray-600 text-xs">{Number(whisky.avgRating).toFixed(1)}</span>
+            <span className="ml-1 text-gray-600 text-xs">{Number((whisky as any).avgRating ?? whisky.avg_rating ?? 0).toFixed(1)}</span>
           </div>
-        ) : (
-          // 리뷰가 0개인 경우: 투명한 별 5개와 "-"
-          <div className="flex items-center gap-0.5">
-            {[1, 2, 3, 4, 5].map((starIndex) => (
-              <span key={starIndex} className="text-gray-300 text-sm">
-                ☆
-              </span>
-            ))}
-            <span className="ml-1 text-gray-500 text-xs">-</span>
-          </div>
-        )}
+          ) : (
+            // 리뷰가 0개인 경우: 투명한 별 5개와 "-"
+            <div className="flex items-center gap-0.5">
+              {[1, 2, 3, 4, 5].map((starIndex) => (
+                <span key={starIndex} className="text-gray-300 text-sm">
+                  ☆
+                </span>
+              ))}
+              <span className="ml-1 text-gray-500 text-xs">-</span>
+            </div>
+          )
+        })()}
       </div>
     </div>
   )

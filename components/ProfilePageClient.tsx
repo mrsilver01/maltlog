@@ -40,15 +40,12 @@ interface ReviewWithWhisky {
   reviewId: string
 }
 
+import type { ProfileSummary, ProfileReviewsResponse, FirstReviewedResponse } from '@/types/whisky'
+
 interface ProfilePageClientProps {
-  initialReviews: ReviewWithWhisky[]
-  initialWhiskies: WhiskyData[]
-  initialStats: {
-    reviewCount: number
-    noteCount: number
-    wishlistCount: number
-    postsCount: number
-  }
+  profileSummary: ProfileSummary
+  initialReviews: ProfileReviewsResponse
+  firstReviewedWhiskies: FirstReviewedResponse
 }
 
 interface Comment {
@@ -59,9 +56,9 @@ interface Comment {
 }
 
 export default function ProfilePageClient({
+  profileSummary,
   initialReviews,
-  initialWhiskies,
-  initialStats
+  firstReviewedWhiskies
 }: ProfilePageClientProps) {
   const router = useRouter()
   const { user, profile, signOut, loading: authLoading, updateProfile } = useAuth()
@@ -71,16 +68,44 @@ export default function ProfilePageClient({
   const [profileImage, setProfileImage] = useState<string | null>(profile?.avatar_url || null)
   const [isDragging, setIsDragging] = useState(false)
   const [isUploadingImage, setIsUploadingImage] = useState(false)
-  const [reviewedWhiskies, setReviewedWhiskies] = useState<WhiskyData[]>(initialWhiskies)
+  const [reviewedWhiskies, setReviewedWhiskies] = useState<WhiskyData[]>(firstReviewedWhiskies.items.map(item => ({
+    id: item.whisky_id,
+    name: item.name,
+    image: item.image || '',
+    region: '',
+    abv: '',
+    cask: '',
+    price: '',
+    avgRating: 0,
+    totalReviews: 0,
+    likes: 0
+  })))
   const [showAllNotes, setShowAllNotes] = useState(false)
   const [expandedComments, setExpandedComments] = useState<{[key: string]: boolean}>({})
   const [replyText, setReplyText] = useState<{[key: string]: string}>({})
-  const [notesData, setNotesData] = useState<ReviewWithWhisky[]>(initialReviews)
-  const [userStats, setUserStats] = useState(initialStats)
+  const [notesData, setNotesData] = useState<ReviewWithWhisky[]>(initialReviews.items.map(review => ({
+    id: review.review_id,
+    user: profileSummary.display_name || profileSummary.handle,
+    whisky: review.whisky.name,
+    rating: review.rating,
+    content: review.note || '',
+    likes: 0,
+    comments: [],
+    date: review.created_at,
+    whiskyImage: review.whisky.image || '',
+    whiskyId: review.whisky.id,
+    reviewId: review.review_id
+  })))
+  const [userStats, setUserStats] = useState({
+    reviewCount: profileSummary.notes_count,
+    noteCount: profileSummary.notes_count,
+    wishlistCount: 0,
+    postsCount: profileSummary.posts_count
+  })
   const [likedWhiskies, setLikedWhiskies] = useState<WhiskyData[]>([])
   const [likedWhiskyIds, setLikedWhiskyIds] = useState<string[]>([])
   const [communityPosts, setCommunityPosts] = useState<any[]>([])
-  const [communityPostsCount, setCommunityPostsCount] = useState(initialStats.postsCount || 0)
+  const [communityPostsCount, setCommunityPostsCount] = useState(profileSummary.posts_count)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   // ⭐ 성능 최적화: 평점 높은 순으로 정렬된 위스키 3개 캐싱
