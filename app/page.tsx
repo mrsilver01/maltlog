@@ -13,8 +13,13 @@ async function getInitialWhiskies(): Promise<WhiskyListResponse> {
   console.log('📊 서버에서 위스키 초기 데이터 로드 시작...')
 
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
-    const apiUrl = `${baseUrl}/api/whiskies?limit=100`
+    // 운영환경에서는 절대 URL, 개발환경에서는 상대 URL 사용
+    let apiUrl: string
+    if (process.env.NODE_ENV === 'production') {
+      apiUrl = 'https://maltlog.kr/api/whiskies?limit=100'
+    } else {
+      apiUrl = 'http://localhost:3000/api/whiskies?limit=100'
+    }
 
     console.log('🌐 API 호출:', apiUrl)
 
