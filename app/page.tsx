@@ -2,8 +2,9 @@ import HomePageClient from '@/components/HomePageClient'
 import { getLikedWhiskyIdsServer } from '@/lib/server/getLikedWhiskyIdsServer'
 import type { WhiskyListResponse } from '@/types/whisky'
 
-// 찜 상태 포함한 사용자별 페이지이므로 동적 렌더링 필요
-export const dynamic = 'force-dynamic'
+// ISR (Incremental Static Regeneration) 적용: 10분 캐시
+// 사용자별 찜 상태는 클라이언트에서 처리하므로 페이지 캐시 안전
+export const revalidate = 600 // 10분
 
 /**
  * 새로운 /api/whiskies를 사용한 초기 데이터 로딩
@@ -57,7 +58,7 @@ async function getInitialWhiskies(): Promise<WhiskyListResponse> {
 }
 
 export default async function HomePage() {
-  console.log('🏠 홈페이지 서버 렌더링 시작...')
+  console.log('🏠 홈페이지 ISR 렌더링 시작... (10분 캐시)')
 
   // 위스키 데이터와 사용자 찜 목록을 병렬로 가져오기
   const [initialWhiskyData, initialLikedIds] = await Promise.all([
