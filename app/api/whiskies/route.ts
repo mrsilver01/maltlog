@@ -61,6 +61,26 @@ export async function GET(req: Request) {
       image: toPublicImageUrl(w.image ?? undefined),
     }))
 
+    // 이미지 보유 위스키 우선 정렬 (시각적 품질 향상)
+    items.sort((a, b) => {
+      // 1. 추천 위스키 우선
+      if (a.is_featured !== b.is_featured) return a.is_featured ? -1 : 1;
+
+      // 2. 실제 이미지 보유 위스키 우선 (no.pic 제외)
+      const hasRealImageA = a.image && !a.image.includes('no.pic');
+      const hasRealImageB = b.image && !b.image.includes('no.pic');
+
+      if (hasRealImageA !== hasRealImageB) return hasRealImageA ? -1 : 1;
+
+      // 3. 평점 높은 순 (동점 처리)
+      if ((a.avg_rating || 0) !== (b.avg_rating || 0)) {
+        return (b.avg_rating || 0) - (a.avg_rating || 0);
+      }
+
+      // 4. 리뷰 수 높은 순 (추가 동점 처리)
+      return (b.reviews_count || 0) - (a.reviews_count || 0);
+    });
+
     // 다음 offset 계산: 더 가져올 게 없으면 null
     const nextCursor = items.length < limit ? null : offset + limit
 
