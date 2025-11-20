@@ -7,7 +7,7 @@ import { uploadAndSetAvatar } from '../lib/avatarStorage'
 import { getUserWhiskyReviews, getWhiskiesByIds } from '../lib/whiskyReviews'
 import { getUserWhiskyLikes } from '../lib/likes'
 import { getUserCommunityPosts } from '../lib/communityPosts'
-import { useWhiskyImage } from '../lib/updateWhiskyImages'
+import { toPublicImageUrl } from '../lib/images'
 import { useAuth } from '../app/context/AuthContext'
 import LoadingAnimation from './LoadingAnimation'
 import toast from 'react-hot-toast'
@@ -574,7 +574,7 @@ export default function ProfilePageClient({
             <div className="border border-rose-300 rounded mb-6 sm:mb-8 bg-rose-50">
               <div className="grid grid-cols-1 sm:grid-cols-3 text-center">
                 <div className="border-b sm:border-b-0 sm:border-r border-rose-300 py-3 sm:py-4">
-                  <div className="text-xl sm:text-2xl font-bold text-rose-800">{userStats.noteCount}</div>
+                  <div className="text-xl sm:text-2xl font-bold text-rose-800">{notesData.length}</div>
                   <div className="text-xs sm:text-sm text-rose-700">노트</div>
                 </div>
                 <div className="border-b sm:border-b-0 sm:border-r border-rose-300 py-3 sm:py-4">
@@ -676,14 +676,22 @@ export default function ProfilePageClient({
                           >
                             {review.whiskyImage ? (
                               <img
-                                src={useWhiskyImage(review.whiskyId, review.whiskyImage)}
+                                src={toPublicImageUrl(review.whiskyImage)}
                                 alt={review.whisky}
                                 className="w-full h-full object-cover"
                                 style={{ filter: 'brightness(1.1)' }}
+                                onError={(e) => {
+                                  const target = e.target as HTMLImageElement;
+                                  target.src = '/images/placeholder-whisky.png';
+                                }}
                               />
                             ) : (
                               <div className="w-full h-full bg-white bg-opacity-30 flex items-center justify-center">
-                                <span className="text-xs text-white opacity-50">No Image</span>
+                                <img
+                                  src="/images/placeholder-whisky.png"
+                                  alt="기본 위스키 이미지"
+                                  className="w-full h-full object-cover opacity-50"
+                                />
                               </div>
                             )}
                           </div>
@@ -691,9 +699,27 @@ export default function ProfilePageClient({
                       })
                     ) : (
                       <>
-                        <div className="w-6 sm:w-8 md:w-10 h-12 sm:h-16 md:h-20 bg-white bg-opacity-30 rounded"></div>
-                        <div className="w-6 sm:w-8 md:w-10 h-12 sm:h-16 md:h-20 bg-white bg-opacity-30 rounded"></div>
-                        <div className="w-6 sm:w-8 md:w-10 h-12 sm:h-16 md:h-20 bg-white bg-opacity-30 rounded"></div>
+                        <div className="w-6 sm:w-8 md:w-10 h-12 sm:h-16 md:h-20 bg-white bg-opacity-30 rounded overflow-hidden">
+                          <img
+                            src="/images/placeholder-whisky.png"
+                            alt="기본 위스키"
+                            className="w-full h-full object-cover opacity-50"
+                          />
+                        </div>
+                        <div className="w-6 sm:w-8 md:w-10 h-12 sm:h-16 md:h-20 bg-white bg-opacity-30 rounded overflow-hidden">
+                          <img
+                            src="/images/placeholder-whisky.png"
+                            alt="기본 위스키"
+                            className="w-full h-full object-cover opacity-50"
+                          />
+                        </div>
+                        <div className="w-6 sm:w-8 md:w-10 h-12 sm:h-16 md:h-20 bg-white bg-opacity-30 rounded overflow-hidden">
+                          <img
+                            src="/images/placeholder-whisky.png"
+                            alt="기본 위스키"
+                            className="w-full h-full object-cover opacity-50"
+                          />
+                        </div>
                       </>
                     )}
                   </div>
