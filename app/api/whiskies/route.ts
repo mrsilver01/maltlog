@@ -21,7 +21,7 @@ export async function GET(req: Request) {
       : 0
 
     const { data, error } = await supabase
-      .from('whiskies_with_stats')
+      .from('whiskies_with_stats_mat')
       .select(
         [
           'abv',
