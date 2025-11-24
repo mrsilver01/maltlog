@@ -20,6 +20,9 @@ export async function GET(req: Request) {
       ? Number(cursorParam)
       : 0
 
+    // 정렬을 위해 더 많은 데이터를 가져온 후 JavaScript에서 처리
+    const fetchLimit = Math.max(limit * 3, 200) // 최소 200개 이상 가져오기
+
     const { data, error } = await supabase
       .from('whiskies_with_stats_mat')
       .select(
@@ -40,11 +43,11 @@ export async function GET(req: Request) {
           'region',
         ].join(','),
       )
-      // 정렬 기준 고정
+      // 기본 정렬만 적용 (JavaScript에서 재정렬할 예정)
       .order('display_order', { ascending: true })
       .order('id', { ascending: true })
-      // offset 기반 페이지네이션
-      .range(offset, offset + limit - 1)
+      // 더 많은 데이터 가져오기
+      .limit(fetchLimit)
 
     if (error) {
       console.error('[GET /api/whiskies] Supabase error:', error)
@@ -61,30 +64,43 @@ export async function GET(req: Request) {
       image: toPublicImageUrl(w.image ?? undefined),
     }))
 
-    // 이미지 보유 위스키 우선 정렬 (시각적 품질 향상)
+    // 실제 이미지 위스키 전역 우선 정렬 (시각적 품질 최우선)
     items.sort((a, b) => {
-      // 1. 추천 위스키 우선
-      if (a.is_featured !== b.is_featured) return a.is_featured ? -1 : 1;
+      // 1. 실제 이미지 보유 여부 - 절대 우선순위 (featured 여부보다 중요)
+      const hasRealImageA = a.image && !a.image.toLowerCase().includes('no.pic') && !a.image.includes('placeholder');
+      const hasRealImageB = b.image && !b.image.toLowerCase().includes('no.pic') && !b.image.includes('placeholder');
 
-      // 2. 실제 이미지 보유 위스키 우선 (no.pic 제외)
-      const hasRealImageA = a.image && !a.image.includes('no.pic');
-      const hasRealImageB = b.image && !b.image.includes('no.pic');
-
+      // 실제 이미지 vs no pic: 실제 이미지가 항상 우선
       if (hasRealImageA !== hasRealImageB) return hasRealImageA ? -1 : 1;
 
-      // 3. 평점 높은 순 (동점 처리)
-      if ((a.avg_rating || 0) !== (b.avg_rating || 0)) {
-        return (b.avg_rating || 0) - (a.avg_rating || 0);
+      // 2. 같은 이미지 상태에서만 추천 위스키 우선
+      if (a.is_featured !== b.is_featured) return a.is_featured ? -1 : 1;
+
+      // 3. 평점 높은 순 (0점도 유효한 평점으로 처리)
+      const ratingA = a.avg_rating ?? 0;
+      const ratingB = b.avg_rating ?? 0;
+      if (ratingA !== ratingB) {
+        return ratingB - ratingA;
       }
 
-      // 4. 리뷰 수 높은 순 (추가 동점 처리)
+      // 4. 리뷰 수 높은 순
       return (b.reviews_count || 0) - (a.reviews_count || 0);
     });
 
-    // 다음 offset 계산: 더 가져올 게 없으면 null
-    const nextCursor = items.length < limit ? null : offset + limit
+    // JavaScript에서 정렬 후 실제 페이지네이션 적용
+    const startIndex = offset
+    const endIndex = offset + limit
+    const paginatedItems = items.slice(startIndex, endIndex)
 
-    return NextResponse.json({ items, nextCursor })
+    // 다음 페이지 존재 여부 확인
+    const hasMore = items.length > endIndex
+    const nextCursor = hasMore ? endIndex : null
+
+    return NextResponse.json({
+      items: paginatedItems,
+      nextCursor,
+      totalFetched: items.length // 디버그용
+    })
   } catch (e: any) {
     console.error('[GET /api/whiskies] Unhandled error:', e)
     return NextResponse.json(
