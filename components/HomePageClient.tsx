@@ -15,6 +15,18 @@ import type { WhiskyWithStats, WhiskyListResponse } from '@/types/whisky'
 // 호환성을 위한 기존 WhiskyData 타입 별칭
 export type WhiskyData = WhiskyWithStats
 
+type NavigateWithTransition = (path: string, message: string) => void
+
+type CommunityPreviewPost = {
+  id: string
+  title: string
+  author: string
+  authorImage: string | null
+  createdAt: string
+  likes: number
+  comments: number
+}
+
 interface HomePageClientProps {
   initial: WhiskyListResponse
   initialLikedIds: string[]
@@ -655,12 +667,12 @@ function WhiskyCard({ whisky, navigateWithTransition }: { whisky: WhiskyData, ro
       {/* 평점 */}
       <div className="flex items-center justify-center gap-1 text-xs text-gray-500">
         {(() => {
-          const totalReviews = (whisky as any).totalReviews ?? whisky.reviews_count ?? 0
+          const totalReviews = whisky.totalReviews ?? whisky.reviews_count ?? 0
           return totalReviews > 0 ? (
           // 리뷰가 있는 경우: 실제 점수에 맞는 별 표시
           <div className="flex items-center gap-0.5">
             {[1, 2, 3, 4, 5].map((starIndex) => {
-              const rating = Number((whisky as any).avgRating ?? whisky.avg_rating ?? 0);
+              const rating = Number(whisky.avgRating ?? whisky.avg_rating ?? 0);
               const fullStars = Math.floor(rating);
               const hasHalfStar = rating % 1 >= 0.5;
 
@@ -687,7 +699,7 @@ function WhiskyCard({ whisky, navigateWithTransition }: { whisky: WhiskyData, ro
                 );
               }
             })}
-            <span className="ml-1 text-gray-600 text-xs">{Number((whisky as any).avgRating ?? whisky.avg_rating ?? 0).toFixed(1)}</span>
+            <span className="ml-1 text-gray-600 text-xs">{Number(whisky.avgRating ?? whisky.avg_rating ?? 0).toFixed(1)}</span>
           </div>
           ) : (
             // 리뷰가 0개인 경우: 투명한 별 5개와 "-"
@@ -707,8 +719,8 @@ function WhiskyCard({ whisky, navigateWithTransition }: { whisky: WhiskyData, ro
 }
 
 // 커뮤니티 미리보기 컴포넌트
-function CommunityPreview({ navigateWithTransition }: { navigateWithTransition: any }) {
-  const [posts, setPosts] = useState<any[]>([])
+function CommunityPreview({ navigateWithTransition }: { navigateWithTransition: NavigateWithTransition }) {
+  const [posts, setPosts] = useState<CommunityPreviewPost[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -721,18 +733,18 @@ function CommunityPreview({ navigateWithTransition }: { navigateWithTransition: 
 
       if (!res.ok) throw new Error('bad status: ' + res.status)
 
-      const data = await res.json()
+      const data: unknown = await res.json()
       console.log('📦 [CommunityPreview] Received data:', {
         isArray: Array.isArray(data),
         length: data?.length ?? 0,
         data: data
       })
 
-      setPosts(Array.isArray(data) ? data : [])
+      setPosts(Array.isArray(data) ? (data as CommunityPreviewPost[]) : [])
       console.log('✅ [CommunityPreview] Posts set successfully:', Array.isArray(data) ? data.length : 0, 'items')
-    } catch (e: any) {
-      console.error('❌ [CommunityPreview] Load failed:', e)
-      setError(e?.message || 'load failed'); setPosts([])
+    } catch (error) {
+      console.error('❌ [CommunityPreview] Load failed:', error)
+      setError(error instanceof Error ? error.message : 'load failed'); setPosts([])
     } finally {
       setLoading(false)
     }
@@ -839,4 +851,5 @@ function CommunityPreview({ navigateWithTransition }: { navigateWithTransition: 
       )}
     </div>
   )
+
 }

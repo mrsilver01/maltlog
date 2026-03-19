@@ -4,15 +4,23 @@ import { supabaseBrowser } from '@/lib/supabase/browser'
  * 게시글 좋아요 기능을 위한 Supabase 헬퍼 함수들
  */
 
-// 게시글에 좋아요 추가
+type PostLikeInsert = {
+  post_id: string
+  user_id: string
+}
+
+type PostLikeRow = {
+  post_id: string
+}
+
 export async function likePost(postId: string, userId: string): Promise<boolean> {
   try {
-    const { error } = await (supabaseBrowser() as any)
-      .from('post_likes')
-      .insert({
-        post_id: postId,
-        user_id: userId
-      })
+    const payload: PostLikeInsert = {
+      post_id: postId,
+      user_id: userId,
+    }
+
+    const { error } = await supabaseBrowser().from('post_likes').insert(payload)
 
     if (error) {
       console.error('게시글 좋아요 실패:', error)
@@ -27,7 +35,6 @@ export async function likePost(postId: string, userId: string): Promise<boolean>
   }
 }
 
-// 게시글 좋아요 취소
 export async function unlikePost(postId: string, userId: string): Promise<boolean> {
   try {
     const { error } = await supabaseBrowser()
@@ -49,7 +56,6 @@ export async function unlikePost(postId: string, userId: string): Promise<boolea
   }
 }
 
-// 게시글에 좋아요를 눌렀는지 확인
 export async function checkIfPostLiked(postId: string, userId: string): Promise<boolean> {
   try {
     const { data, error } = await supabaseBrowser()
@@ -59,7 +65,7 @@ export async function checkIfPostLiked(postId: string, userId: string): Promise<
       .eq('user_id', userId)
       .single()
 
-    if (error && error.code !== 'PGRST116') { // PGRST116은 "no rows returned" 에러
+    if (error && error.code !== 'PGRST116') {
       console.error('게시글 좋아요 상태 확인 실패:', error)
       return false
     }
@@ -71,7 +77,6 @@ export async function checkIfPostLiked(postId: string, userId: string): Promise<
   }
 }
 
-// 특정 게시글의 총 좋아요 개수 가져오기
 export async function getPostLikesCount(postId: string): Promise<number> {
   try {
     const { count, error } = await supabaseBrowser()
@@ -91,8 +96,10 @@ export async function getPostLikesCount(postId: string): Promise<number> {
   }
 }
 
-// 여러 게시글의 좋아요 상태를 한번에 확인 (성능 최적화)
-export async function checkMultiplePostsLiked(postIds: string[], userId: string): Promise<{[key: string]: boolean}> {
+export async function checkMultiplePostsLiked(
+  postIds: string[],
+  userId: string,
+): Promise<Record<string, boolean>> {
   try {
     const { data, error } = await supabaseBrowser()
       .from('post_likes')
@@ -105,13 +112,12 @@ export async function checkMultiplePostsLiked(postIds: string[], userId: string)
       return {}
     }
 
-    // 결과를 객체로 변환
-    const likedPosts: {[key: string]: boolean} = {}
-    postIds.forEach(id => {
+    const likedPosts: Record<string, boolean> = {}
+    postIds.forEach((id) => {
       likedPosts[id] = false
     })
 
-    data?.forEach((like: any) => {
+    ;((data ?? []) as PostLikeRow[]).forEach((like) => {
       likedPosts[like.post_id] = true
     })
 
@@ -121,4 +127,3 @@ export async function checkMultiplePostsLiked(postIds: string[], userId: string)
     return {}
   }
 }
-
