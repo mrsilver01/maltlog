@@ -361,26 +361,6 @@ export async function getCommunityPost(postId: string): Promise<CommunityPostWit
   }
 }
 
-// 게시글 좋아요 수 업데이트 (댓글 시스템과 연동될 때 사용)
-export async function updatePostLikesCount(postId: string, newCount: number): Promise<boolean> {
-  try {
-    const { error } = await supabase
-      .from('posts')
-      .update({ likes_count: newCount })
-      .eq('id', postId)
-
-    if (error) {
-      console.error('좋아요 수 업데이트 실패:', error)
-      return false
-    }
-
-    return true
-  } catch (error) {
-    console.error('좋아요 수 업데이트 중 오류:', error)
-    return false
-  }
-}
-
 // 게시글 댓글 수 업데이트 (댓글 시스템과 연동될 때 사용)
 export async function updatePostCommentsCount(postId: string, newCount: number): Promise<boolean> {
   try {

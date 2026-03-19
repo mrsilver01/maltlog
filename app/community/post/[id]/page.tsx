@@ -22,6 +22,7 @@ export default async function PostDetailPage({ params }: PostDetailPageProps) {
       title,
       content,
       image_url,
+      likes_count,
       created_at,
       profiles (
         nickname,

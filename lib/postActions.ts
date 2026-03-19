@@ -122,28 +122,3 @@ export async function checkMultiplePostsLiked(postIds: string[], userId: string)
   }
 }
 
-// 게시글 좋아요 개수 업데이트 (posts 테이블의 likes_count 필드)
-// 참고: 실제 Supabase에서는 RPC 함수나 트리거를 사용하는 것이 더 안전함
-export async function updatePostLikesCount(postId: string): Promise<boolean> {
-  try {
-    // 현재 좋아요 개수 조회
-    const currentCount = await getPostLikesCount(postId)
-
-    // posts 테이블의 likes_count 업데이트
-    const { error } = await (supabaseBrowser() as any)
-      .from('posts')
-      .update({ likes_count: currentCount })
-      .eq('id', postId)
-
-    if (error) {
-      console.error('게시글 좋아요 개수 업데이트 실패:', error)
-      return false
-    }
-
-    console.log('✅ 게시글 좋아요 개수 업데이트 성공:', postId, currentCount)
-    return true
-  } catch (error) {
-    console.error('게시글 좋아요 개수 업데이트 중 오류:', error)
-    return false
-  }
-}
