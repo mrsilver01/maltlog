@@ -85,7 +85,7 @@ export default function ProfilePageClient({
   const [replyText, setReplyText] = useState<{[key: string]: string}>({})
   const [notesData, setNotesData] = useState<ReviewWithWhisky[]>(initialReviews.items.map(review => ({
     id: review.review_id,
-    user: profileSummary.display_name || profileSummary.handle,
+    user: profileSummary.nickname,
     whisky: review.whisky.name,
     rating: review.rating,
     content: review.note || '',

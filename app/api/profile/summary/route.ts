@@ -4,15 +4,15 @@ import type { ProfileSummary } from '@/types/whisky'
 
 /**
  * 프로필 요약 API
- * GET /api/profile/summary?handle=<handle> 또는 userId=me
+ * GET /api/profile/summary?nickname=<nickname> 또는 userId=me
+ *
+ * DB 스키마: profiles(id, nickname, avatar_url, is_admin, ...)
  */
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
-    const handle = searchParams.get('handle')
+    const nickname = searchParams.get('nickname')
     const userId = searchParams.get('userId')
-
-    console.log('📊 프로필 요약 API 요청:', { handle, userId })
 
     let targetUserId: string
 
@@ -23,12 +23,12 @@ export async function GET(request: NextRequest) {
         return new NextResponse('Unauthorized', { status: 401 })
       }
       targetUserId = user.id
-    } else if (handle) {
-      // 핸들로 사용자 찾기
+    } else if (nickname) {
+      // 닉네임으로 사용자 찾기
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('id')
-        .eq('handle', handle)
+        .eq('nickname', nickname)
         .single()
 
       if (profileError || !profileData) {
@@ -36,17 +36,15 @@ export async function GET(request: NextRequest) {
       }
       targetUserId = profileData.id
     } else {
-      return new NextResponse('handle 또는 userId 파라미터가 필요합니다', { status: 400 })
+      return new NextResponse('nickname 또는 userId 파라미터가 필요합니다', { status: 400 })
     }
-
-    console.log('🎯 대상 사용자 ID:', targetUserId)
 
     // 병렬로 데이터 조회
     const [profileResult, reviewsStatsResult, likesResult, postsResult] = await Promise.all([
-      // 1. 프로필 기본 정보
+      // 1. 프로필 기본 정보 (실제 DB 컬럼: id, nickname, avatar_url)
       supabase
         .from('profiles')
-        .select('id, handle, display_name, avatar_url')
+        .select('id, nickname, avatar_url')
         .eq('id', targetUserId)
         .single(),
 
@@ -86,8 +84,7 @@ export async function GET(request: NextRequest) {
 
     const summary: ProfileSummary = {
       user_id: profile.id,
-      handle: profile.handle || '',
-      display_name: profile.display_name,
+      nickname: profile.nickname ?? '',
       avatar_url: profile.avatar_url,
       notes_count: notesCount,
       posts_count: postsCount,
@@ -95,20 +92,13 @@ export async function GET(request: NextRequest) {
       my_avg_rating: myAvgRating
     }
 
-    console.log('✅ 프로필 요약 조회 완료:', {
-      handle: summary.handle,
-      notes_count: summary.notes_count,
-      posts_count: summary.posts_count,
-      likes_received: summary.likes_received,
-      my_avg_rating: summary.my_avg_rating
-    })
-
     return NextResponse.json(summary)
 
-  } catch (error: any) {
-    console.error('❌ 프로필 요약 API 오류:', error)
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'unknown error'
+    console.error('❌ 프로필 요약 API 오류:', message)
     return new NextResponse(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: message }),
       {
         status: 500,
         headers: { 'Content-Type': 'application/json' }

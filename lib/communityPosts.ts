@@ -381,25 +381,9 @@ export async function updatePostLikesCount(postId: string, newCount: number): Pr
   }
 }
 
-// 게시글 댓글 수 업데이트 (댓글 시스템과 연동될 때 사용)
-export async function updatePostCommentsCount(postId: string, newCount: number): Promise<boolean> {
-  try {
-    const { error } = await supabase
-      .from('posts')
-      .update({ comments_count: newCount })
-      .eq('id', postId)
-
-    if (error) {
-      console.error('댓글 수 업데이트 실패:', error)
-      return false
-    }
-
-    return true
-  } catch (error) {
-    console.error('댓글 수 업데이트 중 오류:', error)
-    return false
-  }
-}
+// NOTE: posts.comments_count는 public.posts_update_comments_count() 트리거가
+// comments INSERT/DELETE 시점에 자동 유지합니다 (DB migration 기반).
+// 과거 수동 업데이트 함수(updatePostCommentsCount)는 이중 카운트 위험 때문에 제거되었습니다.
 
 // 전체 게시글 개수 가져오기 (페이지네이션용)
 export async function getPostsCount(searchQuery?: string): Promise<number> {

@@ -3,9 +3,7 @@
  * 홈, 카드, 프로필, 리스트 모든 곳에서 사용
  */
 export type WhiskyWithStats = {
-  /** 정렬/커서용 고유 번호 */
-  oid: number
-  /** 위스키 고유 ID */
+  /** 위스키 고유 ID (DB 문자열 ID, 예: "mortlach-16") */
   id: string
   /** 위스키 영문명 */
   name: string
@@ -15,10 +13,10 @@ export type WhiskyWithStats = {
   image: string | null
 
   // 실제 DB 필드들
-  /** 도수 */
-  abv: number | null
-  /** 가격 */
-  price: number | null
+  /** 도수 (DB 저장 형식: "43.4" 등 TEXT) */
+  abv: string | null
+  /** 가격 (DB 저장 형식: "18-20만원" 등 TEXT) */
+  price: string | null
   /** 캐스크 */
   cask: string | null
   /** 지역 */
@@ -63,21 +61,23 @@ export type WhiskyListResponse = {
 
 /**
  * 프로필 기본 정보 타입
+ * 실제 DB public.profiles 스키마에 맞춰 정의됨.
+ * (handle/display_name/bio 필드는 DB에 없음 — nickname을 표시 이름으로 사용)
  */
 export type Profile = {
-  /** 사용자 ID */
+  /** 사용자 ID (auth.users.id) */
   id: string
-  /** 사용자 핸들(@handle) */
-  handle: string
-  /** 표시 이름 */
-  display_name: string
+  /** 표시 이름 (DB: nickname) */
+  nickname: string
   /** 아바타 URL */
   avatar_url: string | null
-  /** 한 줄 소개 */
-  bio: string | null
+  /** 관리자 여부 */
+  is_admin: boolean
   /** 가입일 */
   created_at: string
-  /** 통계 정보 */
+  /** 수정일 */
+  updated_at: string
+  /** 통계 정보 (집계 필드) */
   stats: {
     /** 작성한 리뷰 수 */
     reviews_count: number
@@ -124,18 +124,17 @@ export type ProfileResponse = {
 }
 
 /**
- * 새로운 프로필 요약 타입
+ * 프로필 요약 타입 (프로필 페이지 좌측 카드)
+ * DB profiles 테이블 스키마 기반 (nickname).
  */
 export type ProfileSummary = {
   /** 사용자 ID */
   user_id: string
-  /** 사용자 핸들 */
-  handle: string
-  /** 표시 이름 */
-  display_name: string | null
+  /** 표시 이름 (DB: nickname) */
+  nickname: string
   /** 아바타 URL */
   avatar_url: string | null
-  /** 좌측 카드에 쓰일 값들 */
+  /** 작성한 리뷰(노트) 수 */
   notes_count: number
   /** 게시글 수 */
   posts_count: number

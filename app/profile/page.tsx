@@ -29,8 +29,7 @@ async function getProfileSummary(): Promise<ProfileSummary> {
     // 기본값 반환
     return {
       user_id: '',
-      handle: '',
-      display_name: null,
+      nickname: '',
       avatar_url: null,
       notes_count: 0,
       posts_count: 0,

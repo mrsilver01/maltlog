@@ -257,35 +257,5 @@ export async function getComment(commentId: string): Promise<CommunityCommentWit
   }
 }
 
-// 게시글의 댓글 수 업데이트 (게시글과 연동될 때 사용)
-export async function updatePostCommentsCount(postId: string): Promise<boolean> {
-  try {
-    // 해당 게시글의 총 댓글 수 계산
-    const { count, error: countError } = await supabase
-      .from('comments')
-      .select('id', { count: 'exact' })
-      .eq('post_id', postId)
-
-    if (countError) {
-      console.error('댓글 수 계산 실패:', countError)
-      return false
-    }
-
-    // 게시글의 comments_count 업데이트
-    const { error: updateError } = await supabase
-      .from('posts')
-      .update({ comments_count: count || 0 })
-      .eq('id', postId)
-
-    if (updateError) {
-      console.error('게시글 댓글 수 업데이트 실패:', updateError)
-      return false
-    }
-
-    console.log(`✅ 게시글 ${postId}의 댓글 수 업데이트: ${count}`)
-    return true
-  } catch (error) {
-    console.error('댓글 수 업데이트 중 오류:', error)
-    return false
-  }
-}
+// NOTE: posts.comments_count는 public.posts_update_comments_count() 트리거가
+// comments INSERT/DELETE 시점에 자동 유지합니다. 수동 업데이트 함수는 제거되었습니다.
