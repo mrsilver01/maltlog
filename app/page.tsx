@@ -1,81 +1,25 @@
 import HomePageClient from '@/components/HomePageClient'
+import { getInitialWhiskies } from '@/lib/server/getInitialWhiskies'
 import { getLikedWhiskyIdsServer } from '@/lib/server/getLikedWhiskyIdsServer'
-import type { WhiskyListResponse } from '@/types/whisky'
 
-// ISR (Incremental Static Regeneration) 적용: 10분 캐시
-// 사용자별 찜 상태는 클라이언트에서 처리하므로 페이지 캐시 안전
-export const revalidate = 600 // 10분
-
-/**
- * 새로운 /api/whiskies를 사용한 초기 데이터 로딩
- * 커서 기반 페이지네이션 API로 통일된 데이터 소스 사용
- */
-async function getInitialWhiskies(): Promise<WhiskyListResponse> {
-  console.log('📊 서버에서 위스키 초기 데이터 로드 시작...')
-
-  try {
-    // 운영환경에서는 절대 URL, 개발환경에서는 상대 URL 사용
-    let apiUrl: string
-    if (process.env.NODE_ENV === 'production') {
-      apiUrl = 'https://maltlog.kr/api/whiskies?limit=100'
-    } else {
-      apiUrl = 'http://localhost:3000/api/whiskies?limit=100'
-    }
-
-    console.log('🌐 API 호출:', apiUrl)
-
-    const response = await fetch(apiUrl, {
-      cache: 'no-store',  // 항상 최신 데이터 가져오기
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    })
-
-    if (!response.ok) {
-      console.error('❌ API 응답 실패:', response.status, response.statusText)
-      throw new Error(`API 호출 실패: ${response.status} ${response.statusText}`)
-    }
-
-    const data: WhiskyListResponse = await response.json()
-
-    console.log('✅ 서버에서 위스키 초기 데이터 로드 완료:', {
-      itemsCount: data.items.length,
-      nextCursor: data.nextCursor,
-      hasMorePages: data.nextCursor !== null
-    })
-
-    return data
-
-  } catch (error) {
-    console.error('❌ 위스키 초기 데이터 로드 실패:', error)
-
-    // fallback으로 빈 응답 반환
-    return {
-      items: [],
-      nextCursor: null
-    }
-  }
-}
+// ISR (Incremental Static Regeneration): 10분 캐시
+// 위스키 목록은 공개 데이터이므로 ISR로 캐시하여 서버 부하/TTFB를 줄입니다.
+// 사용자별 찜 상태는 클라이언트 쪽에서 하이드레이션하므로 페이지 캐시와 충돌하지 않습니다.
+export const revalidate = 600
 
 export default async function HomePage() {
-  console.log('🏠 홈페이지 ISR 렌더링 시작... (10분 캐시)')
-
-  // 위스키 데이터와 사용자 찜 목록을 병렬로 가져오기
+  // 위스키 데이터(공개) + 사용자 찜 목록(비공개)을 병렬 로드
+  // - getInitialWhiskies: ISR 캐시 대상
+  // - getLikedWhiskyIdsServer: 쿠키 기반, 사용자별로 다르므로 동적 렌더링
   const [initialWhiskyData, initialLikedIds] = await Promise.all([
-    getInitialWhiskies(),
-    getLikedWhiskyIdsServer()
+    getInitialWhiskies(100),
+    getLikedWhiskyIdsServer(),
   ])
-
-  console.log('🎯 홈페이지 데이터 준비 완료:', {
-    whiskiesCount: initialWhiskyData.items.length,
-    likedCount: initialLikedIds.length,
-    nextCursor: initialWhiskyData.nextCursor
-  })
 
   return (
     <HomePageClient
       initial={initialWhiskyData}
       initialLikedIds={initialLikedIds}
     />
-  );
+  )
 }
