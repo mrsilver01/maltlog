@@ -1,36 +1,9 @@
-import { cookies } from 'next/headers'
-import { createServerClient } from '@supabase/ssr'
 import Link from 'next/link'
-import { redirect } from 'next/navigation'
+import { requireAdmin } from '@/lib/server/adminGuard'
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  const cookieStore = await cookies()
-
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value
-        },
-      },
-    }
-  )
-
-  // DB 기반 관리자 권한 확인 (최종 판정)
-  const { data: ok } = await supabase.rpc('is_admin')
-  if (!ok) {
-    redirect('/')
-  }
-
-  // 기존 체크는 보조로 유지
-  const { data: { user } } = await supabase.auth.getUser()
-  const role = (user as any)?.raw_app_meta_data?.role || (user as any)?.role
-
-  if (!user || role !== 'admin') {
-    redirect('/')
-  }
+  // DB의 is_admin() RPC로 관리자 권한 확인 (미인증/비관리자는 / 로 redirect)
+  await requireAdmin('/')
 
   return (
     <div className="mx-auto max-w-6xl p-4">

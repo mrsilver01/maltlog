@@ -1,4 +1,17 @@
 import { supabaseBrowser } from '@/lib/supabase/browser'
+import { z } from 'zod'
+import { formatZodError } from './validation/schemas'
+import toast from 'react-hot-toast'
+
+// 리뷰 저장용 스키마 (별점 0.5 단위, 1-5, note 5000자)
+const reviewSaveSchema = z.object({
+  rating: z
+    .number()
+    .min(1, '별점은 최소 1점 이상이어야 합니다')
+    .max(5, '별점은 최대 5점입니다')
+    .refine((v) => (v * 2) % 1 === 0, '별점은 0.5 단위로 입력해주세요'),
+  note: z.string().trim().max(5000, '리뷰는 최대 5000자입니다').nullish(),
+})
 
 /**
  * 위스키 리뷰(평점 및 노트) 기능을 위한 Supabase 헬퍼 함수들
@@ -87,21 +100,22 @@ export async function saveWhiskyReview(
     const { data: { user }, error: userError } = await supabaseBrowser().auth.getUser()
 
     if (userError || !user) {
-      console.log('로그인이 필요합니다')
+      toast.error('로그인이 필요합니다')
       return false
     }
 
-    // 0.5 단위 별점만 허용 (1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0)
-    if (rating < 1 || rating > 5 || (rating * 2) % 1 !== 0) {
-      console.error('올바르지 않은 평점 (0.5 단위만 허용):', rating)
+    // zod 통합 검증 (별점 범위/단위, note 길이)
+    const parsed = reviewSaveSchema.safeParse({ rating, note: note ?? null })
+    if (!parsed.success) {
+      toast.error(formatZodError(parsed.error))
       return false
     }
 
     const reviewData = {
       user_id: user.id,
       whisky_id: whiskyId,
-      rating: rating,
-      note: note ?? null
+      rating: parsed.data.rating,
+      note: parsed.data.note ?? null
     }
 
     const { error } = await (supabaseBrowser() as any)

@@ -1,4 +1,6 @@
 import { supabase } from './supabase'
+import { postCreateSchema, formatZodError, validateImageFile } from './validation/schemas'
+import toast from 'react-hot-toast'
 
 /**
  * 커뮤니티 게시글 기능을 위한 Supabase 헬퍼 함수들
@@ -158,12 +160,18 @@ export async function createCommunityPost(
     const { data: { user }, error: userError } = await supabase.auth.getUser()
 
     if (userError || !user) {
-      console.log('로그인이 필요합니다')
+      toast.error('로그인이 필요합니다')
       return { success: false }
     }
 
-    if (!title.trim() || !content.trim()) {
-      console.error('제목과 내용을 입력해주세요')
+    // zod 스키마 검증 (제목 2-100자, 본문 1-10000자)
+    const parsed = postCreateSchema.safeParse({
+      title,
+      content,
+      image_url: null,
+    })
+    if (!parsed.success) {
+      toast.error(formatZodError(parsed.error))
       return { success: false }
     }
 
@@ -173,6 +181,13 @@ export async function createCommunityPost(
     if (imageDataUrl) {
       console.log('🖼️ 이미지 업로드 시작...')
       const file = dataUrlToFile(imageDataUrl, 'post.jpg')
+
+      // MIME / size 검증 (5MB, jpeg/png/webp/gif만 허용)
+      const imgCheck = validateImageFile(file)
+      if (!imgCheck.ok) {
+        toast.error(imgCheck.error)
+        return { success: false }
+      }
 
       // 업로드 경로: userId/randomUUID.jpg (RLS 정책 준수)
       const fileExtension = IMAGE_EXTENSIONS[file.type as keyof typeof IMAGE_EXTENSIONS] || '.jpg'
@@ -221,8 +236,8 @@ export async function createCommunityPost(
 
     const postData: Partial<CommunityPost> = {
       user_id: user.id,
-      title: title.trim(),
-      content: content.trim(),
+      title: parsed.data.title,
+      content: parsed.data.content,
       image_url: image_url || undefined
     }
 
@@ -258,13 +273,23 @@ export async function updateCommunityPost(
     const { data: { user }, error: userError } = await supabase.auth.getUser()
 
     if (userError || !user) {
-      console.log('로그인이 필요합니다')
+      toast.error('로그인이 필요합니다')
+      return false
+    }
+
+    const parsed = postCreateSchema.safeParse({
+      title,
+      content,
+      image_url: imageUrl ?? null,
+    })
+    if (!parsed.success) {
+      toast.error(formatZodError(parsed.error))
       return false
     }
 
     const updateData: Partial<CommunityPost> = {
-      title: title.trim(),
-      content: content.trim(),
+      title: parsed.data.title,
+      content: parsed.data.content,
       image_url: imageUrl || undefined
     }
 

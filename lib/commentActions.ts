@@ -1,4 +1,14 @@
 import { supabaseBrowser } from '@/lib/supabase/browser'
+import { z } from 'zod'
+import { formatZodError } from './validation/schemas'
+import toast from 'react-hot-toast'
+
+// 댓글 content 검증 (1-2000자)
+const commentContentSchema = z
+  .string()
+  .trim()
+  .min(1, '댓글을 입력해주세요')
+  .max(2000, '댓글은 최대 2000자까지 입력 가능합니다')
 
 /**
  * 리뷰 댓글 기능을 위한 Supabase 헬퍼 함수들
@@ -56,8 +66,13 @@ export async function addComment(
 ): Promise<boolean> {
   try {
     // 입력값 검증
-    if (!targetId || !userId || !content.trim()) {
-      console.error('댓글 추가 실패: 필수 파라미터 누락', { targetId, userId, content: content.trim() })
+    if (!targetId || !userId) {
+      console.error('댓글 추가 실패: 필수 파라미터 누락', { targetId, userId })
+      return false
+    }
+    const parsed = commentContentSchema.safeParse(content)
+    if (!parsed.success) {
+      toast.error(formatZodError(parsed.error))
       return false
     }
 
@@ -70,7 +85,7 @@ export async function addComment(
       review_id: string | null;
     } = {
       user_id: userId,
-      content: content.trim(),
+      content: parsed.data,
       parent_comment_id: parentCommentId || null,
       post_id: null,
       review_id: null
@@ -117,10 +132,16 @@ export async function addComment(
 // 댓글 수정
 export async function updateComment(commentId: string, userId: string, content: string): Promise<boolean> {
   try {
+    const parsed = commentContentSchema.safeParse(content)
+    if (!parsed.success) {
+      toast.error(formatZodError(parsed.error))
+      return false
+    }
+
     const { error } = await (supabaseBrowser() as any)
       .from('comments')
       .update({
-        content: content.trim(),
+        content: parsed.data,
         updated_at: new Date().toISOString()
       })
       .eq('id', commentId)
