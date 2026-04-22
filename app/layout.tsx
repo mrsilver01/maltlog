@@ -5,6 +5,7 @@ import { AuthProvider } from './context/AuthContext';
 import { Toaster } from 'react-hot-toast';
 import AgeGate from '@/components/AgeGate';
 import AnnouncementBanner from '@/components/AnnouncementBanner';
+import Footer from '@/components/Footer';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -59,6 +60,8 @@ export default function RootLayout({
           <AnnouncementBanner />
 
           {children}
+
+          <Footer />
 
           <Toaster
             position="top-center"
