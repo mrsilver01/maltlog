@@ -24,8 +24,55 @@ const jollyLodger = Jolly_Lodger({
 });
 
 export const metadata: Metadata = {
-  title: "몰트로그, 위스키의 모든 기록",
-  description: "위스키를 사랑하는 모든 이들을 위한 완벽한 기록 공간",
+  metadataBase: new URL('https://maltlog.kr'),
+  title: {
+    default: "몰트로그, 위스키의 모든 기록",
+    template: "%s | 몰트로그",
+  },
+  description: "위스키를 사랑하는 모든 이들을 위한 완벽한 기록 공간. 위스키 리뷰, 테이스팅 노트, 커뮤니티를 한 곳에서 만나보세요.",
+  keywords: [
+    "위스키", "싱글몰트", "스카치", "버번", "위스키 추천",
+    "테이스팅 노트", "위스키 리뷰", "위스키 커뮤니티", "몰트로그",
+    "Maltlog", "whisky", "whiskey", "single malt",
+  ],
+  authors: [{ name: "Maltlog" }],
+  creator: "Maltlog",
+  publisher: "Maltlog",
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    type: "website",
+    locale: "ko_KR",
+    url: "https://maltlog.kr",
+    siteName: "몰트로그",
+    title: "몰트로그, 위스키의 모든 기록",
+    description: "위스키를 사랑하는 모든 이들을 위한 완벽한 기록 공간",
+    images: [
+      {
+        url: "/LOGO.png",
+        width: 512,
+        height: 512,
+        alt: "Maltlog",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "몰트로그, 위스키의 모든 기록",
+    description: "위스키를 사랑하는 모든 이들을 위한 완벽한 기록 공간",
+    images: ["/LOGO.png"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
   icons: {
     icon: [
       { url: '/favicon.ico?v=4' },

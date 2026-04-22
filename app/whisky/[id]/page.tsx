@@ -1,9 +1,55 @@
 // 찜 상태 포함한 사용자별 페이지이므로 동적 렌더링 필요
 export const dynamic = 'force-dynamic'
 
+import type { Metadata } from 'next'
 import { supabase } from '@/lib/supabase'
 import { redirect } from 'next/navigation'
+import { toPublicImageUrl } from '@/lib/images'
 import WhiskyDetailClient from '../../../components/WhiskyDetailClient'
+
+export async function generateMetadata({ params }: WhiskyDetailPageProps): Promise<Metadata> {
+  const { id } = await params
+  const { data: whisky } = await supabase
+    .from('whiskies')
+    .select('name, name_ko, distillery, region, image')
+    .eq('id', id)
+    .single()
+
+  if (!whisky) {
+    return {
+      title: '위스키를 찾을 수 없습니다',
+    }
+  }
+
+  const displayName = whisky.name_ko || whisky.name
+  const title = displayName
+  const description = [whisky.distillery, whisky.region]
+    .filter(Boolean)
+    .join(' · ')
+    ? `${displayName} — ${[whisky.distillery, whisky.region].filter(Boolean).join(' · ')}. 몰트로그에서 리뷰와 테이스팅 노트를 확인하세요.`
+    : `${displayName}에 대한 리뷰와 테이스팅 노트를 몰트로그에서 확인하세요.`
+
+  const imageUrl = toPublicImageUrl(whisky.image ?? undefined)
+
+  return {
+    title,
+    description,
+    alternates: { canonical: `/whisky/${id}` },
+    openGraph: {
+      type: 'article',
+      title,
+      description,
+      url: `/whisky/${id}`,
+      images: imageUrl ? [{ url: imageUrl, alt: displayName }] : undefined,
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: imageUrl ? [imageUrl] : undefined,
+    },
+  }
+}
 
 
 interface Whisky {

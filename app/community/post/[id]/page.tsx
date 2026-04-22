@@ -1,3 +1,4 @@
+import type { Metadata } from 'next'
 import { supabase } from '@/lib/supabase'
 import { redirect } from 'next/navigation'
 import PostDetailClient from '@/components/PostDetailClient'
@@ -7,6 +8,45 @@ export const revalidate = 60;
 interface PostDetailPageProps {
   params: {
     id: string
+  }
+}
+
+export async function generateMetadata({ params }: PostDetailPageProps): Promise<Metadata> {
+  const { id } = params
+  const { data: post } = await supabase
+    .from('posts')
+    .select('title, content, image_url')
+    .eq('id', id)
+    .single()
+
+  if (!post) {
+    return { title: '게시글을 찾을 수 없습니다' }
+  }
+
+  const title = post.title
+  const rawContent = (post.content ?? '').replace(/\s+/g, ' ').trim()
+  const description = rawContent.length > 140
+    ? rawContent.slice(0, 140) + '…'
+    : rawContent || '몰트로그 커뮤니티에서 더 많은 위스키 이야기를 만나보세요.'
+  const imageUrl = post.image_url || undefined
+
+  return {
+    title,
+    description,
+    alternates: { canonical: `/community/post/${id}` },
+    openGraph: {
+      type: 'article',
+      title,
+      description,
+      url: `/community/post/${id}`,
+      images: imageUrl ? [{ url: imageUrl, alt: title }] : undefined,
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: imageUrl ? [imageUrl] : undefined,
+    },
   }
 }
 
