@@ -1,14 +1,29 @@
 'use client'
 
-import React from 'react'
+import React, { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/app/context/AuthContext'
 import toast from 'react-hot-toast' // 1. 중앙 관리 시스템을 import 합니다.
 
+const INSTAGRAM_URL = "https://instagram.com/malt.log";
+const SITE_URL = "https://maltlog.kr";
+
 export default function Header() {
   const router = useRouter()
   const { user, signOut } = useAuth() // 2. Context에서 사용자 정보와 로그아웃 함수를 가져옵니다.
+  const [urlCopied, setUrlCopied] = useState(false)
+
+  const handleCopyUrl = async () => {
+    try {
+      await navigator.clipboard.writeText(SITE_URL)
+      setUrlCopied(true)
+      toast.success("URL을 복사했어요")
+      setTimeout(() => setUrlCopied(false), 2000)
+    } catch {
+      toast.error("복사에 실패했어요")
+    }
+  }
 
   const handleSignOut = async () => {
     try {
@@ -38,6 +53,62 @@ export default function Header() {
 
         {/* 네비게이션 및 로그인 상태 */}
         <div className="flex items-center gap-4">
+          {/* 인스타그램 아이콘 (그라디언트) */}
+          <a
+            href={INSTAGRAM_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Maltlog 인스타그램"
+            className="flex items-center"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="url(#igGradient)"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="w-5 h-5"
+              aria-hidden="true"
+            >
+              <defs>
+                <linearGradient id="igGradient" x1="0%" y1="100%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#f9ce34" />
+                  <stop offset="25%" stopColor="#ee2a7b" />
+                  <stop offset="75%" stopColor="#9b2fa3" />
+                  <stop offset="100%" stopColor="#4f5bd5" />
+                </linearGradient>
+              </defs>
+              <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+              <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+              <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
+            </svg>
+          </a>
+
+          {/* URL 복사 아이콘 (두 개의 사각형) */}
+          <button
+            type="button"
+            onClick={handleCopyUrl}
+            aria-label="사이트 URL 복사"
+            className="flex items-center text-gray-500 hover:text-amber-700 transition-colors"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke={urlCopied ? "#b45309" : "currentColor"}
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="w-5 h-5"
+              aria-hidden="true"
+            >
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+            </svg>
+          </button>
+
           <Link href="/" className="text-gray-600 hover:text-amber-700">HOME</Link>
           
           {/* 4. user 객체의 존재 여부로 로그인 상태를 판단합니다. */}

@@ -724,7 +724,7 @@ function CommunityPreview({ navigateWithTransition }: { navigateWithTransition: 
       const data = await res.json()
       console.log('📦 [CommunityPreview] Received data:', {
         isArray: Array.isArray(data),
-        length: data?.length ?? 0,
+        length: Array.isArray(data) ? data.length : 0,
         data: data
       })
 
