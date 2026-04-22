@@ -414,13 +414,19 @@ export default function ProfilePageClient({
     return <LoadingAnimation message="프로필을 불러오는 중..." />
   }
 
-  // 로그인되지 않은 경우
+  // 로그인되지 않은 경우 → 즉시 로그인 페이지로 이동
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.replace('/login')
+    }
+  }, [authLoading, user, router])
+
   if (!user) {
     return (
       <div className="min-h-screen bg-rose-50 flex items-center justify-center">
         <div className="text-center">
           <div className="text-2xl text-gray-600 mb-4">로그인이 필요합니다</div>
-          <div className="text-gray-500">잠시 후 로그인 페이지로 이동합니다...</div>
+          <div className="text-gray-500">로그인 페이지로 이동합니다...</div>
         </div>
       </div>
     )
