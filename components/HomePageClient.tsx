@@ -34,6 +34,7 @@ export default function HomePageClient({ initial, initialLikedIds }: HomePageCli
   const [currentPage, setCurrentPage] = useState(1)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isInitialLoading, setIsInitialLoading] = useState(false)
+  const [urlCopied, setUrlCopied] = useState(false)
   const itemsPerPage = 12
   const router = useRouter()
   const { isTransitioning, transitionMessage, navigateWithTransition } = usePageTransition()
@@ -88,6 +89,17 @@ export default function HomePageClient({ initial, initialLikedIds }: HomePageCli
       toast.success('로그아웃되었습니다.')
     } catch (error: unknown) {
       toast.error('로그아웃 오류: ' + (error instanceof Error ? error.message : 'Unknown error'))
+    }
+  }
+
+  const handleCopyUrl = async () => {
+    try {
+      await navigator.clipboard.writeText('https://maltlog.kr')
+      setUrlCopied(true)
+      toast.success('URL을 복사했어요')
+      setTimeout(() => setUrlCopied(false), 2000)
+    } catch {
+      toast.error('복사에 실패했어요')
     }
   }
 
@@ -179,6 +191,62 @@ export default function HomePageClient({ initial, initialLikedIds }: HomePageCli
             </div>
 
             <div className="flex items-center gap-3 sm:gap-6">
+              {/* 인스타그램 아이콘 (그라디언트) */}
+              <a
+                href="https://instagram.com/malt.log"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Maltlog 인스타그램"
+                className="flex items-center"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="url(#igGrad)"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="w-5 h-5"
+                  aria-hidden="true"
+                >
+                  <defs>
+                    <linearGradient id="igGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+                      <stop offset="0%" stopColor="#f9ce34" />
+                      <stop offset="25%" stopColor="#ee2a7b" />
+                      <stop offset="75%" stopColor="#9b2fa3" />
+                      <stop offset="100%" stopColor="#4f5bd5" />
+                    </linearGradient>
+                  </defs>
+                  <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+                  <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+                  <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
+                </svg>
+              </a>
+
+              {/* URL 복사 아이콘 */}
+              <button
+                type="button"
+                onClick={handleCopyUrl}
+                aria-label="사이트 URL 복사"
+                className="flex items-center text-gray-500 hover:text-amber-700 transition-colors"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke={urlCopied ? "#b45309" : "currentColor"}
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="w-5 h-5"
+                  aria-hidden="true"
+                >
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                </svg>
+              </button>
+
               <span className="text-lg sm:text-xl font-bold text-red-500 font-[family-name:var(--font-jolly-lodger)] max-[480px]:border max-[480px]:border-gray-300 max-[480px]:px-2 max-[480px]:py-1 max-[480px]:rounded">HOME</span>
               <button
                 onClick={() => navigateWithTransition('/profile', '프로필 페이지로 이동 중...')}
