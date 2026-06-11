@@ -116,6 +116,14 @@ export default function ProfilePageClient({
       .slice(0, 3)
   }, [notesData])
 
+  // 로그인되지 않은 경우 → 즉시 로그인 페이지로 이동
+  // (early return보다 위에 있어야 함 — 훅 순서가 렌더마다 동일해야 React #310이 안 남)
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.replace('/login')
+    }
+  }, [authLoading, user, router])
+
   // 프로필 정보 업데이트
   useEffect(() => {
     if (profile) {
@@ -414,13 +422,6 @@ export default function ProfilePageClient({
   if (authLoading || isLoading) {
     return <LoadingAnimation message="프로필을 불러오는 중..." />
   }
-
-  // 로그인되지 않은 경우 → 즉시 로그인 페이지로 이동
-  useEffect(() => {
-    if (!authLoading && !user) {
-      router.replace('/login')
-    }
-  }, [authLoading, user, router])
 
   if (!user) {
     return (
