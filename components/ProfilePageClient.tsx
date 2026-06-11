@@ -10,6 +10,7 @@ import { getUserCommunityPosts } from '../lib/communityPosts'
 import { toPublicImageUrl } from '../lib/images'
 import { useAuth } from '../app/context/AuthContext'
 import LoadingAnimation from './LoadingAnimation'
+import TasteProfileCard from './TasteProfileCard'
 import toast from 'react-hot-toast'
 
 interface WhiskyData {
@@ -604,6 +605,9 @@ export default function ProfilePageClient({
                 </div>
               </div>
             </div>
+
+            {/* 취향 분석 카드 */}
+            {user && <TasteProfileCard userId={user.id} />}
 
             {/* 찜한 술 섹션 */}
             <div>
