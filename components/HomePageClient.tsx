@@ -4,7 +4,6 @@ import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import LoadingAnimation from './LoadingAnimation'
 import { usePageTransition } from '../hooks/usePageTransition'
-import DrawerSidebar from './DrawerSidebar'
 import { useAuth } from '../app/context/AuthContext'
 import { LikesProvider, useLikes } from './LikesProvider'
 import toast from 'react-hot-toast'
@@ -616,11 +615,6 @@ export default function HomePageClient({ initial, initialLikedIds }: HomePageCli
               <CommunityPreview navigateWithTransition={navigateWithTransition} />
             </section>
           )}
-        </div>
-
-        {/* 서랍장 스타일 사이드바 - 데스크톱에서만 표시 */}
-        <div className="hidden lg:block">
-          <DrawerSidebar />
         </div>
       </div>
     </div>
