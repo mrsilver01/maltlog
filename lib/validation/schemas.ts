@@ -45,7 +45,8 @@ export type CommentCreateInput = z.infer<typeof commentCreateSchema>
 
 // -------- 위스키 리뷰 --------
 export const reviewCreateSchema = z.object({
-  whisky_id: uuidSchema,
+  // whiskies.id 는 UUID가 아닌 슬러그 형식 (예: "mortlach-16")
+  whisky_id: z.string().trim().min(1, '위스키 ID가 필요합니다').max(200),
   rating: z
     .number()
     .min(0.5, '별점은 최소 0.5점 이상이어야 합니다')

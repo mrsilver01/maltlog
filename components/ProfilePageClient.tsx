@@ -579,18 +579,18 @@ export default function ProfilePageClient({
             </div>
 
             {/* 통계 */}
-            <div className="border border-rose-300 rounded mb-6 sm:mb-8 bg-rose-50">
-              <div className="grid grid-cols-1 sm:grid-cols-3 text-center">
-                <div className="border-b sm:border-b-0 sm:border-r border-rose-300 py-3 sm:py-4">
-                  <div className="text-xl sm:text-2xl font-bold text-rose-800">{notesData.length}</div>
-                  <div className="text-xs sm:text-sm text-rose-700">노트</div>
+            <div className="rounded-xl border border-[#E8D9CC] bg-[#FFFCF8] shadow-sm mb-6 sm:mb-8 overflow-hidden">
+              <div className="grid grid-cols-3 text-center divide-x divide-[#EADBCD]">
+                <div className="py-4 sm:py-5">
+                  <div className="text-xl sm:text-2xl font-bold text-[#722F37] tabular-nums">{notesData.length}</div>
+                  <div className="text-[11px] tracking-[0.2em] text-[#9C8270] mt-0.5">노트</div>
                 </div>
-                <div className="border-b sm:border-b-0 sm:border-r border-rose-300 py-3 sm:py-4">
-                  <div className="text-xl sm:text-2xl font-bold text-rose-800">{userStats.wishlistCount}</div>
-                  <div className="text-xs sm:text-sm text-rose-700">찜</div>
+                <div className="py-4 sm:py-5">
+                  <div className="text-xl sm:text-2xl font-bold text-[#722F37] tabular-nums">{userStats.wishlistCount}</div>
+                  <div className="text-[11px] tracking-[0.2em] text-[#9C8270] mt-0.5">찜</div>
                 </div>
                 <div
-                  className="py-3 sm:py-4 cursor-pointer hover:bg-rose-100 transition-colors rounded"
+                  className="py-4 sm:py-5 cursor-pointer hover:bg-[#FBF3EA] transition-colors"
                   onClick={() => router.push('/community')}
                   role="button"
                   tabIndex={0}
@@ -601,8 +601,8 @@ export default function ProfilePageClient({
                     }
                   }}
                 >
-                  <div className="text-xl sm:text-2xl font-bold text-rose-800">{communityPostsCount}</div>
-                  <div className="text-xs sm:text-sm text-rose-700">게시글</div>
+                  <div className="text-xl sm:text-2xl font-bold text-[#722F37] tabular-nums">{communityPostsCount}</div>
+                  <div className="text-[11px] tracking-[0.2em] text-[#9C8270] mt-0.5">게시글</div>
                 </div>
               </div>
             </div>
@@ -612,7 +612,7 @@ export default function ProfilePageClient({
 
             {/* 찜한 술 섹션 */}
             <div>
-              <h3 className="text-lg font-bold text-gray-800 mb-4">찜한 술</h3>
+              <h3 className="text-base font-bold text-[#4A3527] mb-4 pb-2 border-b border-[#EADBCD]">찜한 술</h3>
               <div className="space-y-3">
                 {likedWhiskies.slice(0, 5).map((whisky) => {
                   const handleGoToWhisky = () => {
@@ -657,11 +657,13 @@ export default function ProfilePageClient({
           <div className="md:col-span-2 lg:col-span-3">
             {/* 위스키 컬렉션 박스 */}
             <div className="mb-6 sm:mb-8">
-              <div className="bg-amber-900 p-3 sm:p-4 md:p-6 rounded-lg">
-                <div className="bg-amber-800 p-2 sm:p-3 md:p-4 rounded mb-3 sm:mb-4">
-                  <h3 className="text-white text-center text-base sm:text-lg font-bold">위스키 컬렉션</h3>
+              <div className="bg-gradient-to-b from-[#2D1520] to-[#46222F] p-4 sm:p-5 md:p-6 rounded-xl border border-[#5A3242] shadow-md">
+                <div className="text-center mb-4 sm:mb-5">
+                  <div className="text-[10px] tracking-[0.4em] text-[#C9A961] font-semibold mb-1">CABINET</div>
+                  <h3 className="text-[#F5EBDD] text-base sm:text-lg font-bold">위스키 컬렉션</h3>
+                  <div className="w-10 h-px bg-[#C9A961]/60 mx-auto mt-2"></div>
                 </div>
-                <div className="bg-amber-800 p-4 sm:p-6 md:p-8 rounded flex items-center justify-center">
+                <div className="bg-[#1F0E16]/40 border border-[#5A3242]/60 p-4 sm:p-6 md:p-8 rounded-lg flex items-center justify-center">
                   <div className="flex gap-2 sm:gap-4 md:gap-8">
                     {/* ⭐ 평점 높은 위스키 3개 표시 */}
                     {topRatedWhiskies.length > 0 ? (
@@ -743,7 +745,7 @@ export default function ProfilePageClient({
             {/* 위스키 노트/리뷰 */}
             <div>
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-6 gap-2 sm:gap-0">
-                <h3 className="text-lg sm:text-xl font-bold text-red-500">위스키 노트/리뷰</h3>
+                <h3 className="text-lg sm:text-xl font-bold text-[#722F37]">위스키 노트/리뷰</h3>
                 <button className="text-xs sm:text-sm text-gray-600 hover:text-gray-800 hover:scale-110 transition-all duration-200 transform">작성일 가기</button>
               </div>
 
