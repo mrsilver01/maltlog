@@ -22,24 +22,24 @@ interface MonthStat {
 
 /** 지역 키워드 → 취향 타이틀 */
 function tasteBadge(topRegion: string | null, avgRating: number, total: number): { title: string; desc: string } {
-  if (total === 0) return { title: '첫 잔을 기다리는 중', desc: '첫 시음 노트를 남기면 취향 분석이 시작됩니다' }
+  if (total === 0) return { title: '아직 기록이 없습니다', desc: '첫 시음 노트를 남기면 취향 분석이 시작됩니다' }
 
   const r = (topRegion || '').toLowerCase()
-  let title = '위스키 탐험가'
-  if (r.includes('islay') || r.includes('아일라')) title = '피트 헌터'
-  else if (r.includes('speyside') || r.includes('스페이사이드')) title = '스페이사이드 순례자'
-  else if (r.includes('highland') || r.includes('하이랜드')) title = '하이랜드 방랑자'
-  else if (r.includes('lowland') || r.includes('로우랜드')) title = '로우랜드 신사'
-  else if (r.includes('campbeltown') || r.includes('캠벨타운')) title = '캠벨타운 항해사'
-  else if (r.includes('japan') || r.includes('일본')) title = '재패니즈 감별사'
-  else if (r.includes('ireland') || r.includes('irish') || r.includes('아일랜드')) title = '아이리시 로머'
-  else if (r.includes('america') || r.includes('bourbon') || r.includes('kentucky') || r.includes('테네시') || r.includes('미국') || r.includes('버번')) title = '버번 카우보이'
-  else if (r.includes('한국')) title = 'K-위스키 개척자'
-  else if (r.includes('대만')) title = '포모사 셀렉터'
+  let title = '위스키 애호가'
+  if (r.includes('islay') || r.includes('아일라')) title = '아일라 위스키를 즐기는 편'
+  else if (r.includes('speyside') || r.includes('스페이사이드')) title = '스페이사이드를 즐기는 편'
+  else if (r.includes('highland') || r.includes('하이랜드')) title = '하이랜드를 즐기는 편'
+  else if (r.includes('lowland') || r.includes('로우랜드')) title = '로우랜드를 즐기는 편'
+  else if (r.includes('campbeltown') || r.includes('캠벨타운')) title = '캠벨타운을 즐기는 편'
+  else if (r.includes('japan') || r.includes('일본')) title = '재패니즈 위스키를 즐기는 편'
+  else if (r.includes('ireland') || r.includes('irish') || r.includes('아일랜드')) title = '아이리시 위스키를 즐기는 편'
+  else if (r.includes('america') || r.includes('bourbon') || r.includes('kentucky') || r.includes('테네시') || r.includes('미국') || r.includes('버번')) title = '아메리칸 위스키를 즐기는 편'
+  else if (r.includes('한국')) title = '한국 위스키를 즐기는 편'
+  else if (r.includes('대만')) title = '대만 위스키를 즐기는 편'
 
-  let desc = '균형 잡힌 미각의 소유자'
-  if (avgRating >= 4.2) desc = '잔마다 사랑이 넘치는 후한 평가자'
-  else if (avgRating > 0 && avgRating <= 3.0) desc = '쉽게 만족하지 않는 깐깐한 미각'
+  let desc = '점수를 고르게 주는 편입니다'
+  if (avgRating >= 4.2) desc = '점수를 후하게 주는 편입니다'
+  else if (avgRating > 0 && avgRating <= 3.0) desc = '점수를 아끼는 편입니다'
 
   return { title, desc }
 }

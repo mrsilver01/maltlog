@@ -674,11 +674,11 @@ function WhiskyCard({ whisky, navigateWithTransition }: { whisky: WhiskyData, ro
 
   return (
     <div
-      className="bg-white rounded border border-gray-200 p-2 sm:p-3 text-center hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 cursor-pointer"
+      className="bg-[#FFFCF8] rounded-lg border border-[#E8D9CC] p-2 sm:p-3 text-center hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 cursor-pointer flex flex-col h-full"
       onClick={handleClick}
     >
       {/* 위스키 이미지/글래스 영역 */}
-      <div className="h-32 sm:h-40 mb-2 sm:mb-3 bg-gray-100 rounded flex items-center justify-center relative">
+      <div className="h-32 sm:h-40 mb-2 sm:mb-3 bg-[#FBF3EA] rounded flex items-center justify-center relative shrink-0 overflow-hidden">
         <img
           src={whisky.image || '/images/placeholder-whisky.png'}
           alt={whisky.name}
@@ -698,30 +698,27 @@ function WhiskyCard({ whisky, navigateWithTransition }: { whisky: WhiskyData, ro
             !user
               ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
               : isWhiskyLiked
-              ? 'bg-red-500 text-white'
+              ? 'bg-[#722F37] text-white'
               : isLikeHovered
-              ? 'bg-black text-white'
-              : 'bg-gray-300 text-white hover:bg-gray-400'
+              ? 'bg-[#4A3527] text-white'
+              : 'bg-[#9C8270]/80 text-white hover:bg-[#4A3527]'
           }`}
           onMouseEnter={() => user && setIsLikeHovered(true)}
           onMouseLeave={() => setIsLikeHovered(false)}
           onClick={!user ? undefined : handleLikeClick}
         >
-          <div className="flex items-center gap-1">
-            <span className="text-xs">🥃</span>
-            <span className="font-bold">찜</span>
-          </div>
+          <span className="font-bold">찜</span>
           <span className="font-bold">{formatLikeCount(currentLikes || 0)}</span>
         </button>
       </div>
 
-      {/* 위스키 이름 - 모든 위스키에 표시 */}
-      <div className="text-xs sm:text-sm font-bold mb-1 sm:mb-2 hover:scale-110 transition-all duration-200 text-gray-600 hover:text-red-600 leading-tight">
-        {whisky.name}
+      {/* 위스키 이름 - 모든 위스키에 표시 (2줄 고정 높이로 카드 크기 통일) */}
+      <div className="text-xs sm:text-sm font-bold mb-1 sm:mb-2 transition-colors duration-200 text-[#4A3527] hover:text-[#722F37] leading-tight line-clamp-2 min-h-[2.25rem] sm:min-h-[2.5rem] flex items-center justify-center">
+        <span className="line-clamp-2">{whisky.name}</span>
       </div>
 
       {/* 평점 */}
-      <div className="flex items-center justify-center gap-1 text-xs text-gray-500">
+      <div className="flex items-center justify-center gap-1 text-xs text-gray-500 mt-auto">
         {(() => {
           const totalReviews = (whisky as any).totalReviews ?? whisky.reviews_count ?? 0
           return totalReviews > 0 ? (
@@ -735,14 +732,14 @@ function WhiskyCard({ whisky, navigateWithTransition }: { whisky: WhiskyData, ro
               if (starIndex <= fullStars) {
                 // 채워진 노란 별
                 return (
-                  <span key={starIndex} className="text-yellow-500 text-sm">
+                  <span key={starIndex} className="text-[#C9A961] text-sm">
                     ★
                   </span>
                 );
               } else if (starIndex === fullStars + 1 && hasHalfStar) {
                 // 반별: 약간 어두운 노란색
                 return (
-                  <span key={starIndex} className="text-yellow-400 text-sm">
+                  <span key={starIndex} className="text-[#C9A961] opacity-60 text-sm">
                     ★
                   </span>
                 );
