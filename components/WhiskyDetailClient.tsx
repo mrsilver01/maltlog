@@ -108,10 +108,10 @@ const RatingChart = ({ reviews }: RatingChartProps) => {
   };
 
   const getBarColor = (count: number, rating: number) => {
-    if (count === 0) return 'bg-gray-200';
-    if (rating >= 4) return 'bg-amber-700';
-    if (rating >= 3) return 'bg-yellow-400';
-    return 'bg-red-400';
+    if (count === 0) return 'bg-[#F3E9DE]';
+    if (rating >= 4) return 'bg-[#8B5E34]';
+    if (rating >= 3) return 'bg-[#C9A961]';
+    return 'bg-[#722F37]';
   };
 
   return (
@@ -879,7 +879,7 @@ export default function WhiskyDetailClient({ whisky, initialReviews }: WhiskyDet
       <div className="mb-6 sm:mb-8 ml-2 sm:ml-8">
         <button
           onClick={() => router.back()}
-          className="bg-rose-100 border border-rose-200 rounded-lg px-3 py-2 hover:bg-rose-150 transition-all duration-200 shadow-sm text-gray-700 hover:text-gray-800 text-sm font-medium hover:scale-105 transform hover:shadow-md hover:border-rose-300"
+          className="bg-[#FFFCF8] border border-[#E8D9CC] rounded-lg px-3 py-2 hover:bg-[#FBF3EA] transition-all duration-200 shadow-sm text-[#4A3527] text-sm font-medium hover:shadow-md"
         >
           ← 뒤로 가기
         </button>
@@ -887,100 +887,112 @@ export default function WhiskyDetailClient({ whisky, initialReviews }: WhiskyDet
 
       {/* 메인 컨텐츠 중앙 정렬 */}
       <div className="max-w-6xl mx-auto px-2 sm:px-0">
-        <div className="flex flex-col lg:flex-row gap-6 lg:gap-16 items-start">
-          {/* 위스키 이미지 */}
-          <div className="flex-shrink-0 w-full lg:w-auto flex justify-center lg:block">
-            <div className="w-64 sm:w-72 h-[400px] sm:h-[500px] bg-white border border-gray-200 rounded-xl p-4 sm:p-6 flex items-center justify-center shadow-sm">
-              <img
-                src={whisky.image}
-                alt={whisky.name}
-                className="max-w-full max-h-full object-contain"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src = '/whiskies/no.pic whisky.png'
-                }}
-              />
+        {/* 히어로: 보틀 + 핵심 정보 */}
+        <div className="rounded-2xl overflow-hidden bg-gradient-to-b from-[#2D1520] to-[#46222F] border border-[#5A3242] shadow-xl mb-8 sm:mb-12">
+          <div className="flex flex-col lg:flex-row items-center gap-8 lg:gap-14 p-6 sm:p-10 lg:p-12">
+            {/* 보틀 이미지 */}
+            <div className="flex-shrink-0">
+              <div className="w-56 sm:w-64 h-[360px] sm:h-[440px] bg-[#FFFCF8] rounded-xl p-5 flex items-center justify-center shadow-lg">
+                <img
+                  src={whisky.image}
+                  alt={whisky.name}
+                  className="max-w-full max-h-full object-contain"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = '/whiskies/no.pic whisky.png'
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* 위스키 정보 */}
+            <div className="flex-1 w-full text-center lg:text-left">
+              <div className="text-[10px] tracking-[0.4em] text-[#C9A961] font-semibold mb-2 uppercase">
+                {whisky.region || 'WHISKY'}
+              </div>
+              <div className="flex items-center justify-center lg:justify-start gap-3 mb-1.5">
+                <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-[#F5EBDD] leading-tight">{whisky.name}</h2>
+                <button
+                  aria-label={isWhiskyLikedState ? '찜 취소' : '찜하기'}
+                  onClick={toggleWhiskyLike}
+                  disabled={whiskyLikeBusy}
+                  className={`rounded-full p-1.5 text-xl sm:text-2xl transition-all duration-200 hover:scale-110 transform ${
+                    isWhiskyLikedState ? 'text-[#E25C5C] hover:text-[#F07474]' : 'text-[#8A6470] hover:text-[#C9A961]'
+                  } ${whiskyLikeBusy ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
+                  title={isWhiskyLikedState ? '찜 취소' : '찜하기'}
+                >
+                  {isWhiskyLikedState ? '♥' : '♡'}
+                </button>
+              </div>
+              <p className="text-[11px] text-[#B89AA4] mb-6">술 관련 설명이 실제와 다를 수 있습니다.</p>
+              <div className="w-12 h-px bg-[#C9A961]/60 mb-6 sm:mb-8 mx-auto lg:mx-0"></div>
+
+              {/* 스펙 */}
+              <div className="grid grid-cols-2 gap-x-8 sm:gap-x-12 gap-y-5 max-w-md mx-auto lg:mx-0 mb-8 sm:mb-10 text-left">
+                <div>
+                  <div className="text-[10px] tracking-[0.25em] text-[#C9A961]/80 font-semibold mb-1">도수</div>
+                  <div className="text-sm sm:text-base font-semibold text-[#F5EBDD]">{whisky.abv || '-'}</div>
+                </div>
+                <div>
+                  <div className="text-[10px] tracking-[0.25em] text-[#C9A961]/80 font-semibold mb-1">가격</div>
+                  <div className="text-sm sm:text-base font-semibold text-[#F5EBDD]">{whisky.price || '-'}</div>
+                </div>
+                <div>
+                  <div className="text-[10px] tracking-[0.25em] text-[#C9A961]/80 font-semibold mb-1">지역</div>
+                  <div className="text-sm sm:text-base font-semibold text-[#F5EBDD]">{whisky.region || '-'}</div>
+                </div>
+                <div>
+                  <div className="text-[10px] tracking-[0.25em] text-[#C9A961]/80 font-semibold mb-1">캐스크</div>
+                  <div className="text-sm sm:text-base font-semibold text-[#F5EBDD]">{whisky.cask || '-'}</div>
+                </div>
+              </div>
+
+              {/* 평균 별점 요약 */}
+              <div className="flex items-end justify-center lg:justify-start gap-3">
+                <span className="text-4xl sm:text-5xl font-bold text-[#C9A961] tabular-nums leading-none">
+                  {avgRating > 0 ? avgRating.toFixed(1) : '-'}
+                </span>
+                <div className="pb-0.5 text-left">
+                  <div className="text-[#C9A961] text-sm leading-none mb-1">
+                    {[1, 2, 3, 4, 5].map(s => (
+                      <span key={s} className={s <= Math.round(avgRating) ? '' : 'opacity-30'}>★</span>
+                    ))}
+                  </div>
+                  <div className="text-[11px] text-[#B89AA4]">
+                    {reviews.length > 0 ? `${reviews.length}명의 평가` : '아직 평가가 없습니다'}
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
+        </div>
 
-          {/* 위스키 정보 */}
-          <div className="flex-1 w-full lg:max-w-2xl">
-            {/* 위스키 이름 & 찜 버튼 */}
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 mb-3">
-              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-red-500 text-center">{whisky.name}</h2>
-              <button
-                aria-label={isWhiskyLikedState ? '찜 취소' : '찜하기'}
-                onClick={toggleWhiskyLike}
-                disabled={whiskyLikeBusy}
-                className={`rounded-full p-2 sm:p-3 text-xl sm:text-2xl transition-all duration-200 hover:scale-110 transform ${
-                  isWhiskyLikedState ? 'text-red-500 hover:text-red-600' : 'text-gray-400 hover:text-red-400'
-                } ${whiskyLikeBusy ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
-                title={isWhiskyLikedState ? '찜 취소' : '찜하기'}
-              >
-                {isWhiskyLikedState ? '♥' : '♡'}
-              </button>
-            </div>
+        {/* 본문 */}
+        <div className="max-w-3xl mx-auto">
+          <div>
 
-            {/* 안내 문구 */}
-            <p className="text-xs sm:text-sm text-gray-400 mb-6 sm:mb-8 text-center">
-              술 관련 설명이 실제와 다를 수 있습니다.
-            </p>
-
-            {/* 위스키 상세 정보 */}
-            <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-100 mb-8 sm:mb-10">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-4 sm:gap-y-6 gap-x-4 sm:gap-x-12">
-                <div className="flex justify-between items-center">
-                  <span className="text-base sm:text-lg font-medium text-amber-800">도수</span>
-                  <span className="text-base sm:text-lg font-bold text-amber-900">{whisky.abv}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-base sm:text-lg font-medium text-amber-800">지역</span>
-                  <span className="text-base sm:text-lg font-semibold text-amber-900">{whisky.region}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-base sm:text-lg font-medium text-amber-800">가격</span>
-                  <span className="text-base sm:text-lg font-semibold text-amber-900">{whisky.price}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-base sm:text-lg font-medium text-amber-800">캐스크</span>
-                  <span className="text-base sm:text-lg font-semibold text-amber-900">{whisky.cask}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* 평점 섹션 */}
-            <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-100 mb-6 sm:mb-8">
-              <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-4 sm:mb-6 text-center">이 위스키의 평균 별점은?</h3>
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-6 sm:gap-12">
-                {/* 별점 차트 */}
-                <RatingChart reviews={reviews} />
-
-                {/* 평균 별점 */}
+            {/* 평가 카드: 분포 + 내 평가 */}
+            <div className="rounded-xl border border-[#E8D9CC] bg-[#FFFCF8] shadow-sm p-5 sm:p-7 mb-6 sm:mb-8">
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-8 sm:gap-12">
+                {/* 별점 분포 */}
                 <div className="text-center">
-                  <div className="flex items-center gap-2 justify-center">
-                    <span className="text-amber-500 text-3xl sm:text-4xl">★</span>
-                    <span className="text-3xl sm:text-4xl font-bold text-gray-800">
-                      {avgRating > 0 ? avgRating : '0.0'}
-                    </span>
-                  </div>
-                  {avgRating === 0 && (
-                    <div className="text-sm text-gray-500 mt-2">아직 평가가 없습니다</div>
-                  )}
+                  <h4 className="text-[11px] tracking-[0.25em] font-semibold text-[#7A5C49] mb-3">별점 분포</h4>
+                  <RatingChart reviews={reviews} />
                 </div>
-              </div>
-            </div>
 
-            {/* 빠른 별점 매기기 섹션 */}
-            <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-100 mb-6 sm:mb-8">
-              <h3 className="text-base sm:text-lg font-bold text-amber-800 mb-4 text-center">
-                {!user ? '로그인 후 평가 가능' : hasUserRated ? '내가 매긴 별점' : '이 위스키를 평가해보세요'}
-              </h3>
-              <div className="flex justify-center">
+                <div className="hidden sm:block w-px self-stretch bg-[#EADBCD]"></div>
+
+                {/* 내 평가 */}
+                <div className="text-center flex-1 max-w-xs">
+                  <h4 className="text-[11px] tracking-[0.25em] font-semibold text-[#7A5C49] mb-4">
+                    {!user ? '내 평가' : hasUserRated ? '내가 매긴 별점' : '이 위스키를 평가해보세요'}
+                  </h4>
+                  <div className="flex justify-center">
                 {!user ? (
-                  <div className="text-gray-500 text-center">
+                  <div className="text-gray-500 text-center text-sm">
                     <p className="mb-2">평점을 남기려면 로그인해주세요</p>
                     <button
                       onClick={() => router.push('/login')}
-                      className="text-amber-600 hover:text-amber-800 font-medium underline"
+                      className="text-[#722F37] hover:text-[#96424E] font-medium underline underline-offset-4"
                     >
                       로그인하러 가기
                     </button>
@@ -1038,6 +1050,8 @@ export default function WhiskyDetailClient({ whisky, initialReviews }: WhiskyDet
                     showLabels={true}
                   />
                 )}
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -1052,7 +1066,7 @@ export default function WhiskyDetailClient({ whisky, initialReviews }: WhiskyDet
                     }
                     setShowNoteForm(true)
                   }}
-                  className="bg-red-500 text-white px-6 sm:px-10 py-2.5 sm:py-3 rounded-xl font-bold hover:bg-red-600 transition-all duration-200 shadow-md hover:shadow-lg hover:scale-110 transform text-sm sm:text-base"
+                  className="bg-[#722F37] text-white px-6 sm:px-10 py-2.5 sm:py-3 rounded-xl font-bold hover:bg-[#5C242B] transition-all duration-200 shadow-md hover:shadow-lg hover:scale-105 transform text-sm sm:text-base"
                 >
                   {myReview ? '내 노트 수정하기' : '내 노트 작성하기'}
                 </button>
@@ -1095,7 +1109,7 @@ export default function WhiskyDetailClient({ whisky, initialReviews }: WhiskyDet
                   <button
                     onClick={handleReviewSubmit}
                     disabled={submitting}
-                    className="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition-all duration-200 font-medium hover:scale-110 transform shadow-md hover:shadow-lg disabled:opacity-50 text-sm sm:text-base"
+                    className="bg-[#722F37] text-white px-6 py-2 rounded-lg hover:bg-[#5C242B] transition-all duration-200 font-medium hover:scale-105 transform shadow-md hover:shadow-lg disabled:opacity-50 text-sm sm:text-base"
                   >
                     {submitting ? '저장 중...' : '저장'}
                   </button>
@@ -1113,14 +1127,14 @@ export default function WhiskyDetailClient({ whisky, initialReviews }: WhiskyDet
             {/* 위스키 노트/리뷰 섹션 */}
             <div>
               <div className="flex items-center justify-between mb-4 sm:mb-6">
-                <h3 className="text-lg sm:text-xl font-bold text-red-500">위스키 노트/리뷰</h3>
+                <h3 className="text-lg sm:text-xl font-bold text-[#722F37]">위스키 노트/리뷰</h3>
               </div>
 
               {/* 새 리뷰 작성 영역 */}
               {user && (
                 hasUserReviewed && myReview ? (
                   // 이미 리뷰를 작성한 경우 - 내 리뷰 표시
-                  <div className="bg-blue-50 border border-blue-200 p-4 rounded-xl mb-6">
+                  <div className="bg-[#FBF3EA] border border-[#E8D9CC] p-4 rounded-xl mb-6">
                     <div className="flex items-center gap-3 mb-4">
                       <div className="w-8 h-8 rounded-full border border-gray-300 bg-gray-100 overflow-hidden flex-shrink-0">
                         {user.user_metadata?.avatar_url ? (
@@ -1131,7 +1145,7 @@ export default function WhiskyDetailClient({ whisky, initialReviews }: WhiskyDet
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">
-                            👤
+                            <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
                           </div>
                         )}
                       </div>
@@ -1148,13 +1162,13 @@ export default function WhiskyDetailClient({ whisky, initialReviews }: WhiskyDet
                         <div className="flex items-center gap-2">
                           <button
                             onClick={handleReviewEdit}
-                            className="text-xs bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600 transition-colors"
+                            className="text-xs bg-[#722F37] text-white px-2.5 py-1 rounded hover:bg-[#5C242B] transition-colors"
                           >
                             수정
                           </button>
                           <button
                             onClick={handleReviewDelete}
-                            className="text-xs bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600 transition-colors"
+                            className="text-xs border border-[#722F37]/40 text-[#722F37] px-2.5 py-1 rounded hover:bg-[#722F37]/10 transition-colors"
                           >
                             삭제
                           </button>
@@ -1183,7 +1197,7 @@ export default function WhiskyDetailClient({ whisky, initialReviews }: WhiskyDet
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">
-                            👤
+                            <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
                           </div>
                         )}
                       </div>
@@ -1195,7 +1209,7 @@ export default function WhiskyDetailClient({ whisky, initialReviews }: WhiskyDet
                       placeholder="노즈:
 팔레트:
 피니쉬: "
-                      className="w-full h-24 p-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-800 placeholder-gray-400"
+                      className="w-full h-24 p-3 border border-[#E8D9CC] rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-[#722F37] focus:border-transparent text-gray-800 placeholder-gray-400 bg-white"
                       rows={4}
                       disabled={isSubmittingQuickReview}
                     />
@@ -1203,7 +1217,7 @@ export default function WhiskyDetailClient({ whisky, initialReviews }: WhiskyDet
                       <button
                         onClick={handleQuickReviewSubmit}
                         disabled={isSubmittingQuickReview || !quickReviewText.trim()}
-                        className="bg-amber-700 text-white px-4 py-2 rounded-lg hover:bg-amber-800 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="bg-[#722F37] text-white px-4 py-2 rounded-lg hover:bg-[#5C242B] transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {isSubmittingQuickReview ? '등록 중...' : '리뷰 등록'}
                       </button>
@@ -1228,7 +1242,7 @@ export default function WhiskyDetailClient({ whisky, initialReviews }: WhiskyDet
                               />
                             ) : (
                               <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
-                                👤
+                                <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
                               </div>
                             )}
                           </div>
@@ -1327,7 +1341,7 @@ export default function WhiskyDetailClient({ whisky, initialReviews }: WhiskyDet
                                           />
                                         ) : (
                                           <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
-                                            👤
+                                            <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
                                           </div>
                                         )}
                                       </div>
@@ -1401,7 +1415,7 @@ export default function WhiskyDetailClient({ whisky, initialReviews }: WhiskyDet
 
                           {/* 새 댓글 작성 폼 */}
                           {user ? (
-                            <div className="bg-blue-50 p-3 rounded-lg">
+                            <div className="bg-[#FBF3EA] p-3 rounded-lg">
                               <div className="flex items-start gap-3">
                                 <div className="w-8 h-8 rounded-full border border-gray-300 bg-gray-100 overflow-hidden flex-shrink-0">
                                   {user.user_metadata?.avatar_url ? (
@@ -1412,7 +1426,7 @@ export default function WhiskyDetailClient({ whisky, initialReviews }: WhiskyDet
                                     />
                                   ) : (
                                     <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">
-                                      👤
+                                      <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
                                     </div>
                                   )}
                                 </div>
@@ -1424,7 +1438,7 @@ export default function WhiskyDetailClient({ whisky, initialReviews }: WhiskyDet
                                       [review.id]: e.target.value
                                     }))}
                                     placeholder="댓글을 작성하세요..."
-                                    className="w-full p-2 text-sm border border-gray-200 rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    className="w-full p-2 text-sm border border-[#E8D9CC] rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-[#722F37] focus:border-transparent bg-white"
                                     rows={2}
                                     disabled={commentSubmitting[review.id]}
                                   />
@@ -1435,7 +1449,7 @@ export default function WhiskyDetailClient({ whisky, initialReviews }: WhiskyDet
                                       className={`px-3 py-1 text-sm rounded-md transition-colors ${
                                         commentSubmitting[review.id] || !newComments[review.id]?.trim()
                                           ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                                          : 'bg-blue-500 text-white hover:bg-blue-600'
+                                          : 'bg-[#722F37] text-white hover:bg-[#5C242B]'
                                       }`}
                                     >
                                       {commentSubmitting[review.id] ? '등록 중...' : '등록'}
@@ -1451,7 +1465,7 @@ export default function WhiskyDetailClient({ whisky, initialReviews }: WhiskyDet
                               </p>
                               <button
                                 onClick={() => router.push('/login')}
-                                className="text-blue-600 hover:text-blue-800 font-medium underline text-sm"
+                                className="text-[#722F37] hover:text-[#96424E] font-medium underline underline-offset-4 text-sm"
                               >
                                 로그인하러 가기
                               </button>
@@ -1469,11 +1483,11 @@ export default function WhiskyDetailClient({ whisky, initialReviews }: WhiskyDet
                       <button
                         onClick={loadMoreReviews}
                         disabled={loadingMoreReviews}
-                        className="bg-blue-500 text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg hover:bg-blue-600 transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
+                        className="border border-[#722F37] text-[#722F37] px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg hover:bg-[#722F37] hover:text-white transition-all duration-200 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base font-medium"
                       >
                         {loadingMoreReviews ? (
                           <div className="flex items-center gap-2">
-                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                            <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
                             로딩 중...
                           </div>
                         ) : (
