@@ -6,6 +6,7 @@ import LoadingAnimation from './LoadingAnimation'
 import { usePageTransition } from '../hooks/usePageTransition'
 import { useAuth } from '../app/context/AuthContext'
 import { LikesProvider, useLikes } from './LikesProvider'
+import NewsletterDrawer from './NewsletterDrawer'
 import toast from 'react-hot-toast'
 import { MainPageSkeleton, WhiskyCardSkeleton, CommunityPreviewSkeleton } from './SkeletonUI'
 import { formatLikeCount } from '../lib/formatLikes'
@@ -169,6 +170,8 @@ export default function HomePageClient({ initial, initialLikedIds }: HomePageCli
       {isTransitioning && (
         <LoadingAnimation message={transitionMessage} />
       )}
+      {/* 몰트로그 신문 (우측 끈 → 펼침) */}
+      <NewsletterDrawer />
       <div className="flex">
         {/* 메인 콘텐츠 */}
         <div className="flex-1">
