@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { newsletter } from '@/content/newsletter'
 import { toPublicImageUrl } from '@/lib/images'
@@ -9,9 +9,25 @@ import { toPublicImageUrl } from '@/lib/images'
  * 몰트로그 신문 — 홈 우측의 신문 끈을 당기면 왼쪽으로 펼쳐지는 뉴스레터 패널.
  * 콘텐츠는 content/newsletter.ts 에서 관리.
  */
+
+/** 이미지 경로 해석: public 정적(/...) · 외부(http) · Storage 파일명 모두 지원 */
+function resolveImg(src: string): string {
+  if (!src) return ''
+  if (src.startsWith('http') || src.startsWith('/')) return src
+  return toPublicImageUrl(src)
+}
+
 export default function NewsletterDrawer() {
   const router = useRouter()
   const [open, setOpen] = useState(false)
+  const [leadImgOk, setLeadImgOk] = useState(true)
+  const leadImgRef = useRef<HTMLImageElement>(null)
+
+  // 하이드레이션 전에 이미지 로드가 이미 실패했으면 onError가 안 잡히므로 마운트 시 보정
+  useEffect(() => {
+    const img = leadImgRef.current
+    if (img && img.complete && img.naturalWidth === 0) setLeadImgOk(false)
+  }, [])
 
   // ESC로 닫기 + 열려있는 동안 배경 스크롤 잠금
   useEffect(() => {
@@ -25,6 +41,8 @@ export default function NewsletterDrawer() {
       document.body.style.overflow = prev
     }
   }, [open])
+
+  const { lead, spotlight } = newsletter
 
   return (
     <>
@@ -68,7 +86,7 @@ export default function NewsletterDrawer() {
 
         {/* 신문 패널 — 오른쪽 모서리를 축으로 왼쪽으로 펼쳐짐 */}
         <div
-          className="absolute right-0 top-0 h-full w-[min(460px,94vw)] origin-right transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]"
+          className="absolute right-0 top-0 h-full w-[min(480px,94vw)] origin-right transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]"
           style={{
             transform: open
               ? 'translateX(0) rotateY(0deg)'
@@ -101,59 +119,134 @@ export default function NewsletterDrawer() {
                 <span>maltlog.kr</span>
               </div>
 
-              {/* 1면: 이번 주 위스키 */}
-              <div className="mb-7">
-                <div className="text-[10px] tracking-[0.35em] text-[#722F37] font-bold mb-2.5">
-                  이번 주의 위스키
+              {/* 1면 톱 기사 */}
+              <article className="mb-7">
+                <div className="text-[10px] tracking-[0.35em] text-[#722F37] font-bold mb-2">
+                  {lead.kicker}
                 </div>
-                <div className="flex gap-4 items-start">
-                  <div className="w-24 h-36 shrink-0 bg-white border border-[#C9BBA4] p-1.5 shadow-sm rotate-[-1.5deg]">
+                <h3 className="font-serif text-2xl font-black text-[#2A1A12] leading-[1.25] mb-2">
+                  {lead.headline}
+                </h3>
+                <p className="text-[13px] text-[#5C4836] italic leading-relaxed mb-4">
+                  {lead.dek}
+                </p>
+
+                {/* 사진 (실패 시 크림 플레이스홀더) */}
+                {leadImgOk ? (
+                  <figure className="mb-4">
                     <img
-                      src={toPublicImageUrl(newsletter.spotlight.image)}
-                      alt={newsletter.spotlight.name}
-                      className="w-full h-full object-contain"
+                      ref={leadImgRef}
+                      src={resolveImg(lead.image)}
+                      alt={lead.headline}
+                      onError={() => setLeadImgOk(false)}
+                      className="w-full border border-[#C9BBA4] shadow-sm"
                     />
+                    {lead.imageCaption && (
+                      <figcaption className="text-[10px] text-[#9C8270] italic mt-1.5 text-center">
+                        {lead.imageCaption}
+                      </figcaption>
+                    )}
+                  </figure>
+                ) : (
+                  <div className="mb-4 aspect-[4/3] flex items-center justify-center border border-dashed border-[#C9BBA4] bg-[#EFE6D2]">
+                    <span className="text-[10px] tracking-[0.3em] text-[#9C8270]">MALTLOG TIMES</span>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-serif text-xl font-bold text-[#2A1A12] leading-snug">
-                      {newsletter.spotlight.name}
-                    </h3>
-                    <div className="text-xs text-[#722F37] font-semibold mt-0.5 mb-2">
-                      “{newsletter.spotlight.tagline}”
+                )}
+
+                <p className="text-[13px] leading-relaxed text-[#4A3527]">{lead.body}</p>
+
+                {/* 팩트 그리드 */}
+                {lead.facts.length > 0 && (
+                  <dl className="grid grid-cols-2 gap-x-4 gap-y-2.5 mt-4 pt-4 border-t border-[#C9BBA4]">
+                    {lead.facts.map((f) => (
+                      <div key={f.label}>
+                        <dt className="text-[9px] tracking-[0.25em] text-[#722F37] font-bold mb-0.5">
+                          {f.label}
+                        </dt>
+                        <dd className="text-[12px] text-[#2A1A12] font-medium leading-snug">{f.value}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                )}
+
+                {/* 테이스팅 노트 */}
+                {lead.tasting && (
+                  <div className="mt-3 bg-[#EFE6D2] border-l-2 border-[#722F37] px-3 py-2">
+                    <span className="text-[9px] tracking-[0.25em] text-[#722F37] font-bold">테이스팅 </span>
+                    <span className="text-[12px] text-[#4A3527]">{lead.tasting}</span>
+                  </div>
+                )}
+
+                {lead.link && (
+                  <button
+                    onClick={() => {
+                      setOpen(false)
+                      if (lead.link!.startsWith('http')) window.open(lead.link, '_blank', 'noopener')
+                      else router.push(lead.link!)
+                    }}
+                    className="mt-4 w-full border border-[#722F37] text-[#722F37] text-xs font-semibold tracking-widest py-2 hover:bg-[#722F37] hover:text-[#F7F1E3] transition-colors"
+                  >
+                    자세히 보러 가기 →
+                  </button>
+                )}
+              </article>
+
+              {/* 이주의 추천 한 잔 (DB 위스키) */}
+              {spotlight && (
+                <div className="border-t-2 border-[#3D2B1F] pt-4 mb-7">
+                  <div className="text-[10px] tracking-[0.35em] text-[#722F37] font-bold mb-3">
+                    이주의 추천 한 잔
+                  </div>
+                  <div className="flex gap-4 items-start">
+                    <div className="w-20 h-30 shrink-0 bg-white border border-[#C9BBA4] p-1.5 shadow-sm rotate-[-1.5deg]">
+                      <img
+                        src={resolveImg(spotlight.image)}
+                        alt={spotlight.name}
+                        className="w-full h-full object-contain"
+                        style={{ height: '7rem' }}
+                      />
                     </div>
-                    <p className="text-[13px] leading-relaxed text-[#4A3527]">
-                      {newsletter.spotlight.body}
-                    </p>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-serif text-lg font-bold text-[#2A1A12] leading-snug">
+                        {spotlight.name}
+                      </h4>
+                      <div className="text-xs text-[#722F37] font-semibold mt-0.5 mb-1.5">
+                        “{spotlight.tagline}”
+                      </div>
+                      <p className="text-[12px] leading-relaxed text-[#4A3527]">{spotlight.body}</p>
+                      <button
+                        onClick={() => {
+                          setOpen(false)
+                          router.push(`/whisky/${spotlight.whiskyId}`)
+                        }}
+                        className="mt-2 text-[11px] font-semibold text-[#722F37] hover:text-[#96424E] underline underline-offset-2"
+                      >
+                        자세히 보기 →
+                      </button>
+                    </div>
                   </div>
                 </div>
-                <button
-                  onClick={() => {
-                    setOpen(false)
-                    router.push(`/whisky/${newsletter.spotlight.whiskyId}`)
-                  }}
-                  className="mt-4 w-full border border-[#722F37] text-[#722F37] text-xs font-semibold tracking-widest py-2 hover:bg-[#722F37] hover:text-[#F7F1E3] transition-colors"
-                >
-                  자세히 보러 가기 →
-                </button>
-              </div>
+              )}
 
               {/* 단신 */}
-              <div className="border-t-2 border-[#3D2B1F] pt-4">
-                <div className="text-[10px] tracking-[0.35em] text-[#722F37] font-bold mb-3">
-                  단신
-                </div>
-                <div className="space-y-4">
-                  {newsletter.briefs.map((brief, i) => (
-                    <div key={i} className="border-b border-dashed border-[#C9BBA4] pb-3 last:border-0">
-                      <div className="flex items-baseline justify-between gap-2 mb-1">
-                        <h4 className="font-serif text-sm font-bold text-[#2A1A12]">{brief.title}</h4>
-                        {brief.date && <span className="text-[10px] text-[#9C8270] shrink-0">{brief.date}</span>}
+              {newsletter.briefs.length > 0 && (
+                <div className="border-t-2 border-[#3D2B1F] pt-4">
+                  <div className="text-[10px] tracking-[0.35em] text-[#722F37] font-bold mb-3">
+                    단신
+                  </div>
+                  <div className="space-y-4">
+                    {newsletter.briefs.map((brief, i) => (
+                      <div key={i} className="border-b border-dashed border-[#C9BBA4] pb-3 last:border-0">
+                        <div className="flex items-baseline justify-between gap-2 mb-1">
+                          <h4 className="font-serif text-sm font-bold text-[#2A1A12]">{brief.title}</h4>
+                          {brief.date && <span className="text-[10px] text-[#9C8270] shrink-0">{brief.date}</span>}
+                        </div>
+                        <p className="text-xs leading-relaxed text-[#5C4836]">{brief.body}</p>
                       </div>
-                      <p className="text-xs leading-relaxed text-[#5C4836]">{brief.body}</p>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* 편집자 주 */}
               {newsletter.editorsNote && (
